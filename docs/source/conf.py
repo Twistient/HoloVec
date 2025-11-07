@@ -99,6 +99,7 @@ html_theme_options = {
     # Layout options
     "globaltoc_expand_depth": 2,
     "dark_code": True,  # Use dark theme for code blocks
+    "color_mode": "dark",  # Set dark mode as default
 
     # UI enhancements
     "light_logo": "_static/logo.svg",

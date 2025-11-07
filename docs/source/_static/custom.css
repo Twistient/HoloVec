@@ -1,0 +1,937 @@
+/* HoloVec Documentation - Professional Dark Theme */
+
+/* ============================================
+   DARK THEME - Deep Blue with Subtle Gradients
+   ============================================ */
+
+html.dark {
+    /* Deep dark blue background with subtle gradient */
+    --sy-c-background: #0a0f1e;
+
+    /* Text colors with proper contrast */
+    --sy-c-text: rgba(255, 255, 255, 0.85);
+    --sy-c-light: rgba(255, 255, 255, 0.6);
+    --sy-c-bold: rgba(255, 255, 255, 0.95);
+    --sy-c-heading: #ffffff;
+
+    /* Cyan/Blue accent colors matching logo */
+    --sy-c-link: #00d9ff;
+    --sy-c-link-hover: #33e0ff;
+
+    /* Borders and dividers with subtle opacity */
+    --sy-c-divider: rgba(255, 255, 255, 0.08);
+    --sy-c-border: rgba(255, 255, 255, 0.12);
+
+    /* Footer styling */
+    --sy-c-foot-background: #050811;
+    --sy-c-foot-text: rgba(255, 255, 255, 0.5);
+    --sy-c-foot-divider: rgba(255, 255, 255, 0.06);
+
+    /* Brand colors */
+    --holo-cyan: #00d9ff;
+    --holo-blue: #0066ff;
+    --holo-purple: #a855f7;
+}
+
+/* Light mode refinements */
+html.light {
+    --sy-c-link: #0066ff;
+    --sy-c-link-hover: #0052cc;
+}
+
+/* ============================================
+   BACKGROUND EFFECTS
+   ============================================ */
+
+/* Deep gradient background */
+html.dark body {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0d1425 50%, #0a0f1e 100%);
+    background-attachment: fixed;
+}
+
+/* Subtle dot grid pattern */
+html.dark body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(0, 217, 255, 0.05) 1px, transparent 0);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Radial gradient orbs for depth */
+html.dark body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(0, 217, 255, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(0, 102, 255, 0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ============================================
+   TYPOGRAPHY ENHANCEMENTS
+   ============================================ */
+
+body {
+    font-weight: 400;
+    letter-spacing: -0.011em;
+    line-height: 1.7;
+    font-size: 1.0625rem; /* 17px - more readable body text */
+}
+
+/* Article/content paragraphs - ensure good readability */
+.sy-content p,
+.article p,
+article p {
+    font-size: 1.0625rem; /* 17px */
+    line-height: 1.7;
+    margin-bottom: 1.25rem;
+}
+
+/* List items should match body size */
+.sy-content li,
+.article li,
+article li {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+}
+
+/* Headings with better weight */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.032em;
+    line-height: 1.2;
+}
+
+/* Hide only the h1 title in the hidden-title section, not the whole section */
+section.hidden-title > h1 {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Force heading sizes with high specificity */
+html.dark h1,
+.sy-content h1,
+h1 {
+    font-weight: 800 !important;
+    font-size: clamp(2.5rem, 5vw, 3.5rem) !important;
+    margin-top: 2.5rem !important;
+    margin-bottom: 2rem !important;
+}
+
+html.dark h2,
+.sy-content h2,
+h2 {
+    font-weight: 700 !important;
+    font-size: 2em !important;
+    margin-top: 4rem !important;
+    margin-bottom: 0.75rem !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+    letter-spacing: -0.02em !important;
+}
+
+html.dark h3,
+.sy-content h3,
+h3 {
+    font-weight: 700 !important;
+    font-size: 1.5em !important;
+    margin-top: 2rem !important;
+    margin-bottom: 0.5rem !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+html.dark h4,
+.sy-content h4,
+h4 {
+    font-weight: 600 !important;
+    font-size: 1.25em !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+    color: rgba(255, 255, 255, 0.88) !important;
+}
+
+html.dark h5,
+.sy-content h5,
+h5 {
+    font-weight: 600 !important;
+    font-size: 1.125em !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Code blocks */
+code, pre {
+    font-family: var(--sy-f-mono);
+    font-feature-settings: 'calt' 1, 'liga' 1, 'zero' 1;
+}
+
+/* Inline code with subtle background */
+html.dark code.literal {
+    background: rgba(0, 217, 255, 0.1);
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    color: #00d9ff;
+    padding: 0.125em 0.375em;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    font-weight: 500;
+}
+
+/* ============================================
+   HEADER & NAVIGATION
+   ============================================ */
+
+/* Dark blue navbar with soft cyan glow */
+html.dark .sy-head {
+    background: #0d1b2a !important;
+    border-bottom: none;
+    box-shadow:
+        0 4px 20px rgba(0, 217, 255, 0.15),
+        0 2px 8px rgba(0, 0, 0, 0.4),
+        0 1px 3px rgba(0, 217, 255, 0.2);
+}
+
+/* Target the blur element that sits on top */
+html.dark .sy-head-blur {
+    background-color: #0d1b2a !important;
+    backdrop-filter: blur(12px) saturate(180%);
+}
+
+/* Logo with vibrant glow - much more prominent */
+html.dark .sy-head-brand img {
+    filter:
+        brightness(1.1)
+        drop-shadow(0 0 20px rgba(0, 217, 255, 0.6))
+        drop-shadow(0 0 40px rgba(0, 217, 255, 0.3));
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark .sy-head-brand img:hover {
+    filter:
+        brightness(1.2)
+        drop-shadow(0 0 30px rgba(0, 217, 255, 0.8))
+        drop-shadow(0 0 50px rgba(0, 217, 255, 0.4));
+    transform: scale(1.05);
+}
+
+/* Navigation links - brighter and more visible */
+html.dark .sy-head-nav a {
+    position: relative;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    color: rgba(255, 255, 255, 0.9);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark .sy-head-nav a:hover {
+    color: #00d9ff;
+}
+
+html.dark .sy-head-nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #00d9ff 0%, #0066ff 100%);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px rgba(0, 217, 255, 0.6);
+}
+
+html.dark .sy-head-nav a:hover::after {
+    width: 100%;
+}
+
+/* ============================================
+   SIDEBAR ENHANCEMENTS
+   ============================================ */
+
+html.dark .sy-side {
+    background: rgba(10, 15, 30, 0.5);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Active/current page in sidebar */
+html.dark .sy-side-tree .current > a {
+    background: rgba(0, 217, 255, 0.1);
+    border-left: 3px solid #00d9ff;
+    color: #00d9ff;
+    font-weight: 600;
+}
+
+/* Sidebar links */
+html.dark .sy-side a {
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark .sy-side a:hover {
+    color: #00d9ff;
+    background: rgba(0, 217, 255, 0.05);
+}
+
+/* ============================================
+   CARDS & CONTENT BLOCKS
+   ============================================ */
+
+/* Sphinx Design cards */
+html.dark .sd-card {
+    background: rgba(26, 34, 56, 0.4);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark .sd-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 12px 24px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(0, 217, 255, 0.3);
+    border-color: rgba(0, 217, 255, 0.3);
+}
+
+/* Card headers */
+html.dark .sd-card-header {
+    background: rgba(0, 217, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* Card body text */
+html.dark .sd-card-body {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* ============================================
+   ICONS - Proper Sizing
+   ============================================ */
+
+/* Octicons - properly sized and aligned */
+.sd-card-header .octicon,
+.sd-card-title .octicon,
+.sd-grid-item-card .octicon {
+    width: 1.25em !important;
+    height: 1.25em !important;
+    font-size: 1.25em !important;
+    vertical-align: middle !important;
+    margin-right: 0.5rem !important;
+    display: inline-block !important;
+}
+
+/* Card header text styling */
+.sd-card-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+/* Ensure card header content is inline */
+.sd-card-header .sd-card-text {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+/* Even smaller for dense content */
+.sd-text-center .octicon {
+    width: 1.5em !important;
+    height: 1.5em !important;
+    font-size: 1.5em !important;
+}
+
+/* ============================================
+   SPACING - Better Visual Hierarchy
+   ============================================ */
+
+/* Section spacing */
+.sy-content > section,
+.sy-content > div {
+    margin-bottom: 4rem;
+}
+
+/* Horizontal rule spacing */
+.sy-content hr {
+    margin: 4rem 0;
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   CODE BLOCKS - Professional Styling
+   ============================================ */
+
+/* Code block containers */
+html.dark .highlight {
+    background: rgba(13, 20, 37, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    margin: 1.5rem 0;
+}
+
+/* Tight spacing between headings and code blocks */
+h2 + .highlight,
+h3 + .highlight,
+h4 + .highlight,
+h5 + .highlight {
+    margin-top: 0.5rem !important;
+}
+
+/* Also handle grid items after headings */
+h2 + .sd-grid,
+h3 + .sd-grid,
+h4 + .sd-grid {
+    margin-top: 1rem !important;
+}
+
+/* Override any default code block margins */
+.highlight {
+    margin-top: 1rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+/* Grid containers need proper spacing */
+.sd-grid {
+    margin: 2rem 0;
+}
+
+/* Grid items spacing */
+.sd-grid-item {
+    margin-bottom: 1.5rem;
+}
+
+/* Rubric headings in grid columns - subordinate to h2 but prominent */
+.sd-col .rubric,
+.sd-col p.rubric,
+.sd-grid-item .rubric,
+.sd-grid-item p.rubric,
+p.rubric {
+    font-size: 1.625em !important;  /* 26px - between h2 and h3 */
+    font-weight: 600 !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    letter-spacing: -0.01em !important;
+}
+
+/* First rubric in grid column has less top margin */
+.sd-col .rubric:first-child,
+.sd-col p.rubric:first-child,
+.sd-grid-item .rubric:first-child,
+.sd-grid-item p.rubric:first-child {
+    margin-top: 0 !important;
+}
+
+/* Tight space between rubric and code block */
+.sd-col .rubric + .highlight,
+.sd-col p.rubric + .highlight,
+.sd-grid-item .rubric + .highlight,
+.sd-grid-item p.rubric + .highlight {
+    margin-top: 0.5rem !important;
+}
+
+/* Code block pre */
+html.dark .highlight pre {
+    background: transparent;
+    padding: 1.25rem;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Line numbers */
+html.dark .highlight .linenos {
+    color: rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.2);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Copy button */
+.copybtn {
+    background: rgba(0, 217, 255, 0.1);
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    color: #00d9ff;
+    border-radius: 6px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.875rem;
+}
+
+.copybtn:hover {
+    background: #00d9ff;
+    border-color: #00d9ff;
+    color: #0a0f1e;
+    transform: scale(1.05);
+}
+
+/* ============================================
+   TABLES
+   ============================================ */
+
+html.dark table {
+    background: rgba(13, 20, 37, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+html.dark thead {
+    background: rgba(0, 217, 255, 0.08);
+}
+
+html.dark thead th {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+    border-bottom: 2px solid rgba(0, 217, 255, 0.3);
+}
+
+html.dark tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+html.dark tbody tr:hover {
+    background: rgba(0, 217, 255, 0.05);
+}
+
+html.dark tbody td {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================
+   ADMONITIONS
+   ============================================ */
+
+html.dark .admonition {
+    background: rgba(26, 34, 56, 0.4);
+    border-left-width: 4px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .admonition.note {
+    border-left-color: #00d9ff;
+    background: rgba(0, 217, 255, 0.05);
+}
+
+html.dark .admonition.tip {
+    border-left-color: #0066ff;
+    background: rgba(0, 102, 255, 0.05);
+}
+
+html.dark .admonition.warning {
+    border-left-color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.05);
+}
+
+html.dark .admonition-title {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+}
+
+/* ============================================
+   TABS (Sphinx Design)
+   ============================================ */
+
+/* Tab container - better spacing and structure */
+html.dark .sd-tab-set {
+    background: rgba(13, 20, 37, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 2.5rem 0;
+}
+
+/* Tab labels - uniform 1rem spacing */
+.sd-tab-set > label,
+.sd-tab-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    font-size: 1rem !important;
+    padding: 1rem 1rem 1rem 1rem !important;
+    margin: 0 !important;
+    display: inline-block;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+}
+
+html.dark .sd-tab-set > label,
+html.dark .sd-tab-label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+html.dark .sd-tab-set > label:hover,
+html.dark .sd-tab-label:hover {
+    color: #00d9ff;
+    background: rgba(0, 217, 255, 0.05);
+}
+
+/* Active tab - more prominent */
+.sd-tab-set > input:checked + label {
+    color: #00d9ff !important;
+    border-bottom: 3px solid #00d9ff !important;
+    background: rgba(0, 217, 255, 0.08) !important;
+}
+
+html.dark .sd-tab-set > input:checked + label {
+    color: #00d9ff !important;
+    border-bottom: 3px solid #00d9ff !important;
+    background: rgba(0, 217, 255, 0.08) !important;
+}
+
+/* Tab content area - more generous padding and larger text */
+.sd-tab-content {
+    padding: 2.5rem !important;
+    margin: 0 !important;
+    font-size: 1.0625rem !important;
+}
+
+html.dark .sd-tab-content {
+    background: rgba(0, 217, 255, 0.02);
+}
+
+/* Code blocks in tabs - larger and better spaced */
+.sd-tab-content pre {
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    font-size: 0.9375rem !important;
+}
+
+.sd-tab-content .highlight {
+    margin-bottom: 1.5rem !important;
+}
+
+.sd-tab-content .highlight pre {
+    padding: 1.25rem !important;
+}
+
+/* Fix spacing between paragraphs in tabs */
+.sd-tab-content p {
+    margin-bottom: 1.25rem !important;
+    font-size: 1.0625rem !important;
+    line-height: 1.7;
+}
+
+/* Comments in code should be readable */
+.sd-tab-content .highlight .c1,
+.sd-tab-content .highlight .c {
+    font-size: 0.9rem !important;
+}
+
+/* First element in tab content should have no top margin */
+.sd-tab-content > *:first-child {
+    margin-top: 0 !important;
+}
+
+/* ============================================
+   LINKS
+   ============================================ */
+
+html.dark a {
+    color: var(--sy-c-link);
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark a:hover {
+    color: var(--sy-c-link-hover);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+html.dark .sy-foot {
+    background: var(--sy-c-foot-background);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--sy-c-foot-text);
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+/* Hero title with gradient accent */
+.hero-title {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    margin: 2rem 0 1rem;
+    text-align: center;
+}
+
+html.dark .hero-title {
+    color: #ffffff;
+}
+
+.hero-title .gradient-text {
+    background: linear-gradient(135deg, #00d9ff 0%, #0066ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Lead paragraph */
+.lead-text {
+    font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+    line-height: 1.7;
+    max-width: 900px;
+    margin: 0 auto 3rem;
+    text-align: center;
+}
+
+html.dark .lead-text {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Gradient divider */
+hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 217, 255, 0.3),
+        transparent
+    );
+    margin: 3rem 0;
+}
+
+/* Selection styling */
+html.dark ::selection {
+    background: rgba(0, 217, 255, 0.3);
+    color: #ffffff;
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+    outline: 2px solid #00d9ff;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* ============================================
+   DROPDOWNS / ACCORDIONS
+   ============================================ */
+
+/* Dropdown container with more spacing */
+html.dark .sd-dropdown {
+    background: rgba(26, 34, 56, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark .sd-dropdown:hover {
+    border-color: rgba(0, 217, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Dropdown summary/header - icon + headline/subheadline */
+html.dark .sd-summary-title,
+html.dark details.sd-dropdown > summary,
+html.dark details.sd-dropdown.feature-dropdown-title > summary {
+    padding: 1.5rem 1.75rem !important;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem; /* More space between icon and text */
+}
+
+/* Icon sizing - Lucide icons with proper sizing */
+html.dark .sd-summary-title .octicon,
+html.dark details.sd-dropdown > summary .octicon,
+html.dark details.sd-dropdown > summary svg.octicon,
+html.dark details.sd-dropdown > summary svg.lucide-icon {
+    width: 2.5em !important;
+    height: 2.5em !important;
+    min-width: 2.5em !important;
+    min-height: 2.5em !important;
+    flex-shrink: 0;
+    color: #00d9ff;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    overflow: visible; /* Fix clipping */
+}
+
+/* Chevron indicator */
+html.dark .dropdown-chevron {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    min-width: 1.25rem !important;
+    flex-shrink: 0;
+    margin-left: auto;
+    color: rgba(255, 255, 255, 0.5);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Rotate chevron when open */
+html.dark details.sd-dropdown[open] > summary .dropdown-chevron {
+    transform: rotate(180deg);
+}
+
+html.dark details.sd-dropdown > summary:hover .dropdown-chevron {
+    color: #00d9ff;
+}
+
+/* Title content container */
+html.dark .dropdown-title-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    flex: 1;
+}
+
+/* Headline - bigger and bold */
+html.dark .dropdown-headline {
+    font-size: 1.5rem !important; /* 24px - bigger headline */
+    font-weight: 700 !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+    line-height: 1.2;
+}
+
+/* Subheadline - lighter and smaller */
+html.dark .dropdown-subheadline {
+    font-size: 1rem !important; /* 16px */
+    font-weight: 400 !important;
+    color: rgba(255, 255, 255, 0.65) !important;
+    line-height: 1.5;
+}
+
+html.dark details.sd-dropdown > summary:hover {
+    background: rgba(0, 217, 255, 0.08);
+}
+
+html.dark details.sd-dropdown > summary:hover .dropdown-headline {
+    color: #00d9ff !important;
+}
+
+/* Open dropdown has subtle background */
+html.dark details.sd-dropdown[open] > summary {
+    background: rgba(0, 217, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Dropdown content - more padding and better spacing */
+html.dark .sd-summary-content,
+html.dark details.sd-dropdown .sd-summary-content {
+    padding: 1.25rem 1.75rem 1.75rem 1.75rem !important;
+    font-size: 1rem !important;
+    line-height: 1.7;
+}
+
+/* Better spacing for content inside dropdowns */
+html.dark .sd-dropdown p {
+    margin-bottom: 1rem !important;
+}
+
+html.dark .sd-dropdown ul,
+html.dark .sd-dropdown ol {
+    margin: 1rem 0 !important;
+    padding-left: 1.5rem !important;
+}
+
+html.dark .sd-dropdown li {
+    margin-bottom: 0.75rem !important;
+    line-height: 1.6;
+}
+
+/* Dropdown chevron icon - larger */
+html.dark details.sd-dropdown > summary::before,
+html.dark details.sd-dropdown > summary .sd-summary-icon {
+    font-size: 1.5rem !important;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark details.sd-dropdown[open] > summary::before,
+html.dark details.sd-dropdown[open] > summary .sd-summary-icon {
+    transform: rotate(90deg);
+}
+
+/* ============================================
+   SPHINX GALLERY
+   ============================================ */
+
+html.dark .sphx-glr-thumbcontainer {
+    background: rgba(26, 34, 56, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark .sphx-glr-thumbcontainer:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 12px 24px rgba(0, 0, 0, 0.5),
+        0 0 0 2px rgba(0, 217, 255, 0.3);
+    border-color: rgba(0, 217, 255, 0.3);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .lead-text {
+        font-size: 1.125rem;
+    }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sy-main-content {
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}

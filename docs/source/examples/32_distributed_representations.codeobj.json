@@ -1,0 +1,56 @@
+{
+ "BruteForceCleanup": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.utils.cleanup",
+   "module_short": "holovec.utils",
+   "name": "BruteForceCleanup"
+  }
+ ],
+ "VSA.create": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.VSA",
+   "module_short": "holovec.VSA",
+   "name": "create"
+  }
+ ],
+ "np.mean": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "mean"
+  }
+ ],
+ "np.min": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "min"
+  }
+ ],
+ "np.random.choice": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.random",
+   "module_short": "numpy.random",
+   "name": "choice"
+  }
+ ],
+ "np.random.seed": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.random",
+   "module_short": "numpy.random",
+   "name": "seed"
+  }
+ ]
+}

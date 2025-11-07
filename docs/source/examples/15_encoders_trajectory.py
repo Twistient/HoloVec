@@ -1,0 +1,417 @@
+"""
+Demonstration of Trajectory Encoder for continuous sequence encoding.
+=====================================================================
+
+This demo showcases the TrajectoryEncoder, which encodes continuous sequences
+like time series, paths, and motion trajectories into hypervectors. This is
+particularly useful for:
+
+- Time series analysis and classification
+- Path and trajectory matching
+- Motion pattern recognition
+- Gesture recognition
+- Robot navigation
+- Sensor data encoding
+
+The encoder supports:
+- 1D sequences (time series)
+- 2D paths (planar motion)
+- 3D trajectories (spatial motion)
+- Time range normalization for consistent temporal scaling
+- Different scalar encoders (FractionalPowerEncoder, ThermometerEncoder)
+"""
+
+from holovec import VSA
+from holovec.encoders import TrajectoryEncoder, FractionalPowerEncoder, ThermometerEncoder
+import math
+
+
+def print_section(title):
+    """Print a section header."""
+    print(f"\n{'=' * 70}")
+    print(f"{title}")
+    print('=' * 70)
+
+
+def demo_basic_1d_encoding():
+    """Demonstrate basic 1D time series encoding."""
+    print_section("Demo 1: Basic 1D Time Series Encoding")
+
+    model = VSA.create('FHRR', dim=10000, seed=42)
+    scalar_enc = FractionalPowerEncoder(model, min_val=0, max_val=100, seed=42)
+    encoder = TrajectoryEncoder(model, scalar_enc, n_dimensions=1, seed=42)
+
+    print(f"\nEncoder: {encoder}")
+    print(f"Configuration: {encoder.n_dimensions}D, time_range={encoder.time_range}")
+
+    # Encode a simple time series
+    time_series = [10.0, 20.0, 30.0, 40.0, 50.0]
+    hv = encoder.encode(time_series)
+
+    print(f"\nInput time series: {time_series}")
+    print(f"Encoded hypervector shape: {hv.shape}")
+    print(f"Input type: {encoder.input_type}")
+
+
+def demo_different_dimensions():
+    """Demonstrate encoding in different dimensions."""
+    print_section("Demo 2: Encoding in Different Dimensions")
+
+    model = VSA.create('FHRR', dim=10000, seed=42)
+    scalar_enc = FractionalPowerEncoder(model, min_val=-50, max_val=50, seed=42)
+
+    print("\n1D Time Series:")
+    encoder_1d = TrajectoryEncoder(model, scalar_enc, n_dimensions=1, seed=42)
+    ts_1d = [0.0, 10.0, 20.0, 30.0]
+    hv_1d = encoder_1d.encode(ts_1d)
+    print(f"  Input: {ts_1d}")
+    print(f"  Hypervector shape: {hv_1d.shape}")
+
+    print("\n2D Path:")
+    encoder_2d = TrajectoryEncoder(model, scalar_enc, n_dimensions=2, seed=42)
+    path_2d = [(0, 0), (10, 10), (20, 20), (30, 30)]
+    hv_2d = encoder_2d.encode(path_2d)
+    print(f"  Input: {path_2d}")
+    print(f"  Hypervector shape: {hv_2d.shape}")
+
+    print("\n3D Trajectory:")
+    encoder_3d = TrajectoryEncoder(model, scalar_enc, n_dimensions=3, seed=42)
+    traj_3d = [(0, 0, 0), (10, 10, 5), (20, 20, 10), (30, 30, 15)]
+    hv_3d = encoder_3d.encode(traj_3d)
+    print(f"  Input: {traj_3d}")
+    print(f"  Hypervector shape: {hv_3d.shape}")
+
+
+def demo_time_series_similarity():
+    """Demonstrate time series similarity analysis."""
+    print_section("Demo 3: Time Series Similarity Analysis")
+
+    model = VSA.create('FHRR', dim=10000, seed=42)
+    scalar_enc = FractionalPowerEncoder(model, min_val=0, max_val=100, seed=42)
+    encoder = TrajectoryEncoder(model, scalar_enc, n_dimensions=1, seed=42)
+
+    # Create similar and different time series
+    ts1 = [10.0, 20.0, 30.0, 40.0, 50.0]
+    ts2 = [10.0, 20.0, 30.0, 40.0, 51.0]  # Slightly different
+    ts3 = [50.0, 40.0, 30.0, 20.0, 10.0]  # Reversed
+    ts4 = [5.0, 15.0, 25.0, 35.0, 45.0]   # Offset by -5
+
+    hv1 = encoder.encode(ts1)
+    hv2 = encoder.encode(ts2)
+    hv3 = encoder.encode(ts3)
+    hv4 = encoder.encode(ts4)
+
+    print("\nTime Series 1:", ts1)
+    print("Time Series 2:", ts2, "(slightly different)")
+    print("Time Series 3:", ts3, "(reversed)")
+    print("Time Series 4:", ts4, "(offset by -5)\n")
+
+    sim_1_2 = float(model.similarity(hv1, hv2))
+    sim_1_3 = float(model.similarity(hv1, hv3))
+    sim_1_4 = float(model.similarity(hv1, hv4))
+
+    print(f"Similarity (ts1 vs ts2): {sim_1_2:.3f}")
+    print(f"Similarity (ts1 vs ts3): {sim_1_3:.3f}")
+    print(f"Similarity (ts1 vs ts4): {sim_1_4:.3f}")
+
+    print("\nKey insights:")
+    print("  - Very similar sequences have high similarity")
+    print("  - Reversed sequences have low similarity (order matters)")
+    print("  - Offset sequences have moderate similarity")
+
+
+def demo_path_similarity():
+    """Demonstrate 2D path similarity analysis."""
+    print_section("Demo 4: 2D Path Similarity Analysis")
+
+    model = VSA.create('FHRR', dim=10000, seed=42)
+    scalar_enc = FractionalPowerEncoder(model, min_val=-10, max_val=100, seed=42)
+    encoder = TrajectoryEncoder(model, scalar_enc, n_dimensions=2, seed=42)
+
+    # Define paths
+    path1 = [(0, 0), (10, 10), (20, 20), (30, 30)]       # Diagonal
+    path2 = [(0, 0), (10, 10), (20, 20), (30, 31)]       # Almost identical
+    path3 = [(0, 0), (10, 0), (20, 0), (30, 0)]          # Horizontal
+    path4 = [(0, 0), (0, 10), (0, 20), (0, 30)]          # Vertical
+
+    hv1 = encoder.encode(path1)
+    hv2 = encoder.encode(path2)
+    hv3 = encoder.encode(path3)
+    hv4 = encoder.encode(path4)
+
+    print("\nPath 1: Diagonal", path1)
+    print("Path 2: Almost identical", path2)
+    print("Path 3: Horizontal", path3)
+    print("Path 4: Vertical", path4)
+
+    sim_1_2 = float(model.similarity(hv1, hv2))
+    sim_1_3 = float(model.similarity(hv1, hv3))
+    sim_1_4 = float(model.similarity(hv1, hv4))
+
+    print(f"\nSimilarity (path1 vs path2): {sim_1_2:.3f}")
+    print(f"Similarity (path1 vs path3): {sim_1_3:.3f}")
+    print(f"Similarity (path1 vs path4): {sim_1_4:.3f}")
+
+    print("\nKey insight:")
+    print("  Path shape and direction are encoded in the hypervector")
+
+
+def demo_time_range_normalization():
+    """Demonstrate time range normalization."""
+    print_section("Demo 5: Time Range Normalization")
+
+    model = VSA.create('FHRR', dim=10000, seed=42)
+    scalar_enc = FractionalPowerEncoder(model, min_val=0, max_val=100, seed=42)
+
+    # Without time normalization (default)
+    encoder_no_norm = TrajectoryEncoder(model, scalar_enc, n_dimensions=1, seed=42)
+
+    # With time normalization
+    encoder_with_norm = TrajectoryEncoder(
+        model, scalar_enc, n_dimensions=1, time_range=(0.0, 1.0), seed=42
+    )
+
+    time_series = [10.0, 20.0, 30.0, 40.0, 50.0]
+
+    hv_no_norm = encoder_no_norm.encode(time_series)
+    hv_with_norm = encoder_with_norm.encode(time_series)
+
+    print(f"\nInput time series: {time_series}")
+    print(f"\nWithout time normalization:")
+    print(f"  Time indices used: 0, 1, 2, 3, 4")
+    print(f"  Hypervector: shape {hv_no_norm.shape}")
+
+    print(f"\nWith time normalization (0.0 to 1.0):")
+    print(f"  Time indices normalized: 0.00, 0.25, 0.50, 0.75, 1.00")
+    print(f"  Hypervector: shape {hv_with_norm.shape}")
+
+    sim = float(model.similarity(hv_no_norm, hv_with_norm))
+    print(f"\nSimilarity between encodings: {sim:.3f}")
+    print("\nKey insight:")
+    print("  Time normalization makes sequences comparable regardless of length")
+
+
+def demo_circular_path():
+    """Demonstrate encoding a circular path."""
+    print_section("Demo 6: Circular Path Encoding")
+
+    model = VSA.create('FHRR', dim=10000, seed=42)
+    scalar_enc = FractionalPowerEncoder(model, min_val=-15, max_val=15, seed=42)
+    encoder = TrajectoryEncoder(model, scalar_enc, n_dimensions=2, seed=42)
+
+    # Generate circular path
+    n_points = 8
+    radius = 10.0
+    circle = [
+        (radius * math.cos(2 * math.pi * i / n_points),
+         radius * math.sin(2 * math.pi * i / n_points))
+        for i in range(n_points)
+    ]
+
+    # Generate ellipse (similar to circle)
+    ellipse = [
+        (12.0 * math.cos(2 * math.pi * i / n_points),
+         8.0 * math.sin(2 * math.pi * i / n_points))
+        for i in range(n_points)
+    ]
+
+    # Generate square path
+    square = [(10, 10), (10, -10), (-10, -10), (-10, 10),
+              (10, 10), (10, -10), (-10, -10), (-10, 10)]
+
+    hv_circle = encoder.encode(circle)
+    hv_ellipse = encoder.encode(ellipse)
+    hv_square = encoder.encode(square)
+
+    print(f"\nCircle (radius={radius}, {n_points} points)")
+    print(f"First 3 points: {[tuple(round(x, 1) for x in p) for p in circle[:3]]}")
+
+    print(f"\nEllipse (rx=12, ry=8, {n_points} points)")
+    print(f"First 3 points: {[tuple(round(x, 1) for x in p) for p in ellipse[:3]]}")
+
+    print(f"\nSquare (side=20, {len(square)} points)")
+    print(f"Points: {square[:4]}...")
+
+    sim_circle_ellipse = float(model.similarity(hv_circle, hv_ellipse))
+    sim_circle_square = float(model.similarity(hv_circle, hv_square))
+
+    print(f"\nSimilarity (circle vs ellipse): {sim_circle_ellipse:.3f}")
+    print(f"Similarity (circle vs square): {sim_circle_square:.3f}")
+
+    print("\nKey insight:")
+    print("  Closed curves with similar shapes have higher similarity")
+
+
+def demo_application_gesture_recognition():
+    """Demonstrate application: gesture recognition."""
+    print_section("Demo 7: Application - Gesture Recognition")
+
+    model = VSA.create('FHRR', dim=10000, seed=42)
+    scalar_enc = FractionalPowerEncoder(model, min_val=-20, max_val=20, seed=42)
+    encoder = TrajectoryEncoder(model, scalar_enc, n_dimensions=2, seed=42)
+
+    print("\nScenario: Recognize hand gestures from 2D trajectories\n")
+
+    # Training examples - gesture prototypes
+    swipe_right = [(0, 0), (5, 0), (10, 0), (15, 0), (20, 0)]
+    swipe_left = [(20, 0), (15, 0), (10, 0), (5, 0), (0, 0)]
+    swipe_up = [(0, 0), (0, 5), (0, 10), (0, 15), (0, 20)]
+    circle_gesture = [
+        (10, 0), (7, 7), (0, 10), (-7, 7),
+        (-10, 0), (-7, -7), (0, -10), (7, -7), (10, 0)
+    ]
+
+    # Create gesture prototypes
+    hv_right = encoder.encode(swipe_right)
+    hv_left = encoder.encode(swipe_left)
+    hv_up = encoder.encode(swipe_up)
+    hv_circle = encoder.encode(circle_gesture)
+
+    print("Gesture Library:")
+    print(f"  - Swipe Right: {swipe_right}")
+    print(f"  - Swipe Left: {swipe_left}")
+    print(f"  - Swipe Up: {swipe_up}")
+    print(f"  - Circle: {len(circle_gesture)} points")
+
+    # Test gestures (with variations)
+    test_gestures = [
+        ([(1, 0), (6, 0), (11, 0), (16, 0), (19, 0)], "Swipe Right"),
+        ([(19, 0), (14, 0), (9, 0), (4, 0), (1, 0)], "Swipe Left"),
+        ([(0, 1), (0, 6), (0, 11), (0, 16), (0, 19)], "Swipe Up"),
+        ([(10, 0), (7, 8), (0, 11), (-7, 7), (-10, 0), (-7, -8), (0, -11), (8, -7), (10, 0)], "Circle"),
+    ]
+
+    gestures_db = {
+        "Swipe Right": hv_right,
+        "Swipe Left": hv_left,
+        "Swipe Up": hv_up,
+        "Circle": hv_circle
+    }
+
+    print("\nTest Results:")
+    for gesture, true_label in test_gestures:
+        hv = encoder.encode(gesture)
+
+        # Find best match
+        best_match = None
+        best_sim = -1.0
+        for name, prototype in gestures_db.items():
+            sim = float(model.similarity(hv, prototype))
+            if sim > best_sim:
+                best_sim = sim
+                best_match = name
+
+        print(f"\n  Test gesture: {true_label}")
+        print(f"  Recognized as: {best_match} (similarity: {best_sim:.3f})")
+        print(f"  Result: {'✓ Correct' if best_match == true_label else '✗ Incorrect'}")
+
+
+def demo_application_robot_paths():
+    """Demonstrate application: robot path matching."""
+    print_section("Demo 8: Application - Robot Path Matching")
+
+    model = VSA.create('FHRR', dim=10000, seed=42)
+    scalar_enc = FractionalPowerEncoder(model, min_val=0, max_val=50, seed=42)
+    encoder = TrajectoryEncoder(model, scalar_enc, n_dimensions=2, seed=42)
+
+    print("\nScenario: Match robot paths for navigation planning\n")
+
+    # Known successful paths
+    path_a = [(0, 0), (10, 5), (20, 10), (30, 15), (40, 20)]      # Gradual diagonal
+    path_b = [(0, 0), (5, 10), (10, 20), (15, 30), (20, 40)]      # Steep diagonal
+    path_c = [(0, 0), (10, 0), (20, 5), (30, 10), (40, 15)]       # Mostly horizontal
+
+    hv_a = encoder.encode(path_a)
+    hv_b = encoder.encode(path_b)
+    hv_c = encoder.encode(path_c)
+
+    path_library = {
+        "Path A (gradual diagonal)": hv_a,
+        "Path B (steep diagonal)": hv_b,
+        "Path C (mostly horizontal)": hv_c
+    }
+
+    print("Path Library:")
+    print(f"  Path A: {path_a}")
+    print(f"  Path B: {path_b}")
+    print(f"  Path C: {path_c}")
+
+    # New path to match
+    new_path = [(0, 0), (9, 6), (19, 11), (29, 16), (39, 21)]
+
+    print(f"\nNew path to match: {new_path}")
+
+    hv_new = encoder.encode(new_path)
+
+    print("\nSimilarity to known paths:")
+    for name, prototype in path_library.items():
+        sim = float(model.similarity(hv_new, prototype))
+        print(f"  {name}: {sim:.3f}")
+
+    print("\nKey insight:")
+    print("  Similar paths can be retrieved for navigation planning")
+
+
+def demo_different_scalar_encoders():
+    """Demonstrate using different scalar encoders."""
+    print_section("Demo 9: Different Scalar Encoders")
+
+    print("\nFractionalPowerEncoder (for FHRR/HRR - complex models):")
+    model_fhrr = VSA.create('FHRR', dim=10000, seed=42)
+    scalar_fpe = FractionalPowerEncoder(model_fhrr, min_val=0, max_val=100, seed=42)
+    encoder_fpe = TrajectoryEncoder(model_fhrr, scalar_fpe, n_dimensions=1, seed=42)
+
+    ts = [10.0, 20.0, 30.0, 40.0]
+    hv_fpe = encoder_fpe.encode(ts)
+    print(f"  Model: FHRR")
+    print(f"  Time series: {ts}")
+    print(f"  Encoded shape: {hv_fpe.shape}")
+
+    print("\nThermometerEncoder (for MAP/BSC - bipolar models):")
+    model_map = VSA.create('MAP', dim=10000, seed=42)
+    scalar_therm = ThermometerEncoder(model_map, min_val=0, max_val=100, n_bins=100, seed=42)
+    encoder_therm = TrajectoryEncoder(model_map, scalar_therm, n_dimensions=1, seed=42)
+
+    hv_therm = encoder_therm.encode(ts)
+    print(f"  Model: MAP")
+    print(f"  Time series: {ts}")
+    print(f"  Encoded shape: {hv_therm.shape}")
+
+    print("\nKey insight:")
+    print("  TrajectoryEncoder works with any scalar encoder compatible with the model")
+
+
+def main():
+    """Run all demos."""
+    print("=" * 70)
+    print("Trajectory Encoder - Comprehensive Demonstration")
+    print("=" * 70)
+    print("\nThe TrajectoryEncoder encodes continuous sequences (time series,")
+    print("paths, trajectories) into hypervectors. This is essential for:")
+    print("  - Time series analysis and classification")
+    print("  - Path and trajectory matching")
+    print("  - Motion pattern recognition")
+    print("  - Gesture recognition")
+    print("  - Robot navigation")
+
+    demo_basic_1d_encoding()
+    demo_different_dimensions()
+    demo_time_series_similarity()
+    demo_path_similarity()
+    demo_time_range_normalization()
+    demo_circular_path()
+    demo_application_gesture_recognition()
+    demo_application_robot_paths()
+    demo_different_scalar_encoders()
+
+    print("\n" + "=" * 70)
+    print("Demo Complete!")
+    print("=" * 70)
+    print("\nNext steps:")
+    print("  - See docs/theory/encoders.md for mathematical details")
+    print("  - Run tests: pytest tests/test_encoders_sequence.py -k Trajectory")
+    print("  - Try with different VSA models and scalar encoders")
+
+
+if __name__ == '__main__':
+    main()

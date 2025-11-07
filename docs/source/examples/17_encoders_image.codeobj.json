@@ -1,0 +1,101 @@
+{
+ "FractionalPowerEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "FractionalPowerEncoder"
+  }
+ ],
+ "ImageEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "ImageEncoder"
+  }
+ ],
+ "ThermometerEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "ThermometerEncoder"
+  }
+ ],
+ "VSA.create": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.VSA",
+   "module_short": "holovec.VSA",
+   "name": "create"
+  }
+ ],
+ "np.array": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "array"
+  }
+ ],
+ "np.linspace": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "linspace"
+  }
+ ],
+ "np.ones": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "ones"
+  }
+ ],
+ "np.random.randint": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.random",
+   "module_short": "numpy.random",
+   "name": "randint"
+  }
+ ],
+ "np.random.seed": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.random",
+   "module_short": "numpy.random",
+   "name": "seed"
+  }
+ ],
+ "np.uint8": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "uint8"
+  }
+ ],
+ "np.zeros": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "zeros"
+  }
+ ]
+}

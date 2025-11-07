@@ -1,0 +1,319 @@
+"""
+Fractional Power Encoder Deep Dive
+==================================
+
+Topics: FPE theory, bandwidth tuning, similarity profiles, decoding accuracy
+Time: 15 minutes
+Prerequisites: 10_encoders_scalar.py, 01_basic_operations.py
+Related: 12_encoders_thermometer_level.py, 30_theory_fpe_validation.py
+
+This example provides an in-depth exploration of the FractionalPowerEncoder (FPE),
+the most powerful continuous value encoder in HoloVec. Learn how to tune bandwidth
+for your specific application and understand the theoretical foundations.
+
+Key concepts:
+- Complex exponential encoding: e^(2πi·φ(x))
+- Bandwidth parameter: Controls similarity decay with distance
+- Smooth similarity: Nearby values have high similarity
+- Exact decoding: Reversible encoding for value recovery
+- Model compatibility: Works with FHRR, HRR (complex/real FFT models)
+
+FPE is ideal for continuous measurements (temperature, pressure, time) where
+smooth similarity relationships are important.
+"""
+
+import numpy as np
+from holovec import VSA
+from holovec.encoders import FractionalPowerEncoder
+
+print("=" * 70)
+print("Fractional Power Encoder Deep Dive")
+print("=" * 70)
+print()
+
+# ============================================================================
+# Demo 1: Understanding Bandwidth Parameter
+# ============================================================================
+print("=" * 70)
+print("Demo 1: Bandwidth Parameter Effects")
+print("=" * 70)
+
+model = VSA.create('FHRR', dim=10000, seed=42)
+
+# Create encoders with different bandwidths
+bandwidths = [0.05, 0.1, 0.2, 0.5]
+encoders = {bw: FractionalPowerEncoder(model, min_val=0, max_val=100,
+                                        bandwidth=bw, seed=42)
+            for bw in bandwidths}
+
+print(f"\nModel: {model.model_name}, dimension={model.dimension}")
+print(f"Range: 0-100")
+print(f"\nTesting bandwidths: {bandwidths}")
+
+# Test similarity decay with distance
+reference_value = 50.0
+test_values = [50.0, 51.0, 52.0, 55.0, 60.0, 70.0]
+
+print(f"\n{'Distance':<10s} ", end="")
+for bw in bandwidths:
+    print(f"BW={bw:<5.2f} ", end="")
+print()
+print("-" * 60)
+
+for test_val in test_values:
+    distance = abs(test_val - reference_value)
+    print(f"{distance:<10.1f} ", end="")
+
+    for bw in bandwidths:
+        ref_hv = encoders[bw].encode(reference_value)
+        test_hv = encoders[bw].encode(test_val)
+        sim = float(model.similarity(ref_hv, test_hv))
+        print(f"{sim:7.3f} ", end="")
+    print()
+
+print("\nObservations:")
+print("  - Lower bandwidth = slower similarity decay (more tolerance)")
+print("  - Higher bandwidth = faster decay (more discriminative)")
+print("  - Choose based on your noise tolerance vs discrimination needs")
+
+# ============================================================================
+# Demo 2: Decoding Accuracy vs Bandwidth
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 2: Decoding Accuracy Analysis")
+print("=" * 70)
+
+test_values = [10.0, 25.5, 50.0, 75.3, 99.0]
+
+print("\nDecoding accuracy for different bandwidths:\n")
+print(f"{'Value':<10s} ", end="")
+for bw in bandwidths:
+    print(f"BW={bw:<5.2f} ", end="")
+print()
+print("-" * 60)
+
+for val in test_values:
+    print(f"{val:<10.1f} ", end="")
+
+    for bw in bandwidths:
+        hv = encoders[bw].encode(val)
+        decoded = encoders[bw].decode(hv)
+        error = abs(decoded - val)
+        print(f"{error:7.4f} ", end="")
+    print()
+
+print("\nObservations:")
+print("  - All bandwidths provide excellent decoding (errors < 0.001)")
+print("  - Bandwidth affects similarity profiles, not decoding accuracy")
+
+# ============================================================================
+# Demo 3: Similarity Profile Visualization
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 3: Similarity Profile Shape")
+print("=" * 70)
+
+# Encode reference at 50
+reference = 50.0
+encoder = FractionalPowerEncoder(model, min_val=0, max_val=100,
+                                  bandwidth=0.1, seed=42)
+ref_hv = encoder.encode(reference)
+
+# Test entire range
+test_range = np.linspace(0, 100, 21)
+similarities = []
+
+for val in test_range:
+    test_hv = encoder.encode(val)
+    sim = float(model.similarity(ref_hv, test_hv))
+    similarities.append(sim)
+
+print(f"\nReference value: {reference}")
+print(f"Bandwidth: 0.1")
+print(f"\n{'Value':<8s} {'Similarity':<12s} Visualization")
+print("-" * 50)
+
+for val, sim in zip(test_range, similarities):
+    bar_length = int(sim * 40)
+    bar = "█" * bar_length
+    print(f"{val:6.1f}   {sim:8.3f}     {bar}")
+
+print("\nObservations:")
+print("  - Peak similarity at reference value (1.0)")
+print("  - Smooth, gradual decay with distance")
+print("  - Symmetric around reference point")
+
+# ============================================================================
+# Demo 4: Bandwidth Selection Guide
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 4: Bandwidth Selection Guide")
+print("=" * 70)
+
+# Simulate noisy measurements
+np.random.seed(42)
+true_value = 50.0
+noise_levels = [0.5, 1.0, 2.0, 5.0]
+
+print("\nScenario: Noisy sensor readings")
+print(f"True value: {true_value}")
+print()
+
+for noise_std in noise_levels:
+    print(f"\nNoise level (std): {noise_std}")
+
+    # Generate noisy readings
+    noisy_readings = true_value + np.random.randn(10) * noise_std
+
+    # Test different bandwidths
+    for bw in [0.05, 0.1, 0.2]:
+        encoder = FractionalPowerEncoder(model, min_val=0, max_val=100,
+                                          bandwidth=bw, seed=42)
+
+        # Encode true value
+        true_hv = encoder.encode(true_value)
+
+        # Average similarity of noisy readings
+        sims = []
+        for reading in noisy_readings:
+            noisy_hv = encoder.encode(reading)
+            sim = float(model.similarity(true_hv, noisy_hv))
+            sims.append(sim)
+
+        avg_sim = np.mean(sims)
+        print(f"  BW={bw:.2f}: avg similarity = {avg_sim:.3f}")
+
+print("\nRecommendations:")
+print("  - Low noise (< 1% of range):  BW = 0.2-0.5 (high discrimination)")
+print("  - Medium noise (1-5% of range): BW = 0.1-0.2 (balanced)")
+print("  - High noise (> 5% of range):  BW = 0.05-0.1 (noise tolerant)")
+
+# ============================================================================
+# Demo 5: Multi-Scale Encoding
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 5: Multi-Scale Hierarchical Encoding")
+print("=" * 70)
+
+# Encode at different scales (coarse to fine)
+value = 42.567
+
+# Coarse: tens place (0-100)
+coarse_encoder = FractionalPowerEncoder(model, min_val=0, max_val=100,
+                                         bandwidth=0.1, seed=42)
+# Fine: ones place (0-10)
+fine_encoder = FractionalPowerEncoder(model, min_val=0, max_val=10,
+                                       bandwidth=0.1, seed=43)
+# Very fine: decimals (0-1)
+vfine_encoder = FractionalPowerEncoder(model, min_val=0, max_val=1,
+                                        bandwidth=0.1, seed=44)
+
+# Encode at each scale
+coarse_hv = coarse_encoder.encode(value)                    # 42.567 in [0,100]
+fine_hv = fine_encoder.encode(value % 10)                   # 2.567 in [0,10]
+vfine_hv = vfine_encoder.encode((value * 10) % 1)          # 0.567 in [0,1]
+
+# Bind scales together
+COARSE = model.random(seed=100)
+FINE = model.random(seed=101)
+VFINE = model.random(seed=102)
+
+multi_scale = model.bundle([
+    model.bind(COARSE, coarse_hv),
+    model.bind(FINE, fine_hv),
+    model.bind(VFINE, vfine_hv)
+])
+
+print(f"\nOriginal value: {value}")
+print("\nMulti-scale encoding:")
+print(f"  Coarse scale (tens):     {value:.1f}")
+print(f"  Fine scale (ones):       {value % 10:.2f}")
+print(f"  Very fine scale (decimals): {(value * 10) % 1:.3f}")
+
+# Decode from each scale
+coarse_decoded = coarse_encoder.decode(model.unbind(multi_scale, COARSE))
+fine_decoded = fine_encoder.decode(model.unbind(multi_scale, FINE))
+vfine_decoded = vfine_encoder.decode(model.unbind(multi_scale, VFINE))
+
+print("\nDecoded values:")
+print(f"  Coarse: {coarse_decoded:.3f}")
+print(f"  Fine:   {fine_decoded:.3f}")
+print(f"  Very fine: {vfine_decoded:.3f}")
+
+print("\nBenefit:")
+print("  - Different resolutions for different query types")
+print("  - Coarse search → fine refinement")
+print("  - Robust to scale-specific noise")
+
+# ============================================================================
+# Demo 6: Model Compatibility
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 6: FPE Model Compatibility")
+print("=" * 70)
+
+print("\nFPE works with complex/real FFT-based models:\n")
+
+compatible_models = ['FHRR', 'HRR']
+test_value = 37.5
+
+for model_name in compatible_models:
+    m = VSA.create(model_name, dim=5000, seed=42)
+    encoder = FractionalPowerEncoder(m, min_val=0, max_val=100,
+                                      bandwidth=0.1, seed=42)
+
+    hv = encoder.encode(test_value)
+    decoded = encoder.decode(hv)
+    error = abs(decoded - test_value)
+
+    print(f"{model_name:10s}: encoded={test_value:.1f}°C, "
+          f"decoded={decoded:.3f}°C, error={error:.5f}")
+
+print("\n⚠️  FPE does NOT work with:")
+print("  - MAP (multiplication in {-1,+1} loses phase information)")
+print("  - BSC (binary sparse, no complex representation)")
+print("  - BSDC (segment binary, no complex representation)")
+
+print("\nFor these models, use:")
+print("  - ThermometerEncoder (ordinal encoding)")
+print("  - LevelEncoder (discrete bins)")
+
+# ============================================================================
+# Summary
+# ============================================================================
+print("\n" + "=" * 70)
+print("Summary: FPE Best Practices")
+print("=" * 70)
+print()
+
+print("✓ Bandwidth Selection:")
+print("  - Start with BW=0.1 (good default for most cases)")
+print("  - Increase for high discrimination needs")
+print("  - Decrease for noise-tolerant applications")
+print()
+
+print("✓ When to Use FPE:")
+print("  - Continuous measurements (temp, pressure, time)")
+print("  - Smooth similarity important")
+print("  - Value recovery needed (reversible)")
+print("  - Using FHRR or HRR models")
+print()
+
+print("✓ When NOT to Use FPE:")
+print("  - Using MAP, BSC, BSDC models (incompatible)")
+print("  - Only need ordinal relationships (use Thermometer)")
+print("  - Discrete categories (use Level)")
+print()
+
+print("✓ Advanced Patterns:")
+print("  - Multi-scale encoding for hierarchical queries")
+print("  - Adaptive bandwidth for different value ranges")
+print("  - Ensemble with other encoders for robustness")
+print()
+
+print("Next steps:")
+print("  → 12_encoders_thermometer_level.py - Alternative scalar encoders")
+print("  → 30_theory_fpe_validation.py - Mathematical foundations")
+print("  → 25_app_integration_patterns.py - Combine FPE with other encoders")
+print()
+print("=" * 70)

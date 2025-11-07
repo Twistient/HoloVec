@@ -1,0 +1,65 @@
+{
+ "FractionalPowerEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "FractionalPowerEncoder"
+  }
+ ],
+ "ThermometerEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "ThermometerEncoder"
+  }
+ ],
+ "TrajectoryEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "TrajectoryEncoder"
+  }
+ ],
+ "VSA.create": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.VSA",
+   "module_short": "holovec.VSA",
+   "name": "create"
+  }
+ ],
+ "math.cos": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "math",
+   "module_short": "math",
+   "name": "cos"
+  }
+ ],
+ "math.pi": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "math",
+   "module_short": "math",
+   "name": "pi"
+  }
+ ],
+ "math.sin": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "math",
+   "module_short": "math",
+   "name": "sin"
+  }
+ ]
+}

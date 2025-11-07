@@ -1,0 +1,38 @@
+{
+ "BSDCSEGModel": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.models.bsdc_seg",
+   "module_short": "holovec.models.bsdc_seg",
+   "name": "BSDCSEGModel"
+  }
+ ],
+ "find_by_segment_pattern": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.utils.search",
+   "module_short": "holovec.utils.search",
+   "name": "find_by_segment_pattern"
+  }
+ ],
+ "get_backend": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.backends",
+   "module_short": "holovec",
+   "name": "get_backend"
+  }
+ ],
+ "segment_pattern": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.utils.search",
+   "module_short": "holovec.utils.search",
+   "name": "segment_pattern"
+  }
+ ]
+}

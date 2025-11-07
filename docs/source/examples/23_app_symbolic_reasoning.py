@@ -1,0 +1,466 @@
+"""
+Symbolic Reasoning with Role-Filler Binding
+===========================================
+
+Topics: Role-filler binding, structured representations, reasoning, analogy
+Time: 20 minutes
+Prerequisites: 00_quickstart.py, 18_encoders_graph.py
+Related: 24_app_working_memory.py, 25_app_integration_patterns.py
+
+This example demonstrates symbolic reasoning using role-filler binding in
+hyperdimensional computing. Role-filler binding is a fundamental technique for
+representing structured knowledge, enabling AI systems to perform complex
+reasoning tasks.
+
+Key concepts:
+- Role-filler binding: bind(role, filler) separates structure from content
+- Frame-based representations: Templates with variable slots
+- Variable binding: Bind abstract concepts to concrete instances
+- Analogical reasoning: Transfer structure between domains
+- Query answering: Retrieve fillers by unbinding roles
+
+This approach enables human-like reasoning about structured knowledge,
+essential for natural language understanding, planning, and problem solving.
+"""
+
+from holovec import VSA
+from holovec.retrieval import ItemStore
+
+print("=" * 70)
+print("Symbolic Reasoning with Role-Filler Binding")
+print("=" * 70)
+print()
+
+# Create model
+model = VSA.create('FHRR', dim=10000, seed=42)
+
+# ============================================================================
+# Demo 1: Sentence Understanding with Role-Filler Binding
+# ============================================================================
+print("=" * 70)
+print("Demo 1: Sentence Understanding")
+print("=" * 70)
+
+# Define semantic roles
+print("\nDefining semantic roles:")
+agent = model.random(seed=100)
+action = model.random(seed=101)
+patient = model.random(seed=102)
+instrument = model.random(seed=103)
+location = model.random(seed=104)
+time = model.random(seed=105)
+
+print("  Roles: agent, action, patient, instrument, location, time")
+
+# Encode entities and concepts
+print("\nEncoding entities:")
+john = model.random(seed=200)
+mary = model.random(seed=201)
+hammer = model.random(seed=202)
+nail = model.random(seed=203)
+workshop = model.random(seed=204)
+morning = model.random(seed=205)
+
+# Encode actions
+hit = model.random(seed=300)
+build = model.random(seed=301)
+
+print("  Entities: john, mary, hammer, nail, workshop, morning")
+print("  Actions: hit, build")
+
+# Sentence 1: "John hit the nail with a hammer in the workshop"
+print("\n" + "=" * 70)
+print("Encoding: 'John hit the nail with a hammer in the workshop'")
+print("=" * 70)
+
+sentence1_bindings = [
+    model.bind(agent, john),
+    model.bind(action, hit),
+    model.bind(patient, nail),
+    model.bind(instrument, hammer),
+    model.bind(location, workshop),
+]
+
+sentence1 = model.bundle(sentence1_bindings)
+
+print("\nRole-filler bindings:")
+print("  agent ⊗ john")
+print("  action ⊗ hit")
+print("  patient ⊗ nail")
+print("  instrument ⊗ hammer")
+print("  location ⊗ workshop")
+
+# Query: Who performed the action?
+print("\nQuery: Who performed the action?")
+agent_result = model.unbind(sentence1, agent)
+print(f"  Similarity to john: {float(model.similarity(agent_result, john)):.3f}  ← Agent")
+print(f"  Similarity to mary: {float(model.similarity(agent_result, mary)):.3f}")
+
+# Query: What was used as instrument?
+print("\nQuery: What was used as instrument?")
+instrument_result = model.unbind(sentence1, instrument)
+print(f"  Similarity to hammer: {float(model.similarity(instrument_result, hammer)):.3f}  ← Instrument")
+print(f"  Similarity to nail:   {float(model.similarity(instrument_result, nail)):.3f}")
+
+# Query: Where did this happen?
+print("\nQuery: Where did this happen?")
+location_result = model.unbind(sentence1, location)
+print(f"  Similarity to workshop: {float(model.similarity(location_result, workshop)):.3f}  ← Location")
+print(f"  Similarity to morning:  {float(model.similarity(location_result, morning)):.3f}")
+
+print("\nKey observation:")
+print("  - Each role can be queried independently")
+print("  - Structure (roles) is separate from content (fillers)")
+
+# ============================================================================
+# Demo 2: Frame-Based Representations
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 2: Frame-Based Event Representations")
+print("=" * 70)
+
+# Define frame template for "commercial transaction"
+print("\nDefining 'Commercial Transaction' frame:")
+buyer = model.random(seed=110)
+seller = model.random(seed=111)
+goods = model.random(seed=112)
+payment = model.random(seed=113)
+amount = model.random(seed=114)
+
+print("  Roles: buyer, seller, goods, payment, amount")
+
+# Encode specific transactions
+print("\nEncoding specific transactions:")
+
+# Transaction 1: Alice bought a book from Bob for $20
+alice = model.random(seed=210)
+bob = model.random(seed=211)
+book = model.random(seed=212)
+twenty_dollars = model.random(seed=213)
+
+transaction1_bindings = [
+    model.bind(buyer, alice),
+    model.bind(seller, bob),
+    model.bind(goods, book),
+    model.bind(amount, twenty_dollars),
+]
+transaction1 = model.bundle(transaction1_bindings)
+
+print("  Transaction 1: Alice bought a book from Bob for $20")
+
+# Transaction 2: Bob bought a laptop from Charlie for $500
+charlie = model.random(seed=214)
+laptop = model.random(seed=215)
+five_hundred = model.random(seed=216)
+
+transaction2_bindings = [
+    model.bind(buyer, bob),
+    model.bind(seller, charlie),
+    model.bind(goods, laptop),
+    model.bind(amount, five_hundred),
+]
+transaction2 = model.bundle(transaction2_bindings)
+
+print("  Transaction 2: Bob bought a laptop from Charlie for $500")
+
+# Query: What did Alice buy?
+print("\n" + "=" * 70)
+print("Query: What did Alice buy?")
+print("=" * 70)
+
+# Filter transactions where Alice is buyer
+alice_as_buyer = model.bind(buyer, alice)
+print("\nStep 1: Find transactions where Alice is buyer")
+sim_t1 = float(model.similarity(transaction1, alice_as_buyer))
+sim_t2 = float(model.similarity(transaction2, alice_as_buyer))
+print(f"  Transaction 1 similarity: {sim_t1:.3f}  ← Alice is buyer")
+print(f"  Transaction 2 similarity: {sim_t2:.3f}")
+
+# Get goods from Alice's transaction
+print("\nStep 2: Extract goods from Alice's transaction")
+goods_result = model.unbind(transaction1, goods)
+print(f"  Similarity to book:   {float(model.similarity(goods_result, book)):.3f}  ← Answer")
+print(f"  Similarity to laptop: {float(model.similarity(goods_result, laptop)):.3f}")
+
+# Query: Who sold to Bob?
+print("\n" + "=" * 70)
+print("Query: Who sold to Bob?")
+print("=" * 70)
+
+# Filter transactions where Bob is buyer
+bob_as_buyer = model.bind(buyer, bob)
+print("\nStep 1: Find transactions where Bob is buyer")
+sim_t1_bob = float(model.similarity(transaction1, bob_as_buyer))
+sim_t2_bob = float(model.similarity(transaction2, bob_as_buyer))
+print(f"  Transaction 1 similarity: {sim_t1_bob:.3f}")
+print(f"  Transaction 2 similarity: {sim_t2_bob:.3f}  ← Bob is buyer")
+
+# Get seller from Bob's transaction
+print("\nStep 2: Extract seller from Bob's transaction")
+seller_result = model.unbind(transaction2, seller)
+print(f"  Similarity to alice:   {float(model.similarity(seller_result, alice)):.3f}")
+print(f"  Similarity to bob:     {float(model.similarity(seller_result, bob)):.3f}")
+print(f"  Similarity to charlie: {float(model.similarity(seller_result, charlie)):.3f}  ← Answer")
+
+print("\nKey observation:")
+print("  - Frame templates provide reusable structure")
+print("  - Multiple instances share same frame structure")
+print("  - Enables structured knowledge queries")
+
+# ============================================================================
+# Demo 3: Variable Binding and Substitution
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 3: Variable Binding and Pattern Matching")
+print("=" * 70)
+
+# Create abstract pattern: "X gives Y to Z"
+print("\nCreating abstract pattern:")
+print("  Pattern: 'X gives Y to Z'")
+
+giver = model.random(seed=120)
+gift = model.random(seed=121)
+receiver = model.random(seed=122)
+gives_action = model.random(seed=302)
+
+# Create pattern template
+pattern_template = model.bundle([
+    model.bind(agent, giver),
+    model.bind(action, gives_action),
+    model.bind(patient, gift),
+    model.bind(receiver, receiver),
+])
+
+print("  Roles: giver, gift, receiver")
+
+# Concrete instances
+print("\nConcrete instances:")
+
+# Instance 1: "Alice gives a book to Bob"
+instance1_bindings = [
+    model.bind(giver, alice),
+    model.bind(gift, book),
+    model.bind(receiver, bob),
+]
+instance1 = model.bundle(instance1_bindings)
+print("  Instance 1: 'Alice gives a book to Bob'")
+
+# Instance 2: "John gives a hammer to Mary"
+instance2_bindings = [
+    model.bind(giver, john),
+    model.bind(gift, hammer),
+    model.bind(receiver, mary),
+]
+instance2 = model.bundle(instance2_bindings)
+print("  Instance 2: 'John gives a hammer to Mary'")
+
+# Extract variable bindings from instance 1
+print("\n" + "=" * 70)
+print("Extracting variable bindings from Instance 1:")
+print("=" * 70)
+
+giver_i1 = model.unbind(instance1, giver)
+gift_i1 = model.unbind(instance1, gift)
+receiver_i1 = model.unbind(instance1, receiver)
+
+print(f"\n  giver: alice    (sim={float(model.similarity(giver_i1, alice)):.3f})")
+print(f"  gift: book      (sim={float(model.similarity(gift_i1, book)):.3f})")
+print(f"  receiver: bob   (sim={float(model.similarity(receiver_i1, bob)):.3f})")
+
+# Substitute variables: Replace Alice with John in instance 1
+print("\n" + "=" * 70)
+print("Variable substitution: Replace Alice with John")
+print("=" * 70)
+
+print("\nStep 1: Unbind Alice from giver role")
+unbind_alice = model.unbind(instance1, model.bind(giver, alice))
+
+print("Step 2: Bind John to giver role")
+new_instance = model.bind(unbind_alice, model.bind(giver, john))
+
+print("Step 3: Extract new giver")
+new_giver = model.unbind(new_instance, giver)
+
+print(f"\nNew giver similarity:")
+print(f"  john:  {float(model.similarity(new_giver, john)):.3f}  ← Substituted")
+print(f"  alice: {float(model.similarity(new_giver, alice)):.3f}")
+
+print("\nKey observation:")
+print("  - Variables can be extracted and rebound")
+print("  - Enables pattern matching and substitution")
+
+# ============================================================================
+# Demo 4: Analogical Reasoning
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 4: Analogical Reasoning")
+print("=" * 70)
+
+# Create analogy: "hand is to arm as foot is to leg"
+print("\nAnalogy: 'hand is to arm as foot is to leg'")
+print("  Structure: part-of relationship")
+
+# Define part-whole relation
+part_of = model.random(seed=400)
+
+# Source domain: hand-arm
+hand = model.random(seed=500)
+arm = model.random(seed=501)
+source_relation = model.bind(model.bind(hand, part_of), arm)
+
+print("\n  Source: hand is part_of arm")
+
+# Target domain: foot-leg
+foot = model.random(seed=502)
+leg = model.random(seed=503)
+target_relation = model.bind(model.bind(foot, part_of), leg)
+
+print("  Target: foot is part_of leg")
+
+# Test analogy: Given hand-arm and foot, find leg
+print("\n" + "=" * 70)
+print("Analogical inference: Given 'hand-arm' and 'foot', find '?'")
+print("=" * 70)
+
+# Create source structure
+source = model.bind(model.bind(hand, part_of), arm)
+
+# Create target structure with foot
+target_query = model.bind(foot, part_of)
+
+# Bundle all known relations
+knowledge = model.bundle([source_relation, target_relation])
+
+# Query: What is foot part of?
+answer = model.unbind(model.unbind(knowledge, foot), part_of)
+
+print("\nSimilarity to body parts:")
+print(f"  hand: {float(model.similarity(answer, hand)):.3f}")
+print(f"  arm:  {float(model.similarity(answer, arm)):.3f}")
+print(f"  foot: {float(model.similarity(answer, foot)):.3f}")
+print(f"  leg:  {float(model.similarity(answer, leg)):.3f}  ← Analogical answer!")
+
+print("\nKey observation:")
+print("  - Structural relationships can be transferred across domains")
+print("  - Analogical reasoning emerges from compositional operations")
+
+# ============================================================================
+# Demo 5: Complex Query Answering with ItemStore
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 5: Complex Query Answering")
+print("=" * 70)
+
+# Build a knowledge base of facts
+print("\nBuilding knowledge base with multiple facts:")
+
+# Create ItemStore for entity lookups
+entities_store = ItemStore(model)
+entities_store.add("alice", alice)
+entities_store.add("bob", bob)
+entities_store.add("charlie", charlie)
+entities_store.add("john", john)
+entities_store.add("mary", mary)
+
+# Keep dict for direct lookups
+entities_dict = {
+    "alice": alice,
+    "bob": bob,
+    "charlie": charlie,
+    "john": john,
+    "mary": mary
+}
+
+# Facts:
+facts = []
+
+# alice likes bob
+likes = model.random(seed=401)
+facts.append(model.bind(model.bind(alice, likes), bob))
+print("  Fact 1: alice likes bob")
+
+# bob likes charlie
+facts.append(model.bind(model.bind(bob, likes), charlie))
+print("  Fact 2: bob likes charlie")
+
+# charlie likes alice (cycle!)
+facts.append(model.bind(model.bind(charlie, likes), alice))
+print("  Fact 3: charlie likes alice")
+
+# john is_friend_of mary
+is_friend_of = model.random(seed=402)
+facts.append(model.bind(model.bind(john, is_friend_of), mary))
+print("  Fact 4: john is_friend_of mary")
+
+# Bundle into knowledge base
+kb = model.bundle(facts)
+print("\nKnowledge base created")
+
+# Query 1: Who does Bob like?
+print("\n" + "=" * 70)
+print("Query 1: Who does Bob like?")
+print("=" * 70)
+
+bob_likes = model.unbind(model.unbind(kb, bob), likes)
+result = entities_store.query(bob_likes, k=1)  # Returns list of (label, similarity) tuples
+answer1, sim1 = result[0]  # Extract first result
+print(f"  Answer: {answer1} (similarity={sim1:.3f})")
+
+# Query 2: Who likes Alice?
+print("\n" + "=" * 70)
+print("Query 2: Who likes Alice? (reverse query)")
+print("=" * 70)
+
+# For reverse query, need to find who has alice as target
+# Check each entity
+print("\nChecking each entity:")
+for name in ["alice", "bob", "charlie"]:
+    entity = entities_dict[name]
+    query = model.unbind(model.unbind(kb, entity), likes)
+    sim_alice = float(model.similarity(query, alice))
+    marker = "  ← Answer!" if sim_alice > 0.3 else ""
+    print(f"  {name} likes ?: similarity to alice = {sim_alice:.3f}{marker}")
+
+print("\nKey observation:")
+print("  - ItemStore enables efficient entity retrieval")
+print("  - Complex queries combine unbinding with similarity search")
+print("  - Knowledge base supports bidirectional queries")
+
+# ============================================================================
+# Summary
+# ============================================================================
+print("\n" + "=" * 70)
+print("Summary: Symbolic Reasoning Key Takeaways")
+print("=" * 70)
+print()
+print("✓ Role-filler binding: Separates structure from content")
+print("✓ Frame-based representation: Reusable templates with variable slots")
+print("✓ Variable binding: Extract and substitute fillers")
+print("✓ Analogical reasoning: Transfer structure across domains")
+print("✓ Complex queries: Combine unbinding with ItemStore lookups")
+print()
+print("Core pattern:")
+print("  1. Define roles: abstract slots (agent, patient, location, ...)")
+print("  2. Bind fillers: concrete instances to roles")
+print("  3. Bundle: combine all role-filler pairs")
+print("  4. Query: unbind roles to retrieve fillers")
+print("  5. Reason: compose operations for complex inferences")
+print()
+print("Applications:")
+print("  - Natural language understanding: Semantic role labeling")
+print("  - Knowledge representation: Frames, scripts, schemas")
+print("  - Planning: Action representations with preconditions/effects")
+print("  - Cognitive modeling: Human-like structured reasoning")
+print()
+print("Advantages of HDC approach:")
+print("  - Noise tolerance: Graceful degradation")
+print("  - Compositional: Build complex from simple operations")
+print("  - Distributed: No brittle symbolic pointers")
+print("  - Brain-like: Biologically plausible representations")
+print()
+print("Next steps:")
+print("  → 24_app_working_memory.py - Reasoning with cleanup")
+print("  → 25_app_integration_patterns.py - Combine symbolic + subsymbolic")
+print("  → 18_encoders_graph.py - Graph encoding foundations")
+print()
+print("=" * 70)

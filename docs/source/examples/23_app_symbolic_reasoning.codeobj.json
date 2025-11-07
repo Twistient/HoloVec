@@ -1,0 +1,20 @@
+{
+ "ItemStore": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.retrieval",
+   "module_short": "holovec.retrieval",
+   "name": "ItemStore"
+  }
+ ],
+ "VSA.create": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.VSA",
+   "module_short": "holovec.VSA",
+   "name": "create"
+  }
+ ]
+}

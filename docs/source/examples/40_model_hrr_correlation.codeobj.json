@@ -1,0 +1,20 @@
+{
+ "HRRModel": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.models.hrr",
+   "module_short": "holovec",
+   "name": "HRRModel"
+  }
+ ],
+ "get_backend": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.backends",
+   "module_short": "holovec",
+   "name": "get_backend"
+  }
+ ]
+}

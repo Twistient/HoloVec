@@ -1,0 +1,128 @@
+{
+ "FractionalPowerEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "FractionalPowerEncoder"
+  }
+ ],
+ "LevelEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "LevelEncoder"
+  }
+ ],
+ "ThermometerEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "ThermometerEncoder"
+  }
+ ],
+ "VSA.create": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.VSA",
+   "module_short": "holovec.VSA",
+   "name": "create"
+  }
+ ],
+ "VectorEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "VectorEncoder"
+  }
+ ],
+ "np.abs": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "abs"
+  }
+ ],
+ "np.array": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "array"
+  }
+ ],
+ "np.corrcoef": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "corrcoef"
+  }
+ ],
+ "np.max": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "max"
+  }
+ ],
+ "np.mean": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "mean"
+  }
+ ],
+ "np.random.randint": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.random",
+   "module_short": "numpy.random",
+   "name": "randint"
+  }
+ ],
+ "np.random.seed": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.random",
+   "module_short": "numpy.random",
+   "name": "seed"
+  }
+ ],
+ "np.sqrt": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "sqrt"
+  }
+ ],
+ "np.std": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "std"
+  }
+ ]
+}

@@ -1,0 +1,47 @@
+{
+ "BruteForceCleanup": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.utils.cleanup",
+   "module_short": "holovec.utils",
+   "name": "BruteForceCleanup"
+  }
+ ],
+ "Codebook": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.retrieval",
+   "module_short": "holovec.retrieval",
+   "name": "Codebook"
+  }
+ ],
+ "ItemStore": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.retrieval",
+   "module_short": "holovec.retrieval",
+   "name": "ItemStore"
+  }
+ ],
+ "ResonatorCleanup": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.utils.cleanup",
+   "module_short": "holovec.utils",
+   "name": "ResonatorCleanup"
+  }
+ ],
+ "VSA.create": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.VSA",
+   "module_short": "holovec.VSA",
+   "name": "create"
+  }
+ ]
+}

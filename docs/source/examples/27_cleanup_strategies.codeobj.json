@@ -1,0 +1,38 @@
+{
+ "BruteForceCleanup": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.utils.cleanup",
+   "module_short": "holovec.utils",
+   "name": "BruteForceCleanup"
+  }
+ ],
+ "ResonatorCleanup": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.utils.cleanup",
+   "module_short": "holovec.utils",
+   "name": "ResonatorCleanup"
+  }
+ ],
+ "VSA.create": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.VSA",
+   "module_short": "holovec.VSA",
+   "name": "create"
+  }
+ ],
+ "time.time": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "time",
+   "module_short": "time",
+   "name": "time"
+  }
+ ]
+}

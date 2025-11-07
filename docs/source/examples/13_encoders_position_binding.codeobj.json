@@ -1,0 +1,20 @@
+{
+ "PositionBindingEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "PositionBindingEncoder"
+  }
+ ],
+ "VSA.create": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.VSA",
+   "module_short": "holovec.VSA",
+   "name": "create"
+  }
+ ]
+}

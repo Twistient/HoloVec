@@ -1,0 +1,274 @@
+"""
+Document Classification with N-grams
+====================================
+
+Topics: Text classification, n-gram encoding, supervised learning, NLP
+Time: 15 minutes
+Prerequisites: 14_encoders_ngram.py, 26_retrieval_basics.py
+Related: 23_app_symbolic_reasoning.py, 25_app_integration_patterns.py
+
+This example demonstrates practical document classification using n-gram
+encoding and hyperdimensional computing. Learn how to build a text classifier
+that can categorize documents based on their content.
+
+Key concepts:
+- Document encoding: N-gram patterns for text representation
+- Training: Build class prototypes from labeled examples
+- Classification: Nearest-prototype matching
+- Evaluation: Accuracy metrics and confusion analysis
+
+Text classification with HDC is fast, interpretable, and works well with
+limited training data - ideal for practical NLP applications.
+"""
+
+from holovec import VSA
+from holovec.encoders import NGramEncoder
+from holovec.retrieval import ItemStore
+
+print("=" * 70)
+print("Document Classification with N-grams")
+print("=" * 70)
+print()
+
+# Create model and encoder
+model = VSA.create('MAP', dim=10000, seed=42)
+encoder = NGramEncoder(model, n=3, stride=1, mode='bundling', seed=42)
+
+print(f"Model: {model.model_name}, dimension={model.dimension}")
+print(f"Encoder: NGramEncoder(n=3, mode='bundling')")
+print()
+
+# ============================================================================
+# Dataset: News Article Classification
+# ============================================================================
+print("=" * 70)
+print("Dataset: News Articles (4 categories)")
+print("=" * 70)
+
+# Training data: short news snippets
+training_data = [
+    # Sports
+    ("team wins championship game tonight", "sports"),
+    ("player scores winning goal match", "sports"),
+    ("coach announces new training strategy", "sports"),
+    ("league announces playoff schedule games", "sports"),
+
+    # Technology
+    ("new smartphone launched today features", "technology"),
+    ("software update fixes security bug", "technology"),
+    ("tech company releases ai chatbot", "technology"),
+    ("startup raises million funding round", "technology"),
+
+    # Business
+    ("stock market rises today investors", "business"),
+    ("company reports quarterly earnings profit", "business"),
+    ("merger deal announced billion dollars", "business"),
+    ("economic growth forecast next quarter", "business"),
+
+    # Health
+    ("new study shows health benefits", "health"),
+    ("doctor recommends exercise diet plan", "health"),
+    ("hospital opens new emergency wing", "health"),
+    ("vaccine approved clinical trials results", "health"),
+]
+
+print(f"\nTraining examples: {len(training_data)} articles")
+print(f"Categories: sports, technology, business, health")
+print(f"Examples per category: {len(training_data) // 4}")
+print()
+
+# ============================================================================
+# Training: Build Class Prototypes
+# ============================================================================
+print("=" * 70)
+print("Training: Building Class Prototypes")
+print("=" * 70)
+
+# Group examples by category
+categories = {}
+for text, label in training_data:
+    if label not in categories:
+        categories[label] = []
+    categories[label].append(text)
+
+print("\nEncoding training examples...")
+
+# Build prototype for each category
+class_prototypes = {}
+for label, texts in categories.items():
+    # Encode all documents in this category
+    encoded_docs = [encoder.encode(text) for text in texts]
+
+    # Bundle to create class prototype
+    prototype = model.bundle(encoded_docs)
+    class_prototypes[label] = prototype
+
+    print(f"  {label:12s}: {len(texts)} examples → prototype")
+
+print(f"\nClass prototypes created: {len(class_prototypes)}")
+
+# ============================================================================
+# Classification: Predict Category for New Documents
+# ============================================================================
+print("\n" + "=" * 70)
+print("Classification: Testing on New Documents")
+print("=" * 70)
+
+# Test documents
+test_documents = [
+    "basketball team defeats rivals final",  # sports
+    "new laptop computer faster processor",  # technology
+    "company profits increase stock price",  # business
+    "patients recover hospital treatment",   # health
+]
+
+print("\nClassifying test documents:")
+print()
+
+correct = 0
+total = len(test_documents)
+
+expected_labels = ["sports", "technology", "business", "health"]
+
+for i, doc in enumerate(test_documents):
+    # Encode test document
+    doc_hv = encoder.encode(doc)
+
+    # Find most similar class prototype
+    best_label = None
+    best_sim = float('-inf')
+
+    for label, prototype in class_prototypes.items():
+        sim = float(model.similarity(doc_hv, prototype))
+        if sim > best_sim:
+            best_sim = sim
+            best_label = label
+
+    expected = expected_labels[i]
+    is_correct = best_label == expected
+    correct += (1 if is_correct else 0)
+
+    marker = "✓" if is_correct else "✗"
+    print(f"{i+1}. \"{doc}\"")
+    print(f"   Predicted: {best_label:12s} (similarity={best_sim:.3f}) {marker}")
+    print(f"   Expected:  {expected:12s}")
+    print()
+
+accuracy = correct / total
+print(f"Accuracy: {correct}/{total} = {accuracy:.1%}")
+
+# ============================================================================
+# Analysis: Understanding Classification Decisions
+# ============================================================================
+print("\n" + "=" * 70)
+print("Analysis: Classification Confidence")
+print("=" * 70)
+
+print("\nDetailed similarity scores for first test doc:")
+print(f"Document: '{test_documents[0]}'")
+print()
+
+doc_hv = encoder.encode(test_documents[0])
+
+print(f"{'Category':12s} | {'Similarity':>12s} | {'Confidence':>12s}")
+print("-" * 45)
+
+for label in sorted(class_prototypes.keys()):
+    sim = float(model.similarity(doc_hv, class_prototypes[label]))
+    conf = "High" if sim > 0.6 else "Medium" if sim > 0.4 else "Low"
+    print(f"{label:12s} | {sim:12.3f} | {conf:>12s}")
+
+print("\nKey observation:")
+print("  - Clear winner indicates confident classification")
+print("  - Similar scores suggest ambiguous document")
+print("  - Low scores across all classes suggest out-of-domain")
+
+# ============================================================================
+# Practical Considerations
+# ============================================================================
+print("\n" + "=" * 70)
+print("Practical Considerations")
+print("=" * 70)
+
+print("\n✓ Advantages of HDC Text Classification:")
+print("  - Fast training: just bundle examples per class")
+print("  - One-shot learning: works with few examples")
+print("  - Interpretable: similarity scores show confidence")
+print("  - Noise tolerant: robust to typos and variations")
+print("  - No gradient descent: no hyperparameter tuning")
+print()
+
+print("✗ Limitations:")
+print("  - Approximate: not as accurate as deep learning (large data)")
+print("  - Capacity: performance degrades with many classes")
+print("  - Context: n-grams miss long-range dependencies")
+print("  - Tuning: n-gram size affects performance")
+print()
+
+print("When to use HDC text classification:")
+print("  - Limited training data (< 100 examples per class)")
+print("  - Fast deployment needed (no training time)")
+print("  - Interpretability important (need similarity scores)")
+print("  - Edge devices (low compute, memory constraints)")
+print("  - Prototyping (quick baseline before deep learning)")
+print()
+
+# ============================================================================
+# Extension: Using ItemStore for Efficient Classification
+# ============================================================================
+print("=" * 70)
+print("Extension: ItemStore for Multi-Class Classification")
+print("=" * 70)
+
+# Build ItemStore with class prototypes
+classifier = ItemStore(model)
+for label, prototype in class_prototypes.items():
+    classifier.add(label, prototype)
+
+print(f"\nClassifier built with {len(class_prototypes)} classes")
+
+# Classify with ItemStore
+print("\nClassifying with ItemStore:")
+
+test_doc = "scientist discovers new medical treatment"
+test_hv = encoder.encode(test_doc)
+
+# Query returns list of (label, similarity) tuples
+results = classifier.query(test_hv, k=4)
+
+print(f"\nDocument: '{test_doc}'")
+print("\nTop predictions:")
+for i, (label, sim) in enumerate(results, 1):
+    print(f"  {i}. {label:12s}: {sim:.3f}")
+
+print("\nKey observation:")
+print("  - ItemStore enables efficient k-nearest class retrieval")
+print("  - Can examine top-k predictions for confidence")
+print("  - Scales well to many classes (1000+)")
+
+# ============================================================================
+# Summary
+# ============================================================================
+print("\n" + "=" * 70)
+print("Summary: Text Classification with HDC")
+print("=" * 70)
+print()
+print("Complete workflow:")
+print("  1. Setup: Create model + NGramEncoder")
+print("  2. Training: Encode examples + bundle per class")
+print("  3. Classification: Encode test doc + find nearest prototype")
+print("  4. Evaluation: Check similarity scores for confidence")
+print()
+print("Performance tips:")
+print("  - N-gram size: 2-3 for words, 3-5 for characters")
+print("  - More training examples → better prototypes")
+print("  - Bundle diverse examples to capture class variation")
+print("  - Use ItemStore for efficient multi-class problems")
+print()
+print("Next steps:")
+print("  → Try with your own text dataset")
+print("  → Experiment with n-gram sizes (n=2, 3, 4)")
+print("  → Combine with 25_app_integration_patterns.py for multimodal")
+print("  → Scale to larger datasets with ItemStore")
+print()
+print("=" * 70)

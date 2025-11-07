@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: Holographic Vector Algebra for Compositional Machine Intelligence
+message: If you use this software, please cite it as below.
+authors:
+  - family-names: Schroeder
+    given-names: Brodie
+    orcid: https://orcid.org/0000-0000-0000-0000
+    affiliation: Twistient Corp.
+repository-code: https://github.com/Twistient/holovec
+license: Apache-2.0
+version: 0.1.0
+date-released: 2025-11-06

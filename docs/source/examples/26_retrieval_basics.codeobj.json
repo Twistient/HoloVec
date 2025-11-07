@@ -1,0 +1,47 @@
+{
+ "Codebook": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.retrieval",
+   "module_short": "holovec.retrieval",
+   "name": "Codebook"
+  }
+ ],
+ "FHRRModel": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.models.fhrr",
+   "module_short": "holovec",
+   "name": "FHRRModel"
+  }
+ ],
+ "ItemStore": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.retrieval",
+   "module_short": "holovec.retrieval",
+   "name": "ItemStore"
+  }
+ ],
+ "ResonatorCleanup": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.utils.cleanup",
+   "module_short": "holovec.utils",
+   "name": "ResonatorCleanup"
+  }
+ ],
+ "get_backend": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.backends",
+   "module_short": "holovec",
+   "name": "get_backend"
+  }
+ ]
+}

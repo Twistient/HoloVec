@@ -1,0 +1,29 @@
+{
+ "BruteForceCleanup": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.utils.cleanup",
+   "module_short": "holovec.utils",
+   "name": "BruteForceCleanup"
+  }
+ ],
+ "VSA.create": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.VSA",
+   "module_short": "holovec.VSA",
+   "name": "create"
+  }
+ ],
+ "np.mean": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy",
+   "module_short": "numpy",
+   "name": "mean"
+  }
+ ]
+}

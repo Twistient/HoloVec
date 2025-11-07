@@ -1,0 +1,29 @@
+{
+ "ItemStore": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.retrieval",
+   "module_short": "holovec.retrieval",
+   "name": "ItemStore"
+  }
+ ],
+ "NGramEncoder": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.encoders",
+   "module_short": "holovec.encoders",
+   "name": "NGramEncoder"
+  }
+ ],
+ "VSA.create": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "holovec.VSA",
+   "module_short": "holovec.VSA",
+   "name": "create"
+  }
+ ]
+}

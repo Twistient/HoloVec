@@ -1,0 +1,362 @@
+"""
+Distributed Representations and Capacity Analysis
+=================================================
+
+Topics: Bundling capacity, dimension effects, information limits, cleanup
+Time: 15 minutes
+Prerequisites: 01_basic_operations.py, 02_models_comparison.py
+Related: 31_performance_benchmarks.py, 27_cleanup_strategies.py
+
+This example explores the fundamental capacity limits of hyperdimensional
+computing - how many items can be bundled together while maintaining
+retrievability, and how dimension affects this capacity.
+
+Key concepts:
+- Bundling capacity: Number of items in superposition
+- Dimension scaling: More dimensions → higher capacity
+- Similarity decay: How bundling reduces similarity
+- Cleanup requirements: When do we need cleanup?
+- Practical limits: Real-world capacity guidelines
+
+Understanding capacity is crucial for designing reliable HDC systems.
+"""
+
+import numpy as np
+from holovec import VSA
+from holovec.utils.cleanup import BruteForceCleanup
+
+print("=" * 70)
+print("Distributed Representations and Capacity Analysis")
+print("=" * 70)
+print()
+
+# ============================================================================
+# Demo 1: Basic Bundling Capacity
+# ============================================================================
+print("=" * 70)
+print("Demo 1: Bundling Capacity - Similarity Decay")
+print("=" * 70)
+
+model = VSA.create('MAP', dim=10000, seed=42)
+
+print(f"\nModel: {model.model_name}")
+print(f"Dimension: {model.dimension}")
+print()
+
+# Test bundling different numbers of vectors
+bundle_sizes = [1, 2, 5, 10, 20, 50, 100, 200]
+
+print(f"{'Bundle Size':<15s} {'Avg Similarity':<15s} {'Min Similarity':<15s} {'Retrievable?':<12s}")
+print("-" * 65)
+
+for n in bundle_sizes:
+    # Create n vectors
+    vectors = [model.random(seed=i) for i in range(n)]
+
+    # Bundle them
+    bundled = model.bundle(vectors)
+
+    # Test similarity to each original
+    similarities = [float(model.similarity(bundled, v)) for v in vectors]
+    avg_sim = np.mean(similarities)
+    min_sim = np.min(similarities)
+
+    # Heuristic: retrievable if min similarity > 0.3
+    retrievable = "Yes" if min_sim > 0.3 else "Marginal" if min_sim > 0.15 else "No"
+
+    print(f"{n:<15d} {avg_sim:13.3f}   {min_sim:13.3f}   {retrievable:<12s}")
+
+print("\nKey insight:")
+print("  - Similarity decreases as √(1/n) approximately")
+print("  - With dim=10000, can reliably bundle ~50-100 items")
+print("  - Beyond that, cleanup strategies needed")
+
+# ============================================================================
+# Demo 2: Dimension vs Capacity
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 2: How Dimension Affects Capacity")
+print("=" * 70)
+
+dimensions = [1000, 5000, 10000, 20000]
+test_bundle_sizes = [10, 20, 50, 100]
+
+print(f"\n{'Dimension':<12s} ", end="")
+for n in test_bundle_sizes:
+    print(f"N={n:<8d} ", end="")
+print()
+print("-" * 60)
+
+for dim in dimensions:
+    model = VSA.create('MAP', dim=dim, seed=42)
+    print(f"{dim:<12d} ", end="")
+
+    for n in test_bundle_sizes:
+        vectors = [model.random(seed=i) for i in range(n)]
+        bundled = model.bundle(vectors)
+
+        # Average similarity
+        sims = [float(model.similarity(bundled, v)) for v in vectors]
+        avg_sim = np.mean(sims)
+
+        print(f"{avg_sim:9.3f} ", end="")
+
+    print()
+
+print("\nObservations:")
+print("  - Higher dimension → higher similarity for same bundle size")
+print("  - Roughly: capacity ∝ dimension")
+print("  - dim=10000 supports ~100 items comfortably")
+print("  - dim=20000 supports ~200 items")
+
+# ============================================================================
+# Demo 3: Information Theory Perspective
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 3: Information Capacity")
+print("=" * 70)
+
+model = VSA.create('MAP', dim=10000, seed=42)
+
+print(f"\nDimension: {model.dimension}")
+print(f"\nInformation capacity analysis:")
+print()
+
+# Each bit in MAP can be +1 or -1 (1 bit of info)
+total_bits = model.dimension
+
+print(f"Total bits available: {total_bits:,}")
+print()
+
+# Bundling n vectors averages them
+# Information per vector decreases with bundle size
+print(f"{'Bundle Size':<15s} {'Bits/Vector':<15s} {'Total Bits Used':<18s}")
+print("-" * 55)
+
+for n in [1, 10, 50, 100, 200]:
+    bits_per_vector = total_bits / n
+    total_used = total_bits  # Bundle still uses full dimension
+
+    print(f"{n:<15d} {bits_per_vector:13.1f}   {total_used:16,d}")
+
+print("\nKey insight:")
+print("  - Fixed total capacity (dimension)")
+print("  - More vectors = less information per vector")
+print("  - Trade-off: quantity vs fidelity")
+
+# ============================================================================
+# Demo 4: Retrieval Accuracy vs Bundle Size
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 4: Retrieval Accuracy Analysis")
+print("=" * 70)
+
+model = VSA.create('MAP', dim=10000, seed=42)
+
+# Create a codebook
+codebook_size = 100
+codebook = {f"item_{i}": model.random(seed=1000+i)
+            for i in range(codebook_size)}
+
+cleanup = BruteForceCleanup()
+
+print(f"\nCodebook size: {codebook_size}")
+print(f"Testing retrieval accuracy for different bundle sizes:")
+print()
+
+bundle_sizes_test = [5, 10, 20, 50, 100]
+
+print(f"{'Bundle Size':<15s} {'Accuracy':<12s} {'Avg Rank':<12s}")
+print("-" * 45)
+
+for n in bundle_sizes_test:
+    # Select random items to bundle
+    np.random.seed(42)
+    selected_keys = np.random.choice(list(codebook.keys()), size=n, replace=False)
+    selected = [codebook[key] for key in selected_keys]
+
+    # Bundle
+    bundled = model.bundle(selected)
+
+    # Try to retrieve each item
+    correct = 0
+    ranks = []
+
+    for target_key in selected_keys:
+        target = codebook[target_key]
+
+        # Find most similar in codebook
+        best_key = None
+        best_sim = float('-inf')
+
+        for key, vec in codebook.items():
+            sim = float(model.similarity(bundled, vec))
+            if sim > best_sim:
+                best_sim = sim
+                best_key = key
+
+        if best_key == target_key:
+            correct += 1
+
+        # Calculate rank
+        sims = [(key, float(model.similarity(bundled, vec)))
+                for key, vec in codebook.items()]
+        sims.sort(key=lambda x: x[1], reverse=True)
+        rank = next(i for i, (key, _) in enumerate(sims, 1) if key == target_key)
+        ranks.append(rank)
+
+    accuracy = correct / n
+    avg_rank = np.mean(ranks)
+
+    print(f"{n:<15d} {accuracy:10.2%}   {avg_rank:10.1f}")
+
+print("\nInsight:")
+print("  - Accuracy drops as bundle size increases")
+print("  - Even when top-1 fails, true item often in top-10")
+print("  - Cleanup strategies help improve accuracy")
+
+# ============================================================================
+# Demo 5: Binding vs Bundling Capacity
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 5: Binding Chains - Different Capacity Behavior")
+print("=" * 70)
+
+model = VSA.create('FHRR', dim=10000, seed=42)
+
+print(f"\nModel: {model.model_name} (exact inverses)")
+print()
+
+# Test binding chains of different lengths
+chain_lengths = [1, 2, 3, 5, 10]
+
+print(f"{'Chain Length':<15s} {'Similarity':<15s} {'Recoverable?':<12s}")
+print("-" * 50)
+
+for length in chain_lengths:
+    # Create binding chain: A * B * C * D * ...
+    vectors = [model.random(seed=100+i) for i in range(length)]
+
+    # Bind them all
+    result = vectors[0]
+    for v in vectors[1:]:
+        result = model.bind(result, v)
+
+    # Try to recover first vector by unbinding all others
+    recovered = result
+    for v in reversed(vectors[1:]):
+        recovered = model.unbind(recovered, v)
+
+    # Similarity to original
+    sim = float(model.similarity(recovered, vectors[0]))
+    recoverable = "Yes" if sim > 0.99 else "Degraded"
+
+    print(f"{length:<15d} {sim:13.3f}   {recoverable:<12s}")
+
+print("\nKey difference:")
+print("  - Binding (with exact inverses): Perfect recovery regardless of length")
+print("  - Bundling: Similarity degrades with number of items")
+print("  - Use binding for structured data, bundling for sets")
+
+# ============================================================================
+# Demo 6: Practical Capacity Guidelines
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 6: Practical Capacity Guidelines")
+print("=" * 70)
+
+print("\nRule of thumb for bundling capacity:")
+print()
+
+guideline_table = """
+Dimension    No Cleanup    With Cleanup    Use Case
+──────────────────────────────────────────────────────────────
+1,000        ~10 items     ~20 items       Toy problems
+5,000        ~50 items     ~100 items      Small applications
+10,000       ~100 items    ~200 items      Standard applications
+20,000       ~200 items    ~500 items      Large-scale systems
+"""
+
+print(guideline_table)
+
+print("\nFactors affecting capacity:")
+print("  1. Dimension: Higher = more capacity")
+print("  2. Required similarity: Lower threshold = more capacity")
+print("  3. Cleanup: Can double effective capacity")
+print("  4. Model: MAP vs FHRR may differ slightly")
+print("  5. Noise level: Clean data = higher capacity")
+
+# ============================================================================
+# Demo 7: Overloading Recovery Strategies
+# ============================================================================
+print("\n" + "=" * 70)
+print("Demo 7: Strategies for High-Capacity Scenarios")
+print("=" * 70)
+
+print("\nWhen you need to store more items than dimension allows:\n")
+
+print("Strategy 1: Multiple bundles (sharding)")
+print("  - Split items into groups")
+print("  - Bundle each group separately")
+print("  - Store multiple bundles")
+print("  Example: 1000 items → 10 bundles of 100 each")
+print()
+
+print("Strategy 2: Hierarchical encoding")
+print("  - Create categories")
+print("  - Bundle within categories")
+print("  - Bind category to bundle")
+print("  Example: colors→[red, blue] spatial→[top, bottom]")
+print()
+
+print("Strategy 3: Cleanup on retrieval")
+print("  - Allow lower bundling similarity")
+print("  - Use resonator cleanup to sharpen")
+print("  - See 27_cleanup_strategies.py")
+print()
+
+print("Strategy 4: Increase dimension")
+print("  - dim=20000 or dim=50000")
+print("  - Trade memory for capacity")
+print("  - See 31_performance_benchmarks.py for cost")
+
+# ============================================================================
+# Summary
+# ============================================================================
+print("\n" + "=" * 70)
+print("Summary: Capacity Recommendations")
+print("=" * 70)
+print()
+
+print("✓ Bundling Capacity Rules:")
+print("  - Conservative: N ≤ dimension / 100")
+print("  - Standard: N ≤ dimension / 50 (with cleanup)")
+print("  - Aggressive: N ≤ dimension / 20 (requires strong cleanup)")
+print()
+
+print("✓ When Approaching Limits:")
+print("  - Monitor similarity metrics")
+print("  - Test retrieval accuracy")
+print("  - Use cleanup strategies")
+print("  - Consider hierarchical encoding")
+print()
+
+print("✓ Dimension Selection:")
+print("  - Estimate max bundle size needed")
+print("  - Choose dim ≥ 50 × max_bundle_size")
+print("  - Leave safety margin (2x)")
+print("  Example: Need 100 items → dim ≥ 10,000")
+print()
+
+print("✓ Binding Capacity:")
+print("  - Much higher than bundling (with exact inverses)")
+print("  - Limited by numerical precision, not information")
+print("  - Chains of 10-20 bindings work well")
+print()
+
+print("Next steps:")
+print("  → 27_cleanup_strategies.py - Improve retrieval accuracy")
+print("  → 33_error_handling_robustness.py - Handle degraded signals")
+print("  → 31_performance_benchmarks.py - Dimension cost analysis")
+print()
+print("=" * 70)

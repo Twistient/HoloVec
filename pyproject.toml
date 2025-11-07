@@ -63,7 +63,7 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Twistient/HoloVec"
+Homepage = "https://holovec.readthedocs.io"
 Documentation = "https://holovec.readthedocs.io"
 Repository = "https://github.com/Twistient/HoloVec"
 "Bug Tracker" = "https://github.com/Twistient/HoloVec/issues"

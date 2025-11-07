@@ -94,7 +94,7 @@ html_theme_options = {
     ],
 
     # Social/external links
-    "github_url": "https://github.com/twistient/holovec",
+    "github_url": "https://github.com/Twistient/HoloVec",
 
     # Layout options
     "globaltoc_expand_depth": 2,

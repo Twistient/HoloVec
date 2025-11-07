@@ -58,6 +58,9 @@ dmypy.json
 docs/build/
 docs/_build/
 docs/source/gen_modules/
+docs/source/examples/*.zip
+docs/source/examples/*.ipynb
+docs/source/examples/searchindex
 
 # Jupyter Notebook
 .ipynb_checkpoints

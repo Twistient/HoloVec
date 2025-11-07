@@ -2,19 +2,19 @@
   <img src="docs/source/_static/logo.svg" alt="HoloVec Logo" width="400">
 </div>
 
-# HoloVec: Holographic Vector Algebra for Compositional Machine Intelligence
-
 <div align="center">
-
-Compositional algebra in 10,000‑D, with exact/approximate inverses and kernel‑shaped encoders.
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+Compositional algebra in 10,000‑D, with exact/approximate inverses and kernel‑shaped encoders.
+
 </div>
 
-HoloVec is a holographic vector algebra for building and manipulating compositional representations in high dimensions. It implements modern Vector Symbolic Architectures (VSA/HDC) with both commutative (HRR/FHRR) and non‑commutative (GHRR/MBAT) binding, kernel‑aware encoders (FPE/RFF with Gaussian/Laplace/Cauchy/Student distributions), and sparse/segment codes (BSDC‑SEG). You can bind structure, bundle sets, and unbind components with exact or approximate inverses — then factorize multi‑way compositions efficiently via resonator cleanup — on NumPy, PyTorch, or JAX.
+## Holographic Vector Algebra for Compositional Machine Intelligence
+
+HoloVec is a holographic vector algebra for building and manipulating compositional representations in high dimensions. It implements modern Vector Symbolic Architectures (VSA/HDC) with both commutative (HRR/FHRR) and non‑commutative (GHRR/MBAT) binding, kernel‑aware encoders (FPE/RFF with Gaussian, Laplace, Cauchy, Student distributions), and sparse/segment codes (BSDC‑SEG). You can bind structure, bundle sets, and unbind components with exact or approximate inverses — then factorize multi‑way compositions efficiently via resonator cleanup — on NumPy, PyTorch, or JAX.
 
 ## What is this?
 
@@ -128,7 +128,24 @@ HoloVec makes HDC accessible with:
 
 ## 📦 Installation
 
-### Quick Start (NumPy only)
+> **Note**: HoloVec is not yet published to PyPI. For now, install from source using the development installation below.
+
+### Development Installation (Recommended)
+
+Clone and install in editable mode:
+
+```bash
+git clone https://github.com/Twistient/HoloVec.git
+cd HoloVec
+
+# With pip
+pip install -e .
+
+# Or with uv (faster)
+uv pip install -e .
+```
+
+### Quick Start (when published to PyPI)
 
 ```bash
 pip install holovec
@@ -140,50 +157,36 @@ Or using [uv](https://github.com/astral-sh/uv) (recommended for faster installs)
 uv pip install holovec
 ```
 
-### Development Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/Twistient/HoloVec.git
-cd HoloVec
-
-# Install in editable mode with pip
-pip install -e .
-
-# Or with uv (faster)
-uv pip install -e .
-```
-
 ### Optional Backends
 
 #### GPU Support (PyTorch)
 
 ```bash
 # With pip
-pip install holovec[torch]
+pip install -e .[torch]
 
 # With uv
-uv pip install holovec[torch]
+uv pip install -e .[torch]
 ```
 
 #### JIT Compilation (JAX)
 
 ```bash
 # With pip
-pip install holovec[jax]
+pip install -e .[jax]
 
 # With uv
-uv pip install holovec[jax]
+uv pip install -e .[jax]
 ```
 
 #### All Features (Development)
 
 ```bash
 # With pip
-pip install holovec[all]
+pip install -e .[all]
 
 # With uv
-uv pip install holovec[all]
+uv pip install -e .[all]
 ```
 
 This installs all backends, development tools (pytest, black, ruff, mypy), and documentation tools (sphinx).
@@ -809,19 +812,7 @@ Special thanks to the researchers whose work made this possible.
 
 ---
 
-**Ready to start?** Install HoloVec and build brain-inspired AI:
-
-```bash
-pip install holovec
-```
-
-or
-
-```bash
-uv pip install holovec
-```
-
-Then dive into the [Quick Start](#-quick-start) guide above!
+**Ready to start?** Check out the [Installation](#-installation) section above to get HoloVec, then dive into the [Quick Start](#-quick-start) guide!
 
 ---
 

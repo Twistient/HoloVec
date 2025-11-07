@@ -227,11 +227,9 @@ sphinx_gallery_conf = {
     'within_subsection_order': FileNameSortKey,  # Sort by filename
     'default_thumb_file': None,          # No default thumbnail (will use first image if any)
     'line_numbers': True,                # Show line numbers in code blocks
-    'reference_url': {
-        'holovec': None,                   # Don't link to external holovec docs (we are it!)
-    },
-    'backreferences_dir': 'gen_modules/backreferences',  # Where to store backreferences
-    'doc_module': ('holovec',),            # Modules to document
+    'reference_url': {},                     # Disable external doc linking to avoid cache issues
+    'backreferences_dir': None,              # Disable backreferences to avoid cache issues
+    'doc_module': ('holovec',),              # Modules to document
     'inspect_global_variables': False,   # Don't inspect (since not executing)
     'expected_failing_examples': [],     # Examples expected to fail
     'first_notebook_cell': None,         # No special first cell

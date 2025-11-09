@@ -8,233 +8,191 @@
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Compositional algebra in 10,000‑D, with exact/approximate inverses and kernel‑shaped encoders.
+**Compositional algebra in 10,000-D, with exact/approximate inverses and kernel-shaped encoders.**
+
+[Installation](#-installation) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Examples](#-examples)
 
 </div>
 
-## Holographic Vector Algebra for Compositional Machine Intelligence
+---
 
-HoloVec is a holographic vector algebra for building and manipulating compositional representations in high dimensions. It implements modern Vector Symbolic Architectures (VSA/HDC) with both commutative (HRR/FHRR) and non‑commutative (GHRR/MBAT) binding, kernel‑aware encoders (FPE/RFF with Gaussian, Laplace, Cauchy, Student distributions), and sparse/segment codes (BSDC‑SEG). You can bind structure, bundle sets, and unbind components with exact or approximate inverses — then factorize multi‑way compositions efficiently via resonator cleanup — on NumPy, PyTorch, or JAX.
+## Overview
 
-## What is this?
+**HoloVec** is a modern library for building and manipulating compositional representations in high-dimensional spaces using Vector Symbolic Architectures (VSA/HDC). It provides:
 
-- A high‑dimensional vector algebra (VSA/HDC) you can actually compute with: bind, bundle, permute, and unbind structured information using modern operations (FHRR/HRR/GHRR/MBAT) and kernel‑aware encoders.
+- **🎯 Compositional Power**: Bind structure, bundle sets, unbind components with exact or approximate inverses
+- **🔬 Kernel-Aware Encoders**: FPE/RFF with rich phase distributions (Gaussian, Laplace, Cauchy, Student) plus multivariate and periodic encoders
+- **⚡ Multi-Backend**: Run on NumPy, PyTorch (GPU), or JAX (JIT) with unified API
+- **🧮 Modern VSA Models**: 7 validated models from HRR/FHRR (commutative) to GHRR/MBAT (non-commutative)
+- **🎲 Sparse Codes**: BSDC-SEG with segment-wise operations and efficient search
+- **🔍 Practical Retrieval**: Codebook/ItemStore APIs with resonator factorization
 
-## What does it do?
+### Why Hyperdimensional Computing?
 
-- Encodes continuous, discrete, periodic, and multivariate data (FPE/RFF, periodic angles).
-- Binds structure (commutative and non‑commutative), bundles sets, and unbinds components with exact or Wiener‑style inverses.
-- Factorizes multi‑factor compositions via resonator cleanup (hard/soft updates) with fast convergence.
-- Supports sparse/segment codes (BSDC‑SEG) with segment‑wise search and utilities.
-- Runs on NumPy, PyTorch, or JAX.
+Hyperdimensional computing represents information as high-dimensional vectors (~1,000-10,000 dimensions) enabling:
 
-## Why should I use it?
+- ✅ **One-shot learning** without gradient descent
+- ✅ **Robust, noise-tolerant** representations
+- ✅ **Explainable AI** with transparent operations
+- ✅ **Efficient hardware** (neuromorphic chips, FPGAs)
+- ✅ **Compositional reasoning** with symbolic structure
 
-- Compositional power: exact non‑commutative binding (GHRR) with tunable diagonality — encode direction/order without hacks.
-- Kernel‑shaped encoders: FPE = RFF with richer phase distributions and mixtures; multivariate and periodic encoders built‑in.
-- Practical retrieval: lean Codebook/ItemStore APIs, fast batched similarity, resonator factorization.
-- Clean separation of concerns: HoloVec stays lean (algebra + encoders + retrieval); HoloMem (coming) adds learned memories/training; HoloGraph adds outer‑product graph algebra.
+### What Makes HoloVec Different?
+
+- **Non-commutative first-class**: GHRR with tunable diagonality, MBAT/VTB transform binding
+- **Kernel theory integration**: FPE = RFF with multiple phase families and mixtures (M2)
+- **Production-ready**: 480+ tests, 90-98% coverage, type-safe, zero dependencies beyond NumPy
+- **Clean separation**: HoloVec (algebra + encoders), HoloMem (memories + training), HoloGraph (graph algebra)
+
+<details>
+<summary><b>📊 Technical Positioning & Scope</b></summary>
+
+### What HoloVec Provides
+
+**HoloVec = Algebra-first + Kernel-aware HDC core**
+
+- **Compositional algebra**: HRR/FHRR (commutative), GHRR (exact non-commutative with diagonality), VTB/MBAT (non-commutative transform), BSC/BSDC + BSDC-SEG (sparse/segment)
+- **Kernel encoders**: FPE = RFF with phase families + mixtures, multivariate (VectorFPE), periodic encoders; explicit link to kernel methods
+- **Retrieval primitives**: Codebook/ItemStore, brute-force cleanup, resonator (hard/soft, temperature)
+
+### Companion Libraries (Separate)
+
+- **HoloMem**: Advanced memories + learning (SDM variants, attention/Hopfield cleanup, learned β/α, GPU batched retrieval)
+- **HoloGraph**: Outer-product graph embeddings + algebra (tensor/outer-product, powers, subgraphs, homomorphism tests)
+
+### Feature Matrix
+
+| Category | Features |
+|----------|----------|
+| **Algebra (binding)** | HRR (conv), FHRR (phasor, exact inverse), GHRR (matrix-unitary, non-commutative, diagonality), VTB/MBAT (transform), BSC/BSDC (XOR), BSDC-SEG (segments) |
+| **Encoders** | Scalar FPE (Gaussian/Laplace/Cauchy/Student/Uniform) + mixtures; VectorFPE (multivariate); Periodic/angle; Thermometer; Level |
+| **Retrieval** | Codebook + ItemStore; Brute-force cleanup; Resonator (hard/soft, temperature, early-stop); batched similarity |
+| **Sparse/Segment** | BSDC-SEG (exact 1-hot/segment); segment-wise masking/rotation/permutation; segment-pattern search |
+| **Backends** | NumPy (base), PyTorch (GPU), JAX (JIT); helper parity (complex, FFT, softmax, angle, power, where, etc.) |
+
+### Key Differentiators
+
+**Already in HoloVec:**
+- GHRR with diagonality → flexible non-commutativity and exact inverses
+- VTB/MBAT transform binding → directional facts without heavy permutations
+- FPE "done right" → multiple phase families, mixtures (M2), multivariate, periodic
+- BSDC-SEG → exact segmented sparsity + segment search utilities
+- Multi-backend (NumPy/Torch/JAX) + kernel framing approachable for ML engineers
+
+**What we delegate:**
+- Deep framework-specific training pipelines (→ HoloMem)
+- Graph-specific algebra (→ HoloGraph)
+
+</details>
 
 ---
 
-## Positioning & Scope
-
-- **HoloVec = Algebra‑first + Kernel‑aware HDC core**
-  - Compositional algebra: HRR/FHRR (commutative), GHRR (exact non‑commutative with diagonality), VTB/MBAT (non‑commutative transform), BSC/BSDC + BSDC‑SEG (sparse/segment).
-  - Kernel encoders: FPE = RFF with phase families + mixtures, multivariate (VectorFPE), periodic encoders; explicit link to kernel methods.
-- **HoloMem (separate)** = Advanced memories + learning
-  - SDM variants, attention/Hopfield cleanup, learned β/α, GPU batched retrieval, evaluators.
-- **HoloGraph (separate)** = Outer‑product graph embeddings + algebra
-  - Tensor/outer‑product, powers, subgraphs, degrees, homomorphism tests, trace metrics.
-
-### Feature Matrix (core)
-
-| Category | Features |
-|---|---|
-| Algebra (binding) | HRR (conv), FHRR (phasor, exact inverse), GHRR (matrix‑unitary, non‑commutative, diagonality), VTB/MBAT (transform, non‑commutative), BSC/BSDC (XOR), BSDC‑SEG (segments) |
-| Encoders | Scalar FPE (Gaussian/Laplace/Cauchy/Student/Uniform) + mixtures; VectorFPE (multivariate); Periodic/angle; Thermometer; Level |
-| Retrieval | Codebook + ItemStore; Brute‑force cleanup; Resonator (hard/soft, temperature, early‑stop); batched similarity |
-| Sparse/Segment | BSDC‑SEG (exact 1‑hot/segment); segment‑wise masking/rotation/permutation; segment‑pattern search |
-| Backends | NumPy (base), PyTorch (GPU), JAX (JIT); helper parity (complex, FFT, softmax, angle, power, where, etc.) |
-
-> HoloMem adds learned/attention memories and training; HoloGraph adds tensor/outer‑product graph algebra.
-
-### How We Differ
-
-HoloVec focuses on algebra and kernels across multiple backends. It emphasizes non‑commutative binding (GHRR/MBAT), kernel‑aware encoders (FPE/RFF) with rich phase families, and lean retrieval/factorization — keeping the core dependency‑light and theory‑aligned.
-
-**Differentiators already in HoloVec**
-
-- GHRR with diagonality → flexible non‑commutativity and exact inverses.
-- VTB/MBAT transform binding → directional facts without heavy permutations.
-- FPE “done right” → multiple phase families, mixtures (M2), multivariate, periodic.
-- BSDC‑SEG → exact segmented sparsity + segment search utilities.
-- Built‑in retrieval (Codebook/ItemStore), light resonator, segment utilities.
-- Multi‑backend (NumPy/Torch/JAX) + kernel framing approachable for ML engineers.
-
-**What we don’t duplicate in core**
-
-- Deep, framework‑specific training pipelines and dataset loaders (HoloMem/HoloGraph and the website will cover more applied flows).
-
-### Differentiators
-
-- Non‑commutative binding as first‑class (GHRR diagonality sweeps; MBAT VTB). Side‑by‑side decoding quality/speed vs HRR.
-- Kernel shaping (FPE=RFF): phase distributions, mixtures, multivariate, periodic; kernel visualizations; UCI tasks.
-- Sparse/segment codes: BSDC‑SEG capacity/robustness curves; biologically plausible angle.
-- Resonator factorization: convergence plots; ablations (hard vs soft, temperature, top‑K).
-- Graph algebra (HoloGraph): tensor/outer‑product and matrix algebra for graphs.
-
-## ⚡ 10‑second code
+## ⚡ Quick Start
 
 ```python
-from holovec import VSA  # post-rename: from holovec import VSA
+from holovec import VSA
 
+# Create model (FHRR has best capacity)
 model = VSA.create('FHRR', dim=2048)
+
+# Bind and unbind vectors
 a, b = model.random(), model.random()
 c = model.bind(a, b)
-a_hat = model.unbind(c, b)
-print("sim(a, a_hat) =", model.similarity(a, a_hat))
+a_recovered = model.unbind(c, b)
+print(f"Similarity: {model.similarity(a, a_recovered):.3f}")  # ~0.99
 
+# Encode continuous data with kernel-aware encoder
 from holovec.encoders import VectorFPE
 fpe = VectorFPE(model, input_dim=3, bandwidth=0.5, phase_dist='gaussian')
 hx = fpe.encode([0.2, 1.4, -0.7])
 
+# Store and retrieve
 from holovec.retrieval import ItemStore, Codebook
-cb = Codebook({f"item{i}": model.random(seed=100+i) for i in range(10)}, backend=model.backend)
+cb = Codebook({f"item{i}": model.random(seed=100+i) for i in range(10)},
+              backend=model.backend)
 store = ItemStore(model).fit(cb)
 print(store.query(cb._items['item3'], k=3))
 ```
-
-## 🌟 Why HoloVec?
-
-Hyperdimensional computing represents information as high-dimensional vectors (~1000-10000 dimensions) that enable:
-
-- **One-shot learning** without gradient descent
-- **Robust, noise-tolerant** representations
-- **Explainable AI** with transparent operations
-- **Efficient hardware** implementation (neuromorphic chips, FPGAs)
-- **Compositional reasoning** with symbolic structure
-
-HoloVec makes HDC accessible with:
-
-- ✅ **7 validated VSA models** from academic literature
-- ✅ **3 computational backends** (NumPy, PyTorch, JAX)
-- ✅ **8 production-ready encoders** for diverse data types
-- ✅ **480+ tests** with 90-98% coverage
-- ✅ **Zero dependencies** beyond NumPy for base install
-- ✅ **Type-safe** with comprehensive documentation
 
 ---
 
 ## 📦 Installation
 
-> **Note**: HoloVec is not yet published to PyPI. For now, install from source using the development installation below.
+> [!IMPORTANT]
+> HoloVec is not yet published to PyPI. Install from source for now.
 
-### Development Installation (Recommended)
-
-Clone and install in editable mode:
+### From Source (Current Method)
 
 ```bash
 git clone https://github.com/Twistient/HoloVec.git
 cd HoloVec
 
-# With pip
+# Basic install (NumPy only)
 pip install -e .
 
 # Or with uv (faster)
 uv pip install -e .
 ```
 
-### Quick Start (when published to PyPI)
+### Optional Backends
+
+<details>
+<summary><b>GPU Support (PyTorch)</b></summary>
+
+```bash
+pip install -e .[torch]
+# or
+uv pip install -e .[torch]
+```
+</details>
+
+<details>
+<summary><b>JIT Compilation (JAX)</b></summary>
+
+```bash
+pip install -e .[jax]
+# or
+uv pip install -e .[jax]
+```
+</details>
+
+<details>
+<summary><b>All Features (Development)</b></summary>
+
+Includes all backends, dev tools (pytest, black, ruff, mypy), and docs (sphinx):
+
+```bash
+pip install -e .[all]
+# or
+uv pip install -e .[all]
+```
+</details>
+
+### Future (when published to PyPI)
 
 ```bash
 pip install holovec
-```
-
-Or using [uv](https://github.com/astral-sh/uv) (recommended for faster installs):
-
-```bash
+# or
 uv pip install holovec
 ```
 
-### Optional Backends
-
-#### GPU Support (PyTorch)
-
-```bash
-# With pip
-pip install -e .[torch]
-
-# With uv
-uv pip install -e .[torch]
-```
-
-#### JIT Compilation (JAX)
-
-```bash
-# With pip
-pip install -e .[jax]
-
-# With uv
-uv pip install -e .[jax]
-```
-
-#### All Features (Development)
-
-```bash
-# With pip
-pip install -e .[all]
-
-# With uv
-uv pip install -e .[all]
-```
-
-This installs all backends, development tools (pytest, black, ruff, mypy), and documentation tools (sphinx).
-
 ---
 
-## 🚀 Quick Start
+## 🚀 Core Concepts
 
-```python
-from holovec import VSA
-
-# Create a VSA model (FHRR has best capacity)
-model = VSA.create('FHRR', dim=10000)
-
-# Generate random hypervectors
-country = model.random(seed=1)
-capital = model.random(seed=2)
-currency = model.random(seed=3)
-
-# Bind vectors to create associations
-usa = model.bind_multiple([country, capital, currency])
-
-# Query: What is the capital? (unbind country)
-capital_query = model.unbind(usa, country)
-similarity = model.similarity(capital_query, capital)
-print(f"Similarity: {similarity:.3f}")  # ~0.99 for FHRR
-
-# Bundle multiple items into a set
-countries = model.bundle([usa, model.random(), model.random()])
-```
-
----
-
-## 🧠 Core Concepts
-
-### Vector Symbolic Architectures
+### Vector Symbolic Architectures (VSA)
 
 VSAs represent information as high-dimensional vectors with three fundamental operations:
 
-#### 1. **Binding (⊗)** - Associates two vectors → dissimilar result
+#### 1. Binding (⊗) - Associates two vectors → dissimilar result
 
 ```python
 role_filler = model.bind(role, filler)
 ```
 
-Creates structured representations like "color: red" or "position: 3"
+Creates structured representations like `color: red` or `position: 3`
 
-#### 2. **Bundling (+)** - Superpose multiple vectors → similar to all inputs
+#### 2. Bundling (+) - Superpose multiple vectors → similar to all inputs
 
 ```python
 set_vector = model.bundle([item1, item2, item3])
@@ -242,7 +200,7 @@ set_vector = model.bundle([item1, item2, item3])
 
 Represents collections, prototypes, and averages
 
-#### 3. **Permutation (ρ)** - Reorders coordinates → preserves similarity
+#### 3. Permutation (ρ) - Reorders coordinates → preserves similarity
 
 ```python
 position_encoded = model.permute(vector, k)
@@ -250,43 +208,40 @@ position_encoded = model.permute(vector, k)
 
 Encodes sequences, positions, and temporal order
 
-### Key Properties
+### VSA Model Comparison
 
-Different VSA models have different algebraic properties optimized for specific use cases:
+Different models have different algebraic properties optimized for specific use cases:
 
 | Model | Binding | Inverse | Capacity | Best For |
 |-------|---------|---------|----------|----------|
 | **FHRR** | Complex ∗ | Exact (conjugate) | Best (~330 dim) | Continuous data, highest accuracy |
+| **GHRR** | Matrix product | Approximate | Excellent | State-of-the-art (2024), non-commutative |
 | **MAP** | Element × | Self-inverse | Good (~510 dim) | Hardware, neuromorphic chips |
 | **HRR** | Circular conv | Approximate | Good (~510 dim) | Classic baseline |
+| **VTB** | Matrix transform | Learned | Excellent | Adaptive representations |
 | **BSC** | XOR | Self-inverse | Good | Binary operations, FPGA |
 | **BSDC** | Segment sample | Approximate | Very Good | Sparse data, memory efficient |
-| **VTB** | Matrix transform | Learned | Excellent | Adaptive representations |
-| **GHRR** | Matrix product | Approximate | Excellent | State-of-the-art (2024) |
 
 ---
 
 ## 🎯 Features
 
-### 🔧 VSA Models (7 Validated Implementations)
+### 🔧 VSA Models (7 Validated)
 
 All models validated against academic literature with comprehensive property-based testing:
 
-- **MAP (Multiply-Add-Permute)**: Self-inverse, neuromorphic-friendly
-- **FHRR (Fourier HRR)**: Complex-valued, exact inverses, best capacity
-- **HRR (Holographic RR)**: Classic circular convolution
-- **BSC (Binary Spatter Codes)**: XOR-based for binary vectors
-- **BSDC (Binary Sparse DC)**: Sparse binary, memory-efficient
-- **GHRR (Generalized HRR)**: 2024 SOTA with matrix binding
-- **VTB (Vector-derived Transformation)**: Learned transformation matrices
+- **MAP** (Multiply-Add-Permute): Self-inverse, neuromorphic-friendly
+- **FHRR** (Fourier HRR): Complex-valued, exact inverses, best capacity
+- **HRR** (Holographic RR): Classic circular convolution
+- **BSC** (Binary Spatter Codes): XOR-based for binary vectors
+- **BSDC** (Binary Sparse DC): Sparse binary, memory-efficient
+- **BSDC-SEG** (Segmented BSDC): Block-based sparse codes with segment operations
+- **GHRR** (Generalized HRR): 2024 SOTA with matrix binding, non-commutative
+- **VTB** (Vector-derived Transformation): Learned transformation matrices
 
 ### 🖥️ Computational Backends (3 Frameworks)
 
 Write once, run anywhere with automatic backend selection:
-
-- **NumPy** (default): Pure CPU, zero dependencies, perfect for prototyping
-- **PyTorch**: GPU acceleration (CUDA/Metal), neural network integration
-- **JAX**: JIT compilation (10-100x speedup), TPU support, auto-differentiation
 
 ```python
 # Automatic best backend
@@ -295,35 +250,43 @@ model = VSA.create('FHRR', dim=10000)
 # Explicit backend selection
 model = VSA.create('FHRR', dim=10000, backend='torch', device='cuda')
 
-# Query backend capabilities
+# Query capabilities
 from holovec import backend_info
 info = backend_info()
 print(info['available_backends'])  # ['numpy', 'torch', 'jax']
 ```
 
+**Available backends:**
+- **NumPy** (default): Pure CPU, zero dependencies, perfect for prototyping
+- **PyTorch**: GPU acceleration (CUDA/Metal), neural network integration
+- **JAX**: JIT compilation (10-100x speedup), TPU support, auto-differentiation
+
 ### 📊 Encoders (8 Production-Ready)
 
 Transform diverse data types into hypervectors:
 
-**Scalar Encoders:**
+<details>
+<summary><b>Scalar Encoders</b></summary>
 
-- `FractionalPowerEncoder`: Continuous values with locality preservation
-- `ThermometerEncoder`: Smooth ordinal encoding
-- `LevelEncoder`: Discrete categorical values
+- **FractionalPowerEncoder**: Continuous values with locality preservation
+- **ThermometerEncoder**: Smooth ordinal encoding
+- **LevelEncoder**: Discrete categorical values
+</details>
 
-**Sequence Encoders:**
+<details>
+<summary><b>Sequence Encoders</b></summary>
 
-- `PositionBindingEncoder`: Order-sensitive sequences
-- `NGramEncoder`: N-gram context windows
-- `TrajectoryEncoder`: Temporal trajectories
+- **PositionBindingEncoder**: Order-sensitive sequences
+- **NGramEncoder**: N-gram context windows
+- **TrajectoryEncoder**: Temporal trajectories
+</details>
 
-**Spatial Encoder:**
+<details>
+<summary><b>Spatial & Structured Encoders</b></summary>
 
-- `ImageEncoder`: 2D grids and images
-
-**Structured Encoder:**
-
-- `VectorEncoder`: Multi-dimensional feature vectors
+- **ImageEncoder**: 2D grids and images
+- **VectorEncoder**: Multi-dimensional feature vectors
+</details>
 
 ### 🔍 Cleanup & Retrieval
 
@@ -372,36 +335,7 @@ similarity = model.similarity(result, queen)
 print(f"King - Man + Woman ≈ Queen: {similarity:.3f}")
 ```
 
-### Example 2: Sequence Encoding
-
-Encode ordered sequences with position information:
-
-```python
-from holovec import VSA
-
-model = VSA.create('MAP', dim=10000)
-
-# Elements
-a = model.random(seed=1)
-b = model.random(seed=2)
-c = model.random(seed=3)
-
-# Encode sequence: A + ρ(B) + ρ²(C)
-sequence = model.bundle([
-    a,
-    model.permute(b, k=1),
-    model.permute(c, k=2)
-])
-
-# Query position 1: should recover B
-query_pos1 = model.unpermute(sequence, k=1)
-similarity_b = model.similarity(query_pos1, b)
-print(f"Recovered B with similarity: {similarity_b:.3f}")  # ~0.95+
-
-# Order matters! Different permutations = different positions
-```
-
-### Example 3: Role-Filler Binding
+### Example 2: Role-Filler Binding
 
 Represent structured knowledge: "The ball is red and large"
 
@@ -429,16 +363,14 @@ ball_representation = model.bundle([
 
 # Query: What is the color?
 color_query = model.unbind(ball_representation, color_role)
-similarity_red = model.similarity(color_query, red)
-print(f"Color is red: {similarity_red:.3f}")  # ~0.99
+print(f"Color is red: {model.similarity(color_query, red):.3f}")  # ~0.99
 
 # Query: What is the object?
 object_query = model.unbind(ball_representation, object_role)
-similarity_ball = model.similarity(object_query, ball)
-print(f"Object is ball: {similarity_ball:.3f}")  # ~0.99
+print(f"Object is ball: {model.similarity(object_query, ball):.3f}")  # ~0.99
 ```
 
-### Example 4: Encoding Continuous Values
+### Example 3: Encoding Continuous Values
 
 Encode scalars with locality preservation:
 
@@ -457,18 +389,15 @@ temp_21 = encoder.encode(21.0)
 temp_35 = encoder.encode(35.0)
 
 # Similar temperatures → similar vectors
-sim_20_21 = model.similarity(temp_20, temp_21)
-print(f"20°C vs 21°C: {sim_20_21:.3f}")  # ~0.99 (very similar)
-
-sim_20_35 = model.similarity(temp_20, temp_35)
-print(f"20°C vs 35°C: {sim_20_35:.3f}")  # ~0.70 (somewhat similar)
+print(f"20°C vs 21°C: {model.similarity(temp_20, temp_21):.3f}")  # ~0.99
+print(f"20°C vs 35°C: {model.similarity(temp_20, temp_35):.3f}")  # ~0.70
 
 # Decode back to temperature
 decoded = encoder.decode(temp_20)
 print(f"Decoded: {decoded:.1f}°C")  # ~20.0°C
 ```
 
-### Example 5: Symbolic Sequences
+### Example 4: Sequence Encoding
 
 Encode variable-length sequences:
 
@@ -485,19 +414,15 @@ seq2 = encoder.encode(['hello', 'world', '!'])
 seq3 = encoder.encode(['goodbye', 'world'])
 
 # Shared prefixes → high similarity
-sim_1_2 = model.similarity(seq1, seq2)
-print(f"['hello','world'] vs ['hello','world','!']: {sim_1_2:.3f}")
-
-sim_1_3 = model.similarity(seq1, seq3)
-print(f"['hello','world'] vs ['goodbye','world']: {sim_1_3:.3f}")
+print(f"['hello','world'] vs ['hello','world','!']: {model.similarity(seq1, seq2):.3f}")
+print(f"['hello','world'] vs ['goodbye','world']: {model.similarity(seq1, seq3):.3f}")
 
 # Order matters!
 seq4 = encoder.encode(['world', 'hello'])
-sim_1_4 = model.similarity(seq1, seq4)
-print(f"['hello','world'] vs ['world','hello']: {sim_1_4:.3f}")  # Low
+print(f"['hello','world'] vs ['world','hello']: {model.similarity(seq1, seq4):.3f}")  # Low
 ```
 
-### Example 6: Multi-Dimensional Feature Vectors
+### Example 5: Multi-Dimensional Feature Vectors
 
 Encode embeddings and feature vectors:
 
@@ -520,14 +445,42 @@ hv1 = vec_encoder.encode(embedding1)
 hv2 = vec_encoder.encode(embedding2)
 
 # Similarity in hypervector space reflects embedding similarity
-sim = model.similarity(hv1, hv2)
-print(f"Hypervector similarity: {sim:.3f}")  # High for similar embeddings
+print(f"Hypervector similarity: {model.similarity(hv1, hv2):.3f}")
 
 # Approximate decoding
 decoded = vec_encoder.decode(hv1)
 reconstruction_error = np.mean((embedding1 - decoded) ** 2)
 print(f"Reconstruction MSE: {reconstruction_error:.4f}")
 ```
+
+<details>
+<summary><b>Example 6: Position-Aware Sequence Decoding</b></summary>
+
+```python
+from holovec import VSA
+
+model = VSA.create('MAP', dim=10000)
+
+# Elements
+a = model.random(seed=1)
+b = model.random(seed=2)
+c = model.random(seed=3)
+
+# Encode sequence: A + ρ(B) + ρ²(C)
+sequence = model.bundle([
+    a,
+    model.permute(b, k=1),
+    model.permute(c, k=2)
+])
+
+# Query position 1: should recover B
+query_pos1 = model.unpermute(sequence, k=1)
+similarity_b = model.similarity(query_pos1, b)
+print(f"Recovered B with similarity: {similarity_b:.3f}")  # ~0.95+
+
+# Order matters! Different permutations = different positions
+```
+</details>
 
 ---
 
@@ -588,11 +541,11 @@ pytest tests/test_models.py -k numpy
 
 **Test Statistics:**
 
-- 480+ test functions
-- 90-98% code coverage
-- Property-based testing with Hypothesis
-- Cross-backend consistency validation
-- Numerical stability verification
+- ✅ **480+ test functions**
+- ✅ **90-98% code coverage**
+- ✅ **Property-based testing** with Hypothesis
+- ✅ **Cross-backend consistency** validation
+- ✅ **Numerical stability** verification
 
 ---
 
@@ -607,8 +560,7 @@ cd HoloVec
 
 # Install with development dependencies
 pip install -e .[dev]
-
-# Or with uv (faster)
+# or with uv (faster)
 uv pip install -e .[dev]
 
 # Install pre-commit hooks (optional but recommended)
@@ -732,6 +684,36 @@ HoloVec is built on decades of academic research in hyperdimensional computing:
 
 ---
 
+## 🧭 Roadmap (Near-Term)
+
+<details>
+<summary><b>P0 (within HoloVec)</b></summary>
+
+- **Docs**: "HDC for ML People" and "GHRR for Researchers"; literature-backed notes
+- **Bench**: factorization (3-5 factors) with convergence curves; bundling capacity curves; FPE kernel visualizations
+- **sklearn helpers**: thin wrappers for FPE + ItemStore; UCI demo
+- **Examples**: circular correlation HRR; role permutations; resonator factorization demo; FPE kernel shapes
+- **API polish**: top-level factory finalize; stabilize public surface; batched ItemStore query (done)
+</details>
+
+<details>
+<summary><b>P1 (HoloMem/HoloGraph scaffolds)</b></summary>
+
+- **HoloMem**: SDM variants; attention/Hopfield cleanup; learned β/α trainers; GPU batched memory; evaluation harness; PyTorch modules
+- **HoloGraph**: outer-product graph embeddings + algebra demos (subgraphs, homomorphisms, path powers)
+</details>
+
+<details>
+<summary><b>P2 (Ecosystem/Adoption)</b></summary>
+
+- **Website** with literate notebooks
+- **Publish** 0.1.0-alpha
+- **Blog posts**: Attention≈SDM; GHRR holography; BSDC-SEG capacity
+- **Academic channels**: arXiv-style writeup linking library
+</details>
+
+---
+
 ## 📄 Citation
 
 If you use HoloVec in your research, please cite:
@@ -812,25 +794,8 @@ Special thanks to the researchers whose work made this possible.
 
 ---
 
-**Ready to start?** Check out the [Installation](#-installation) section above to get HoloVec, then dive into the [Quick Start](#-quick-start) guide!
+<div align="center">
 
----
+**Ready to start?** Check out the [Installation](#-installation) section above, then dive into the [Quick Start](#-quick-start) guide!
 
-## 🧭 Roadmap (near‑term)
-
-**P0 (within HoloVec)**
-
-- Docs: “HDC for ML People” and “GHRR for Researchers”; literature‑backed notes.
-- Bench: factorization (3–5 factors) with convergence curves; bundling capacity curves; FPE kernel visualizations.
-- sklearn helpers: thin wrappers for FPE + ItemStore; UCI demo.
-- Examples: circular correlation HRR; role permutations; resonator factorization demo; FPE kernel shapes.
-- API polish: top‑level factory finalize; stabilize public surface; batched ItemStore query (done).
-
-**P1 (HoloMem/HoloGraph scaffolds)**
-
-- HoloMem: SDM variants; attention/Hopfield cleanup; learned β/α trainers; GPU batched memory; evaluation harness; PyTorch modules.
-- HoloGraph: outer‑product graph embeddings + algebra demos (subgraphs, homomorphisms, path powers).
-
-**P2 (Ecosystem/Adoption)**
-
-- Website with literate notebooks; publish 0.1.0‑alpha; blog posts (Attention≈SDM; GHRR holography; BSDC‑SEG capacity); academic channels (arXiv‑style writeup linking library).
+</div>

@@ -6,7 +6,7 @@ for accessing different computational backends (NumPy, PyTorch, JAX).
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Type
+from typing import Dict, Optional, Type, Union
 
 from .base import Backend, BackendError, BackendNotAvailableError
 from .numpy_backend import NumPyBackend
@@ -64,11 +64,13 @@ def is_backend_available(name: str) -> bool:
     return name.lower() in _BACKENDS
 
 
-def get_backend(name: Optional[str] = None, **kwargs) -> Backend:
+def get_backend(name: Union[str, Backend, None] = None, **kwargs) -> Backend:
     """Get a backend instance by name.
 
     Args:
-        name: Backend name ('numpy', 'torch', 'jax'). If None, returns default backend.
+        name: Backend name ('numpy', 'torch', 'jax'), a Backend instance, or None.
+              If a Backend instance is passed, it is returned as-is.
+              If None, returns default backend.
         **kwargs: Backend-specific arguments (e.g., device='cuda' for torch)
 
     Returns:
@@ -82,8 +84,13 @@ def get_backend(name: Optional[str] = None, **kwargs) -> Backend:
         >>> backend = get_backend('numpy')
         >>> backend = get_backend('torch', device='cuda')
         >>> backend = get_backend()  # Returns default
+        >>> backend = get_backend(existing_backend)  # Returns existing_backend
     """
     global _DEFAULT_BACKEND
+
+    # If already a Backend instance, return it directly
+    if isinstance(name, Backend):
+        return name
 
     # If no name specified, return or create default
     if name is None:

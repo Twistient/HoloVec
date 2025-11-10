@@ -92,8 +92,19 @@ class HRRModel(VSAModel):
         # Circular convolution in frequency domain
         result = self.backend.circular_convolve(a, b)
 
+        # DEBUG: Check result norm before normalization
+        import numpy as np
+        norm_before = np.linalg.norm(result)
+        print(f"[DEBUG bind] Result norm BEFORE normalize: {norm_before:.6f}")
+
         # Normalize to ensure consistent magnitude for bundling operations
-        return self.normalize(result)
+        normalized = self.normalize(result)
+
+        # DEBUG: Check result norm after normalization
+        norm_after = np.linalg.norm(normalized)
+        print(f"[DEBUG bind] Result norm AFTER normalize: {norm_after:.6f}")
+
+        return normalized
 
     def unbind(self, a: Array, b: Array) -> Array:
         """Unbind using Wiener-style deconvolution in frequency domain.
@@ -209,6 +220,12 @@ class HRRModel(VSAModel):
         >>> similarity = model.similarity(x, x_recovered)
         >>> print(f"Recovery similarity: {similarity:.3f}")  # ~0.99
         """
+        # DEBUG: Check input norms
+        import numpy as np
+        norm_a = np.linalg.norm(a)
+        norm_b = np.linalg.norm(b)
+        print(f"[DEBUG unbind] Input norms: a={norm_a:.6f}, b={norm_b:.6f}")
+
         # Transform to frequency domain
         fa = self.backend.fft(a)
         fb = self.backend.fft(b)
@@ -229,8 +246,18 @@ class HRRModel(VSAModel):
         # Take real part (imaginary part should be near zero due to real inputs)
         result = self.backend.real(time)
 
+        # DEBUG: Check result norm BEFORE normalization
+        norm_before = np.linalg.norm(result)
+        print(f"[DEBUG unbind] Result norm BEFORE normalize: {norm_before:.6f}")
+
         # Normalize to ensure consistent magnitude (fixes unbinding from bundles)
-        return self.normalize(result)
+        normalized = self.normalize(result)
+
+        # DEBUG: Check result norm AFTER normalization
+        norm_after = np.linalg.norm(normalized)
+        print(f"[DEBUG unbind] Result norm AFTER normalize: {norm_after:.6f}")
+
+        return normalized
 
     def bundle(self, vectors: Sequence[Array]) -> Array:
         """Bundle using element-wise addition.
@@ -251,11 +278,28 @@ class HRRModel(VSAModel):
 
         vectors = list(vectors)
 
+        # DEBUG: Check input vector norms
+        import numpy as np
+        print(f"[DEBUG bundle] Bundling {len(vectors)} vectors")
+        for i, v in enumerate(vectors):
+            norm = np.linalg.norm(v)
+            print(f"[DEBUG bundle]   Vector {i} norm: {norm:.6f}")
+
         # Sum all vectors
         result = self.backend.sum(self.backend.stack(vectors, axis=0), axis=0)
 
+        # DEBUG: Check result norm before normalization
+        norm_before = np.linalg.norm(result)
+        print(f"[DEBUG bundle] Sum norm BEFORE normalize: {norm_before:.6f}")
+
         # L2 normalize
-        return self.normalize(result)
+        normalized = self.normalize(result)
+
+        # DEBUG: Check result norm after normalization
+        norm_after = np.linalg.norm(normalized)
+        print(f"[DEBUG bundle] Result norm AFTER normalize: {norm_after:.6f}")
+
+        return normalized
 
     def permute(self, vec: Array, k: int = 1) -> Array:
         """Permute using circular shift.

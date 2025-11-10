@@ -92,29 +92,23 @@ class HRRModel(VSAModel):
         # Circular convolution in frequency domain
         result = self.backend.circular_convolve(a, b)
 
-        # DEBUG: Check result norm
-        import numpy as np
-        norm = np.linalg.norm(result)
-        print(f"[DEBUG bind] Result norm (NOT normalized): {norm:.6f}")
-
-        # Do NOT normalize here - Wiener deconvolution requires preserving
-        # the magnitude relationship: C = X * B in frequency domain.
-        # Normalizing breaks this relationship and degrades unbind quality.
+        # Do NOT normalize - preserves magnitude for proper unbinding via
+        # circular correlation. Normalization would interfere with the
+        # mathematical relationship required for unbind recovery.
         return result
 
     def unbind(self, a: Array, b: Array) -> Array:
-        """Unbind using Wiener-style deconvolution in frequency domain.
+        """Unbind using circular correlation (approximate inverse of convolution).
 
-        This implements approximate inverse binding via regularized deconvolution,
-        which is superior to simple circular correlation for recovering bound
-        information in the presence of noise.
+        This is the classic HRR unbinding operation that uses circular correlation
+        to approximately recover the original vector from a bound pair.
 
         Args:
             a: Bound vector c = x ⊛ b (result of circular convolution)
             b: Key vector (second operand in binding)
 
         Returns:
-            Approximate recovery of x (original vector)
+            Approximate recovery of x (original vector), normalized to unit length
 
         Notes
         -----
@@ -126,85 +120,35 @@ class HRRModel(VSAModel):
         In frequency domain (Fourier):
             C(ω) = X(ω) · B(ω)
 
-        To recover x, we need:
-            X(ω) = C(ω) / B(ω)
+        Unbinding via circular correlation:
+            x̂ = c ⋆ b = IFFT(C(ω) · B*(ω))
 
-        **Problem:** Direct division is ill-conditioned:
-        - If B(ω) ≈ 0 for some frequency ω, division explodes
-        - Noise in C(ω) gets amplified by 1/B(ω)
-        - No regularization leads to unstable recovery
+        Where B*(ω) is the complex conjugate of B(ω).
 
-        **Wiener Deconvolution Solution:**
+        Substituting C(ω) = X(ω) · B(ω):
+            x̂ = IFFT(X(ω) · B(ω) · B*(ω))
+              = IFFT(X(ω) · |B(ω)|²)
 
-        Instead of direct division, use:
-            X̂(ω) = C(ω) · B*(ω) / (|B(ω)|² + ε)
-
-        Where:
-        - B*(ω) = complex conjugate of B(ω)
-        - |B(ω)|² = B(ω) · B*(ω) = power spectrum
-        - ε = regularization parameter (1e-8)
-
-        **Why This Works:**
-
-        1. **Numerator** C(ω) · B*(ω):
-           = X(ω) · B(ω) · B*(ω)    [substituting C(ω)]
-           = X(ω) · |B(ω)|²          [B · B* = |B|²]
-
-        2. **Denominator** |B(ω)|² + ε:
-           - Prevents division by zero
-           - Attenuates frequencies where |B(ω)|² is small
-           - ε represents signal-to-noise ratio assumption
-
-        3. **Result**:
-           X̂(ω) ≈ X(ω) · |B(ω)|² / (|B(ω)|² + ε)
-                ≈ X(ω)  [when |B(ω)|² >> ε]
-
-        **Regularization Parameter ε:**
-
-        Current value: 1e-8 (from holovec.constants.EPSILON_WIENER)
-
-        Interpretation:
-        - ε controls noise suppression vs recovery fidelity
-        - Small ε: Better recovery, more noise amplification
-        - Large ε: More stable, but attenuates signal
-        - 1e-8 assumes SNR ≈ 10⁸:1 (clean signal)
+        For random vectors with approximately uniform power spectrum (|B(ω)|² ≈ 1),
+        this gives x̂ ≈ x.
 
         **Approximation Quality:**
 
         Recovery similarity depends on:
         - Dimension D: Higher D → better recovery
         - Noise level: Clean binding → better unbind
-        - Random vector statistics: Uniform spectrum → better recovery
+        - Bundle size: More items → more interference
 
         Empirical performance (D=10000):
         - Clean unbind: similarity ≈ 0.99
-        - After bundling 10 items: similarity ≈ 0.80
-        - After bundling 100 items: similarity ≈ 0.60
-
-        **Comparison to Alternatives:**
-
-        1. **Circular Correlation** (naive):
-           X̂(ω) = C(ω) · B*(ω)
-           - Simpler but noisier
-           - Doesn't account for power spectrum variation
-
-        2. **FHRR Conjugate** (exact):
-           X̂(ω) = C(ω) / B(ω)  [exact for complex-valued FHRR]
-           - Exact inverse (no approximation error)
-           - Requires complex-valued vectors
-
-        3. **Wiener Deconvolution** (HRR):
-           X̂(ω) = C(ω) · B*(ω) / (|B(ω)|² + ε)
-           - Best for real-valued vectors
-           - Balances accuracy and stability
+        - After bundling 2 items: similarity ≈ 0.57
+        - After bundling 10 items: similarity ≈ 0.30
+        - After bundling 100 items: similarity decreases further
 
         References
         ----------
-        - Plate (1995): "Holographic Reduced Representations" - Original HRR paper
-        - Plate (2003): "Holographic Reduced Representations" - Chapter 3, Section 3.4
-          on approximate unbinding and Wiener deconvolution
-        - Wiener (1949): "Extrapolation, Interpolation, and Smoothing of Stationary
-          Time Series" - Original Wiener filter theory
+        - Plate (1995): "Holographic Reduced Representations"
+        - Plate (2003): "Holographic Reduced Representations" (full book)
 
         Examples
         --------
@@ -216,12 +160,6 @@ class HRRModel(VSAModel):
         >>> similarity = model.similarity(x, x_recovered)
         >>> print(f"Recovery similarity: {similarity:.3f}")  # ~0.99
         """
-        # DEBUG: Check input norms
-        import numpy as np
-        norm_a = np.linalg.norm(a)
-        norm_b = np.linalg.norm(b)
-        print(f"[DEBUG unbind] Input norms: a={norm_a:.6f}, b={norm_b:.6f}")
-
         # Transform to frequency domain
         fa = self.backend.fft(a)
         fb = self.backend.fft(b)
@@ -236,55 +174,37 @@ class HRRModel(VSAModel):
         # Take real part (imaginary part should be near zero due to real inputs)
         result = self.backend.real(time)
 
-        # DEBUG: Check result norm BEFORE normalization
-        norm_before = np.linalg.norm(result)
-        print(f"[DEBUG unbind] Result norm BEFORE normalize: {norm_before:.6f}")
-
-        # Normalize to ensure consistent magnitude (fixes unbinding from bundles)
-        normalized = self.normalize(result)
-
-        # DEBUG: Check result norm AFTER normalization
-        norm_after = np.linalg.norm(normalized)
-        print(f"[DEBUG unbind] Result norm AFTER normalize: {norm_after:.6f}")
-
-        return normalized
+        # Normalize to unit length for consistent comparison with other vectors
+        return self.normalize(result)
 
     def bundle(self, vectors: Sequence[Array]) -> Array:
-        """Bundle using element-wise addition.
+        """Bundle using element-wise addition (superposition).
 
-        For real-valued vectors, sum and normalize.
+        For HRR, bundling is simple vector addition without normalization.
+        This preserves the magnitude relationships needed for proper unbinding.
 
         Args:
             vectors: Sequence of vectors to bundle
 
         Returns:
-            Bundled vector
+            Bundled vector (unnormalized sum)
 
         Raises:
             ValueError: If vectors is empty
+
+        Notes:
+            Unlike some VSA models, HRR does NOT normalize after bundling.
+            Normalization would interfere with the circular correlation unbinding
+            operation. The unbind() method handles normalization of its output.
         """
         if not vectors:
             raise ValueError("Cannot bundle empty sequence")
 
         vectors = list(vectors)
 
-        # DEBUG: Check input vector norms
-        import numpy as np
-        print(f"[DEBUG bundle] Bundling {len(vectors)} vectors")
-        for i, v in enumerate(vectors):
-            norm = np.linalg.norm(v)
-            print(f"[DEBUG bundle]   Vector {i} norm: {norm:.6f}")
-
-        # Sum all vectors
+        # Sum all vectors (simple superposition, no normalization)
         result = self.backend.sum(self.backend.stack(vectors, axis=0), axis=0)
 
-        # DEBUG: Check result norm
-        norm_result = np.linalg.norm(result)
-        print(f"[DEBUG bundle] Sum norm (NOT normalized): {norm_result:.6f}")
-
-        # Do NOT normalize - HRR bundling is simple superposition.
-        # Normalizing interferes with Wiener deconvolution's magnitude assumptions.
-        # The unbind() operation will handle normalization of its output.
         return result
 
     def permute(self, vec: Array, k: int = 1) -> Array:

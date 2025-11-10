@@ -198,9 +198,11 @@ class GHRRModel(VSAModel):
         # Sum all vectors (element-wise matrix addition)
         result = self.backend.sum(self.backend.stack(vectors, axis=0), axis=0)
 
-        # For GHRR, normalization is approximate
-        # Ideally would project back to unitary matrices, but expensive
-        # For practical purposes, we can skip or use simple normalization
+        # Normalize to project back to unitary matrices
+        # This is critical for maintaining quasi-orthogonality (Yeung et al. 2024)
+        # Uses polar decomposition via SVD
+        result = self.space.normalize(result)
+
         return result
 
     def permute(self, vec: Array, k: int = 1) -> Array:

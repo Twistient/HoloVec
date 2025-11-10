@@ -614,23 +614,38 @@ class MatrixSpace(ContinuousSpace):
         return float(similarity)
 
     def normalize(self, vec: Array) -> Array:
-        """Normalize to ensure each matrix is unitary.
+        """Normalize to ensure each matrix is unitary via polar decomposition.
 
-        For GHRR, normalization means ensuring each m×m matrix
-        in the hypervector is unitary (or close to it).
+        For GHRR, normalization means ensuring each m×m matrix in the hypervector
+        is unitary (U†U = I). This is critical for maintaining quasi-orthogonality
+        properties after bundling operations.
 
-        This is approximate - uses polar decomposition-like approach.
+        Uses polar decomposition via SVD: for matrix H = U·Σ·Vh, the closest
+        unitary matrix is U·Vh (discarding the singular values Σ).
+
+        Reference:
+            Yeung et al. (2024): "Generalized Holographic Reduced Representations"
+            Section 4.1 - Unitarity requirement for quasi-orthogonality
 
         Args:
             vec: Array of matrices (D, m, m)
 
         Returns:
-            Normalized array
+            Normalized array where each matrix is unitary
+
+        Note:
+            This uses SVD which is O(m³) per matrix. For typical GHRR with
+            small m (e.g., m=2-5) and moderate D (100-1000), this is efficient.
         """
-        # For simplicity, just return as-is
-        # Proper normalization would require polar decomposition
-        # which is expensive and not critical for most uses
-        return vec
+        # Use SVD to compute polar decomposition: H = U·Σ·Vh
+        # The unitary part of the polar decomposition is U·Vh
+        U, S, Vh = self.backend.svd(vec, full_matrices=True)
+
+        # Compute unitary part: U_polar = U @ Vh
+        # This is the closest unitary matrix to vec in Frobenius norm
+        unitary = self.backend.matmul(U, Vh)
+
+        return unitary
 
 
 # Convenience factory function

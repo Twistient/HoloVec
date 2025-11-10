@@ -416,6 +416,21 @@ class TorchBackend(Backend):
         # PyTorch doesn't have batched trace, so we do it manually
         return torch.diagonal(a, dim1=-2, dim2=-1).sum(-1)
 
+    def svd(self, a: Array, full_matrices: bool = True) -> Tuple[Array, Array, Array]:
+        """Compute Singular Value Decomposition.
+
+        PyTorch's SVD natively supports batched operations.
+        """
+        # PyTorch's svd returns (U, S, V) not (U, S, Vh)
+        # We need to conjugate transpose V to get Vh
+        U, S, V = torch.linalg.svd(a, full_matrices=full_matrices)
+        # For real matrices, transpose is enough; for complex, need conjugate
+        if torch.is_complex(a):
+            Vh = V.conj().transpose(-2, -1)
+        else:
+            Vh = V.transpose(-2, -1)
+        return U, S, Vh
+
     def reshape(self, a: Array, shape: Tuple[int, ...]) -> Array:
         """Reshape array."""
         return a.reshape(shape)

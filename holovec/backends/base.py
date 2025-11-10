@@ -517,6 +517,32 @@ class Backend(ABC):
         pass
 
     @abstractmethod
+    def svd(self, a: Array, full_matrices: bool = True) -> Tuple[Array, Array, Array]:
+        """Compute Singular Value Decomposition (SVD).
+
+        Decomposes matrix A as A = U @ diag(S) @ Vh, where:
+        - U: left singular vectors (unitary)
+        - S: singular values (non-negative, sorted descending)
+        - Vh: conjugate transpose of right singular vectors (unitary)
+
+        For batched matrices (3D+), computes SVD for each matrix in batch.
+
+        Args:
+            a: Matrix or batch of matrices (shape [..., m, n])
+            full_matrices: If True, U and Vh have shapes [..., m, m] and [..., n, n].
+                          If False, shapes are [..., m, k] and [..., k, n] where k=min(m,n).
+
+        Returns:
+            Tuple of (U, S, Vh) arrays
+
+        Examples:
+            >>> A = backend.random_normal((3, 3))
+            >>> U, S, Vh = backend.svd(A)
+            >>> # Verify: A ≈ U @ diag(S) @ Vh
+        """
+        pass
+
+    @abstractmethod
     def reshape(self, a: Array, shape: Tuple[int, ...]) -> Array:
         """Reshape array to new shape.
 

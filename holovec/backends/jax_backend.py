@@ -378,6 +378,15 @@ class JAXBackend(Backend):
         # For 3D+: trace along last two dims
         return jnp.trace(a, axis1=-2, axis2=-1)
 
+    def svd(self, a: Array, full_matrices: bool = True) -> Tuple[Array, Array, Array]:
+        """Compute Singular Value Decomposition.
+
+        JAX's SVD natively supports batched operations.
+        """
+        # JAX returns (U, S, Vh) directly - exactly what we need!
+        U, S, Vh = jnp.linalg.svd(a, full_matrices=full_matrices)
+        return U, S, Vh
+
     def reshape(self, a: Array, shape: Tuple[int, ...]) -> Array:
         """Reshape array."""
         return jnp.reshape(a, shape)

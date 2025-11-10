@@ -325,6 +325,51 @@ class NumPyBackend(Backend):
         # For 3D+: trace along last two dims
         return np.trace(a, axis1=-2, axis2=-1)
 
+    def svd(self, a: Array, full_matrices: bool = True) -> Tuple[Array, Array, Array]:
+        """Compute Singular Value Decomposition.
+
+        For batched matrices (3D+), computes SVD for each matrix in the batch.
+        """
+        # NumPy's svd doesn't handle batched operations natively in older versions
+        # Handle both 2D and batched cases
+        if len(a.shape) == 2:
+            # Simple 2D case
+            return np.linalg.svd(a, full_matrices=full_matrices)
+        else:
+            # Batched case: process each matrix individually
+            batch_shape = a.shape[:-2]
+            m, n = a.shape[-2:]
+
+            # Determine output shapes
+            if full_matrices:
+                u_shape = batch_shape + (m, m)
+                vh_shape = batch_shape + (n, n)
+            else:
+                k = min(m, n)
+                u_shape = batch_shape + (m, k)
+                vh_shape = batch_shape + (k, n)
+            s_shape = batch_shape + (min(m, n),)
+
+            # Pre-allocate output arrays
+            U_batch = np.zeros(u_shape, dtype=a.dtype)
+            S_batch = np.zeros(s_shape, dtype=a.real.dtype)
+            Vh_batch = np.zeros(vh_shape, dtype=a.dtype)
+
+            # Flatten batch dimensions for iteration
+            a_reshaped = a.reshape(-1, m, n)
+            U_reshaped = U_batch.reshape(-1, *U_batch.shape[-2:])
+            S_reshaped = S_batch.reshape(-1, S_batch.shape[-1])
+            Vh_reshaped = Vh_batch.reshape(-1, *Vh_batch.shape[-2:])
+
+            # Compute SVD for each matrix
+            for i in range(a_reshaped.shape[0]):
+                U, S, Vh = np.linalg.svd(a_reshaped[i], full_matrices=full_matrices)
+                U_reshaped[i] = U
+                S_reshaped[i] = S
+                Vh_reshaped[i] = Vh
+
+            return U_batch, S_batch, Vh_batch
+
     def reshape(self, a: Array, shape: Tuple[int, ...]) -> Array:
         """Reshape array."""
         return np.reshape(a, shape)

@@ -204,7 +204,7 @@ $$\delta(\mathbf{a}, \mathbf{b}) = \frac{1}{D} \sum_{i=1}^D \cos(\arg(a_i) - \ar
 
 - ✅ Exact inverse
 - ✅ **Non-commutative** (tunable via diagonality)
-- ⚠️ Non-associative
+- ✅ **Associative** (matrix multiplication is associative: (A·B)·C = A·(B·C))
 - ✅ Better capacity than FHRR for bound vectors
 - ✅ No permutation needed for order
 - ⚠️ Higher memory (D × m × m)
@@ -429,16 +429,17 @@ print(model.similarity(sequence, sequence2))  # Low!
 
 ### Associativity
 
-**Associative** (MAP, FHRR, HRR, BSC, BSDC):
+**Associative** (MAP, FHRR, HRR, BSC, BSDC, GHRR):
 
 - $(\mathbf{a} \otimes \mathbf{b}) \otimes \mathbf{c} = \mathbf{a} \otimes (\mathbf{b} \otimes \mathbf{c})$
 - Order of operations doesn't matter
 - Simplifies nested bindings
+- GHRR is associative because matrix multiplication is associative
 
-**Non-Associative** (GHRR, VTB for unbinding):
+**Non-Associative** (VTB for unbinding):
 
-- Order of operations matters
-- More expressive for structured data
+- Order of operations may matter in certain unbinding scenarios
+- Note: VTB binding itself is typically associative; non-associativity may appear in complex factorization
 
 ---
 
@@ -452,8 +453,8 @@ print(model.similarity(sequence, sequence2))  # Low!
 | FHRR | Complex | ❌ | ✅ | ✅ | ✅ | **Best** | O(D) |
 | HRR | Real | ❌ | ⚠️ | ✅ | ✅ | Medium | O(D log D) |
 | BSC | Binary | ✅ | ✅ | ✅ | ✅ | Medium | O(D) |
-| GHRR | Matrices | ❌ | ✅ | ❌ | ❌ | High | O(Dm²) |
-| VTB | Real | ❌ | ⚠️ | ✅ | ❌ | Medium | O(D log D) |
+| GHRR | Matrices | ❌ | ✅ | ❌ | ✅ | High | O(Dm²) |
+| VTB | Real | ❌ | ⚠️ | ❌ | ✅ | Medium | O(D²) |
 | BSDC | Sparse | ✅ | ✅ | ✅ | ✅ | High | O(Dp) |
 
 Legend:

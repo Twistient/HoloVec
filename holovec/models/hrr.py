@@ -91,8 +91,9 @@ class HRRModel(VSAModel):
         """
         # Circular convolution in frequency domain
         result = self.backend.circular_convolve(a, b)
-        # Do not re-normalize here; cosine similarity is scale-invariant
-        return result
+
+        # Normalize to ensure consistent magnitude for bundling operations
+        return self.normalize(result)
 
     def unbind(self, a: Array, b: Array) -> Array:
         """Unbind using Wiener-style deconvolution in frequency domain.
@@ -226,7 +227,10 @@ class HRRModel(VSAModel):
         time = self.backend.ifft(fr)
 
         # Take real part (imaginary part should be near zero due to real inputs)
-        return self.backend.real(time)
+        result = self.backend.real(time)
+
+        # Normalize to ensure consistent magnitude (fixes unbinding from bundles)
+        return self.normalize(result)
 
     def bundle(self, vectors: Sequence[Array]) -> Array:
         """Bundle using element-wise addition.

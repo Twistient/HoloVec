@@ -226,15 +226,9 @@ class HRRModel(VSAModel):
         fa = self.backend.fft(a)
         fb = self.backend.fft(b)
 
-        # Numerator: C(ω) * conj(B(ω)) = X(ω) * |B(ω)|²
-        num = self.backend.multiply(fa, self.backend.conjugate(fb))
-
-        # Denominator: |B(ω)|² + ε (regularized power spectrum)
-        denom = self.backend.multiply(fb, self.backend.conjugate(fb))
-        denom = self.backend.add(denom, 1e-8)  # ε = 1e-8 for numerical stability
-
-        # Wiener deconvolution: X̂(ω) = num / denom
-        fr = self.backend.divide(num, denom)
+        # Circular correlation: C(ω) * conj(B(ω))
+        # This is the classic HRR unbinding operation (Plate, 1995)
+        fr = self.backend.multiply(fa, self.backend.conjugate(fb))
 
         # Transform back to time domain
         time = self.backend.ifft(fr)

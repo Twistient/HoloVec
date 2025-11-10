@@ -284,18 +284,14 @@ class HRRModel(VSAModel):
         # Sum all vectors
         result = self.backend.sum(self.backend.stack(vectors, axis=0), axis=0)
 
-        # DEBUG: Check result norm before normalization
-        norm_before = np.linalg.norm(result)
-        print(f"[DEBUG bundle] Sum norm BEFORE normalize: {norm_before:.6f}")
+        # DEBUG: Check result norm
+        norm_result = np.linalg.norm(result)
+        print(f"[DEBUG bundle] Sum norm (NOT normalized): {norm_result:.6f}")
 
-        # L2 normalize
-        normalized = self.normalize(result)
-
-        # DEBUG: Check result norm after normalization
-        norm_after = np.linalg.norm(normalized)
-        print(f"[DEBUG bundle] Result norm AFTER normalize: {norm_after:.6f}")
-
-        return normalized
+        # Do NOT normalize - HRR bundling is simple superposition.
+        # Normalizing interferes with Wiener deconvolution's magnitude assumptions.
+        # The unbind() operation will handle normalization of its output.
+        return result
 
     def permute(self, vec: Array, k: int = 1) -> Array:
         """Permute using circular shift.

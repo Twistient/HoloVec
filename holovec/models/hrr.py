@@ -92,19 +92,15 @@ class HRRModel(VSAModel):
         # Circular convolution in frequency domain
         result = self.backend.circular_convolve(a, b)
 
-        # DEBUG: Check result norm before normalization
+        # DEBUG: Check result norm
         import numpy as np
-        norm_before = np.linalg.norm(result)
-        print(f"[DEBUG bind] Result norm BEFORE normalize: {norm_before:.6f}")
+        norm = np.linalg.norm(result)
+        print(f"[DEBUG bind] Result norm (NOT normalized): {norm:.6f}")
 
-        # Normalize to ensure consistent magnitude for bundling operations
-        normalized = self.normalize(result)
-
-        # DEBUG: Check result norm after normalization
-        norm_after = np.linalg.norm(normalized)
-        print(f"[DEBUG bind] Result norm AFTER normalize: {norm_after:.6f}")
-
-        return normalized
+        # Do NOT normalize here - Wiener deconvolution requires preserving
+        # the magnitude relationship: C = X * B in frequency domain.
+        # Normalizing breaks this relationship and degrades unbind quality.
+        return result
 
     def unbind(self, a: Array, b: Array) -> Array:
         """Unbind using Wiener-style deconvolution in frequency domain.

@@ -31,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install mkdocs mkdocs-shadcn 'mkdocstrings[python]' pymdown-extensions
+          pip install mkdocs mkdocs-shadcn mkdocs-mermaid2-plugin 'mkdocstrings[python]' pymdown-extensions
           pip install -e .
 
       - name: Build docs

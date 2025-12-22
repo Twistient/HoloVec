@@ -57,6 +57,7 @@ dev = [
 docs = [
     "mkdocs>=1.5",
     "mkdocs-shadcn>=0.9",
+    "mkdocs-mermaid2-plugin>=1.0",
     "mkdocstrings[python]>=0.24",
     "pymdown-extensions>=10.0",
 ]

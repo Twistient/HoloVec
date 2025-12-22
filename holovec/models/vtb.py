@@ -183,7 +183,14 @@ class VTBModel(VSAModel):
     def unbind(self, c: Array, b: Array) -> Array:
         """Approximate unbinding using weighted inverse transforms.
 
-        b̂ = Σ_k w_k(a) · roll(c, -s_k)
+        IMPORTANT: Due to non-commutativity, this recovers b from c = bind(a, b).
+        You must pass the FIRST argument of bind (a) as the second argument here.
+
+        For c = bind(a, b):
+          - unbind(c, a) → recovers b (correct usage)
+          - unbind(c, b) → does NOT recover a
+
+        b̂ = Σ_k w_k(b) · roll(c, -s_k)
         """
         # Use same transform derived from b
         w = self._weights(b)

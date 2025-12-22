@@ -140,7 +140,7 @@ class HRRModel(VSAModel):
         - Bundle size: More items → more interference
 
         Empirical performance (D=10000):
-        - Clean unbind: similarity ≈ 0.99
+        - Clean unbind: similarity ≈ 0.65-0.75 (approximate inverse)
         - After bundling 2 items: similarity ≈ 0.57
         - After bundling 10 items: similarity ≈ 0.30
         - After bundling 100 items: similarity decreases further

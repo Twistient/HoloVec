@@ -6,8 +6,10 @@ repo_name: Twistient/HoloVec
 
 theme:
   name: shadcn
-  logo: assets/logo.svg
-  favicon: assets/logo.svg
+  icon: assets/logo.svg
+  pygments_style:
+    light: default
+    dark: github-dark
 
 plugins:
   - search
@@ -21,6 +23,8 @@ plugins:
 
 markdown_extensions:
   - admonition
+  - codehilite:
+      guess_lang: false
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.tabbed:

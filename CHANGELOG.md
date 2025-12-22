@@ -15,16 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - PyTorch backend: Fixed complex dot product double-conjugation bug causing FHRR similarity to return near-zero instead of 1.0
-- README: Updated version in citation block to 0.1.1
-- README: Corrected model count from 7 to 8 (includes BSDC-SEG)
-- README: Fixed GHRR inverse property (Approximate → Exact)
-- README: Fixed BSDC binding description (Segment sample → Sparse XOR)
-- README: Fixed Quick Start example to avoid private attribute access
-- README: Corrected coverage claim (90-98% → 70% overall)
-- README: Marked HoloMem/HoloGraph as planned companion libraries
+- README: Major cleanup - removed aspirational content, updated test count (525→720+), coverage (70→78%), fixed citation URL
+- README: Replaced "Project Status" phases with accurate "Current Status" table
+- README: Simplified "Technical Positioning" into concise "Feature Summary"
 - CITATION.cff: Updated version to 0.1.1 and release date
 - examples/01_basic_operations.py: Removed broken sys.path hack
 - examples/00_quickstart.py: Fixed temperature encoder bandwidth so output matches comments
+- examples/INDEX.md: Fixed URLs and updated date
 - docs/README.md: Removed references to non-existent files
 
 ## [0.1.1] - 2025-12-21

@@ -60,5 +60,5 @@ This separation follows patterns from major libraries (PyTorch, scikit-learn, Nu
 
 - **README.md** (root) - Quick start and overview
 - **examples/** - Working code demonstrations
-- **IMPLEMENTATION_PLAN.md** - Development roadmap
-- **PHASE_*_COMPLETE.md** - Completion reports for each phase
+- **CHANGELOG.md** - Release history and changes
+- **CONTRIBUTING.md** - Development guidelines

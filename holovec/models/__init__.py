@@ -8,11 +8,13 @@ This module provides different VSA models with various algebraic properties:
 - GHRR: Generalized HRR (non-commutative, compositional structures)
 - VTB: Vector-derived Transformation Binding (non-commutative)
 - BSDC: Binary Sparse Distributed Codes (sparse, memory efficient)
+- BSDC-SEG: Segmented BSDC (segment-sparse, exact 1-hot per segment)
 """
 
 from .base import VSAModel
 from .bsc import BSCModel
 from .bsdc import BSDCModel
+from .bsdc_seg import BSDCSEGModel
 from .fhrr import FHRRModel
 from .ghrr import GHRRModel
 from .hrr import HRRModel
@@ -26,6 +28,7 @@ __all__ = [
     'HRRModel',
     'BSCModel',
     'BSDCModel',
+    'BSDCSEGModel',
     'GHRRModel',
     'VTBModel',
 ]

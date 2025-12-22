@@ -48,7 +48,7 @@ from typing import Optional, Union
 
 from . import backends, models, spaces
 from .backends import Backend, get_backend
-from .models import BSCModel, BSDCModel, FHRRModel, GHRRModel, HRRModel, MAPModel, VSAModel, VTBModel
+from .models import BSCModel, BSDCModel, BSDCSEGModel, FHRRModel, GHRRModel, HRRModel, MAPModel, VSAModel, VTBModel
 from .spaces import VectorSpace, create_space
 
 __version__ = "0.1.1"
@@ -80,6 +80,7 @@ class VSA:
         'hrr': HRRModel,
         'bsc': BSCModel,
         'bsdc': BSDCModel,
+        'bsdc_seg': BSDCSEGModel,
         'ghrr': GHRRModel,
         'vtb': VTBModel,
     }
@@ -91,6 +92,7 @@ class VSA:
         'hrr': 'real',
         'bsc': 'binary',
         'bsdc': 'sparse',
+        'bsdc_seg': 'sparse_segment',
         'ghrr': 'matrix',
         'vtb': 'real',
     }
@@ -156,13 +158,20 @@ class VSA:
         if space is None:
             space = cls._DEFAULT_SPACES.get(model_type_lower)
 
+        # Collect space-specific kwargs
+        space_kwargs = {}
+        if space == 'sparse_segment':
+            # For BSDC-SEG: default to dim/10 segments (segment_length=10)
+            space_kwargs['segments'] = kwargs.get('segments', max(1, dim // 10))
+
         # Create space if string provided
         if isinstance(space, str):
             space_instance = create_space(
                 space,
                 dimension=dim,
                 backend=backend_instance,
-                seed=seed
+                seed=seed,
+                **space_kwargs
             )
         else:
             space_instance = space
@@ -262,6 +271,7 @@ __all__ = [
     'HRRModel',
     'BSCModel',
     'BSDCModel',
+    'BSDCSEGModel',
     'GHRRModel',
     'VTBModel',
     # Spaces

@@ -679,6 +679,7 @@ def create_space(
         'real': RealSpace,
         'complex': ComplexSpace,
         'sparse': SparseSpace,
+        'sparse_segment': SparseSegmentSpace,
         'matrix': MatrixSpace,
     }
 

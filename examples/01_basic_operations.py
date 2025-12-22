@@ -9,9 +9,6 @@ This example demonstrates the core operations of VSA models:
 - Permutation (sequence encoding)
 """
 
-import sys
-sys.path.insert(0, '..')
-
 from holovec import VSA, backend_info
 
 def main():

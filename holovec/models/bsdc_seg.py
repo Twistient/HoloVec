@@ -33,18 +33,21 @@ class BSDCSEGModel(VSAModel):
     def __init__(
         self,
         dimension: int,
-        segments: int,
+        segments: Optional[int] = None,
         space: Optional[VectorSpace] = None,
         backend: Optional[Backend] = None,
         seed: Optional[int] = None,
     ):
         if space is None:
+            if segments is None:
+                raise ValueError("segments is required when space is not provided")
             from ..backends import get_backend
             backend = backend if backend is not None else get_backend()
             space = SparseSegmentSpace(dimension, segments=segments, backend=backend, seed=seed)
+        elif not isinstance(space, SparseSegmentSpace):
+            raise TypeError(f"space must be SparseSegmentSpace, got {type(space)}")
 
         super().__init__(space, backend)
-        assert isinstance(space, SparseSegmentSpace)
         self.segments = space.segments
         self.segment_length = space.segment_length
 

@@ -105,7 +105,8 @@ print("-" * 70)
 from holovec.encoders import FractionalPowerEncoder
 
 # Create an encoder for temperatures (0-100°C)
-temp_encoder = FractionalPowerEncoder(model, min_val=0, max_val=100, bandwidth=0.1)
+# bandwidth controls sensitivity: higher = more distinct encodings for distant values
+temp_encoder = FractionalPowerEncoder(model, min_val=0, max_val=100, bandwidth=2.0)
 
 # Encode temperatures
 temp_25 = temp_encoder.encode(25.0)

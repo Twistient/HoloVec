@@ -23,7 +23,7 @@
 - **🎯 Compositional Power**: Bind structure, bundle sets, unbind components with exact or approximate inverses
 - **🔬 Kernel-Aware Encoders**: FPE/RFF with rich phase distributions (Gaussian, Laplace, Cauchy, Student) plus multivariate and periodic encoders
 - **⚡ Multi-Backend**: Run on NumPy, PyTorch (GPU), or JAX (JIT) with unified API
-- **🧮 Modern VSA Models**: 7 validated models from HRR/FHRR (commutative) to GHRR/MBAT (non-commutative)
+- **🧮 Modern VSA Models**: 8 validated models from HRR/FHRR (commutative) to GHRR/VTB (non-commutative)
 - **🎲 Sparse Codes**: BSDC-SEG with segment-wise operations and efficient search
 - **🔍 Practical Retrieval**: Codebook/ItemStore APIs with resonator factorization
 
@@ -41,7 +41,7 @@ Hyperdimensional computing represents information as high-dimensional vectors (~
 
 - **Non-commutative first-class**: GHRR with tunable diagonality, MBAT/VTB transform binding
 - **Kernel theory integration**: FPE = RFF with multiple phase families and mixtures (M2)
-- **Production-ready**: 525+ tests, 90-98% coverage, type-safe, zero dependencies beyond NumPy
+- **Production-ready**: 525+ tests, 70% overall coverage (core modules 90%+), type-safe, zero dependencies beyond NumPy
 - **Clean separation**: HoloVec (algebra + encoders), HoloMem (memories + training), HoloGraph (graph algebra)
 
 <details>
@@ -55,10 +55,10 @@ Hyperdimensional computing represents information as high-dimensional vectors (~
 - **Kernel encoders**: FPE = RFF with phase families + mixtures, multivariate (VectorFPE), periodic encoders; explicit link to kernel methods
 - **Retrieval primitives**: Codebook/ItemStore, brute-force cleanup, resonator (hard/soft, temperature)
 
-### Companion Libraries (Separate)
+### Companion Libraries (Planned)
 
-- **HoloMem**: Advanced memories + learning (SDM variants, attention/Hopfield cleanup, learned β/α, GPU batched retrieval)
-- **HoloGraph**: Outer-product graph embeddings + algebra (tensor/outer-product, powers, subgraphs, homomorphism tests)
+- **HoloMem** *(planned)*: Advanced memories + learning (SDM variants, attention/Hopfield cleanup, learned β/α, GPU batched retrieval)
+- **HoloGraph** *(planned)*: Outer-product graph embeddings + algebra (tensor/outer-product, powers, subgraphs, homomorphism tests)
 
 ### Feature Matrix
 
@@ -108,10 +108,11 @@ hx = fpe.encode([0.2, 1.4, -0.7])
 
 # Store and retrieve
 from holovec.retrieval import ItemStore, Codebook
-cb = Codebook({f"item{i}": model.random(seed=100+i) for i in range(10)},
-              backend=model.backend)
+cb = Codebook({"apple": model.random(seed=1), "banana": model.random(seed=2),
+               "cherry": model.random(seed=3)}, backend=model.backend)
 store = ItemStore(model).fit(cb)
-print(store.query(cb._items['item3'], k=3))
+query = model.random(seed=1)  # Same seed as "apple"
+print(store.query(query, k=2))  # Returns [('apple', 1.0), ('banana', ~0.0)]
 ```
 
 ---
@@ -215,18 +216,19 @@ Different models have different algebraic properties optimized for specific use 
 | Model | Binding | Inverse | Capacity | Best For |
 |-------|---------|---------|----------|----------|
 | **FHRR** | Complex ∗ | Exact (conjugate) | Best (~330 dim) | Continuous data, highest accuracy |
-| **GHRR** | Matrix product | Approximate | Excellent | State-of-the-art (2024), non-commutative |
+| **GHRR** | Matrix product | Exact | Excellent | State-of-the-art (2024), non-commutative |
 | **MAP** | Element × | Self-inverse | Good (~510 dim) | Hardware, neuromorphic chips |
 | **HRR** | Circular conv | Approximate | Good (~510 dim) | Classic baseline |
-| **VTB** | Matrix transform | Learned | Excellent | Adaptive representations |
+| **VTB** | Matrix transform | Approximate | Excellent | Non-commutative, directional |
 | **BSC** | XOR | Self-inverse | Good | Binary operations, FPGA |
-| **BSDC** | Segment sample | Approximate | Very Good | Sparse data, memory efficient |
+| **BSDC** | Sparse XOR | Approximate | Very Good | Sparse data, memory efficient |
+| **BSDC-SEG** | Segment XOR | Self-inverse | Very Good | Segment-sparse, efficient search |
 
 ---
 
 ## 🎯 Features
 
-### 🔧 VSA Models (7 Validated)
+### 🔧 VSA Models (8 Validated)
 
 All models validated against academic literature with comprehensive property-based testing:
 
@@ -308,31 +310,29 @@ Recover clean vectors from noisy queries:
 
 ## 📚 Examples
 
-### Example 1: Analogical Reasoning
+### Example 1: Binding and Recovery
 
-Solve "King - Man + Woman = Queen":
+Demonstrate the core VSA operation - bind two vectors and recover one:
 
 ```python
 from holovec import VSA
 
 model = VSA.create('FHRR', dim=10000)
 
-# Create concept vectors
-king = model.random(seed=1)
-man = model.random(seed=2)
-woman = model.random(seed=3)
-queen = model.random(seed=4)
+# Create two random vectors
+a = model.random(seed=1)
+b = model.random(seed=2)
 
-# Compute analogy: king - man + woman
-result = model.bundle([
-    king,
-    model.unbind(king, man),  # Remove "maleness"
-    woman                      # Add "femaleness"
-])
+# Bind them together (creates association)
+c = model.bind(a, b)
 
-# Should be similar to queen
-similarity = model.similarity(result, queen)
-print(f"King - Man + Woman ≈ Queen: {similarity:.3f}")
+# The bound vector is dissimilar to both inputs
+print(f"Similarity(c, a): {model.similarity(c, a):.3f}")  # ~0.0
+print(f"Similarity(c, b): {model.similarity(c, b):.3f}")  # ~0.0
+
+# Unbind to recover the original
+a_recovered = model.unbind(c, b)
+print(f"Similarity(a, a_recovered): {model.similarity(a, a_recovered):.3f}")  # ~1.0
 ```
 
 ### Example 2: Role-Filler Binding
@@ -511,7 +511,7 @@ holovec/
 ├── retrieval/        # Cleanup and retrieval (Codebook, ItemStore, strategies)
 └── utils/            # Utilities (CPSE/CPSD, search, operations)
 
-tests/                # 525+ test functions (90-98% coverage)
+tests/                # 525+ test functions
 examples/             # Working examples and demos
 docs/                 # Documentation and theory guides
 ```
@@ -542,7 +542,7 @@ pytest tests/test_models.py -k numpy
 **Test Statistics:**
 
 - ✅ **525+ test functions**
-- ✅ **90-98% code coverage**
+- ✅ **70% overall coverage** (core modules 90%+)
 - ✅ **Property-based testing** with Hypothesis
 - ✅ **Cross-backend consistency** validation
 - ✅ **Numerical stability** verification
@@ -707,7 +707,7 @@ HoloVec is built on decades of academic research in hyperdimensional computing:
 <summary><b>P2 (Ecosystem/Adoption)</b></summary>
 
 - **Website** with literate notebooks
-- **Publish** 0.1.0-alpha
+- **PyPI publish** and stable API
 - **Blog posts**: Attention≈SDM; GHRR holography; BSDC-SEG capacity
 - **Academic channels**: arXiv-style writeup linking library
 </details>
@@ -724,7 +724,7 @@ If you use HoloVec in your research, please cite:
   title        = {HoloVec: Holographic Vector Algebra for Compositional Machine Intelligence},
   organization = {Twistient Corp.},
   year         = {2025},
-  version      = {0.1.0},
+  version      = {0.1.1},
   url          = {https://github.com/Twistient/holovec},
   license      = {Apache-2.0}
 }

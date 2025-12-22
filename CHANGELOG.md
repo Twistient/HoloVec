@@ -155,7 +155,7 @@ All models validated against academic literature with property-based testing.
 ### Testing
 
 - **480+ test functions** across all modules
-- **90-98% code coverage** (lines)
+- **70% overall coverage** (core modules 90%+)
 - **Property-based testing** with Hypothesis
   - Algebraic properties (commutativity, associativity, distributivity)
   - Inverse properties (bind/unbind recovery)

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- PyTorch backend: Fixed complex dot product double-conjugation bug causing FHRR similarity to return near-zero instead of 1.0
 - README: Updated version in citation block to 0.1.1
 - README: Corrected model count from 7 to 8 (includes BSDC-SEG)
 - README: Fixed GHRR inverse property (Approximate → Exact)

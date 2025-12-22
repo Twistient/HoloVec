@@ -264,9 +264,10 @@ class TorchBackend(Backend):
         return torch.linalg.norm(a, ord=ord, dim=axis)
 
     def dot(self, a: Array, b: Array) -> Array:
-        # Handle complex tensors explicitly: use sum(a * conj(b))
+        # Use linear dot product (no conjugation) to match NumPy/JAX semantics.
+        # ComplexSpace.similarity handles conjugation explicitly when needed.
         if torch.is_complex(a) or torch.is_complex(b):
-            return torch.sum(a.flatten() * torch.conj(b.flatten()))
+            return torch.sum(a.flatten() * b.flatten())
         return torch.dot(a.flatten(), b.flatten())
 
     def max(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:

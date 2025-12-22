@@ -44,7 +44,7 @@ Vector Spaces:
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Union
 
 from . import backends, models, spaces
 from .backends import Backend, get_backend
@@ -100,7 +100,7 @@ class VSA:
         cls,
         model_type: str,
         dim: int = 10000,
-        backend: Optional[str] = None,
+        backend: Optional[Union[str, Backend]] = None,
         space: Optional[str] = None,
         seed: Optional[int] = None,
         **kwargs
@@ -110,7 +110,8 @@ class VSA:
         Args:
             model_type: Model name ('MAP', 'FHRR', 'HRR', 'BSC', etc.)
             dim: Dimensionality of hypervectors
-            backend: Backend name ('numpy', 'torch', 'jax') or None for default
+            backend: Backend name ('numpy', 'torch', 'jax'), a :class:`Backend`
+                instance, or None for the default backend
             space: Vector space name or None for model's default
             seed: Random seed for reproducibility
             **kwargs: Additional arguments passed to backend (e.g., device='cuda')
@@ -140,7 +141,16 @@ class VSA:
 
         # Create backend
         backend_kwargs = {k: v for k, v in kwargs.items() if k in ['device']}
-        backend_instance = get_backend(backend, **backend_kwargs) if backend else None
+        if isinstance(backend, Backend):
+            backend_instance = backend
+        elif isinstance(backend, str):
+            backend_instance = get_backend(backend, **backend_kwargs)
+        elif backend is None:
+            backend_instance = None
+        else:
+            raise TypeError(
+                "backend must be a backend name (str) or a Backend instance"
+            )
 
         # Determine space type
         if space is None:

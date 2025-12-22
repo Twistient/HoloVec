@@ -215,14 +215,14 @@ Different models have different algebraic properties optimized for specific use 
 
 | Model | Binding | Inverse | Capacity | Best For |
 |-------|---------|---------|----------|----------|
-| **FHRR** | Complex ∗ | Exact (conjugate) | Best (~330 dim) | Continuous data, highest accuracy |
-| **GHRR** | Matrix product | Exact | Excellent | State-of-the-art (2024), non-commutative |
-| **MAP** | Element × | Self-inverse | Good (~510 dim) | Hardware, neuromorphic chips |
-| **HRR** | Circular conv | Approximate | Good (~510 dim) | Classic baseline |
+| **FHRR** | Complex multiply | Exact | Best | Continuous data, highest accuracy |
+| **GHRR** | Matrix product | Exact | Excellent | Non-commutative, state-of-the-art |
+| **MAP** | Element multiply | Self-inverse | Good | Hardware, neuromorphic chips |
+| **HRR** | Circular conv | Approximate | Good | Classic baseline, real-valued |
 | **VTB** | Matrix transform | Approximate | Excellent | Non-commutative, directional |
 | **BSC** | XOR | Self-inverse | Good | Binary operations, FPGA |
-| **BSDC** | Sparse XOR | Approximate | Very Good | Sparse data, memory efficient |
-| **BSDC-SEG** | Segment XOR | Self-inverse | Very Good | Segment-sparse, efficient search |
+| **BSDC** | Sparse XOR | Approximate | Very Good | Sparse, memory efficient |
+| **BSDC-SEG** | Segment XOR | Self-inverse | Very Good | Segment-sparse, fast search |
 
 ---
 

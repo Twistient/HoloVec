@@ -41,47 +41,24 @@ Hyperdimensional computing represents information as high-dimensional vectors (~
 
 - **Non-commutative first-class**: GHRR with tunable diagonality, MBAT/VTB transform binding
 - **Kernel theory integration**: FPE = RFF with multiple phase families and mixtures (M2)
-- **Production-ready**: 525+ tests, 70% overall coverage (core modules 90%+), type-safe, zero dependencies beyond NumPy
-- **Clean separation**: HoloVec (algebra + encoders), HoloMem (memories + training), HoloGraph (graph algebra)
+- **Production-ready**: 720+ tests, 78% coverage, type-safe, zero dependencies beyond NumPy
+- **Focused scope**: Core algebra and encoders - clean, composable, extensible
 
 <details>
-<summary><b>📊 Technical Positioning & Scope</b></summary>
+<summary><b>📊 Feature Summary</b></summary>
 
-### What HoloVec Provides
+| Category | What's Included |
+|----------|-----------------|
+| **VSA Models** | HRR, FHRR (exact inverse), GHRR (non-commutative), VTB, MAP, BSC, BSDC, BSDC-SEG |
+| **Encoders** | FractionalPower (continuous), Thermometer, Level, Position, NGram, Trajectory, Image, Vector |
+| **Retrieval** | Codebook, ItemStore, BruteForce cleanup, Resonator cleanup |
+| **Backends** | NumPy (CPU), PyTorch (GPU/CUDA/Metal), JAX (JIT/TPU) |
 
-**HoloVec = Algebra-first + Kernel-aware HDC core**
-
-- **Compositional algebra**: HRR/FHRR (commutative), GHRR (exact non-commutative with diagonality), VTB/MBAT (non-commutative transform), BSC/BSDC + BSDC-SEG (sparse/segment)
-- **Kernel encoders**: FPE = RFF with phase families + mixtures, multivariate (VectorFPE), periodic encoders; explicit link to kernel methods
-- **Retrieval primitives**: Codebook/ItemStore, brute-force cleanup, resonator (hard/soft, temperature)
-
-### Companion Libraries (Planned)
-
-- **HoloMem** *(planned)*: Advanced memories + learning (SDM variants, attention/Hopfield cleanup, learned β/α, GPU batched retrieval)
-- **HoloGraph** *(planned)*: Outer-product graph embeddings + algebra (tensor/outer-product, powers, subgraphs, homomorphism tests)
-
-### Feature Matrix
-
-| Category | Features |
-|----------|----------|
-| **Algebra (binding)** | HRR (conv), FHRR (phasor, exact inverse), GHRR (matrix-unitary, non-commutative, diagonality), VTB/MBAT (transform), BSC/BSDC (XOR), BSDC-SEG (segments) |
-| **Encoders** | Scalar FPE (Gaussian/Laplace/Cauchy/Student/Uniform) + mixtures; VectorFPE (multivariate); Periodic/angle; Thermometer; Level |
-| **Retrieval** | Codebook + ItemStore; Brute-force cleanup; Resonator (hard/soft, temperature, early-stop); batched similarity |
-| **Sparse/Segment** | BSDC-SEG (exact 1-hot/segment); segment-wise masking/rotation/permutation; segment-pattern search |
-| **Backends** | NumPy (base), PyTorch (GPU), JAX (JIT); helper parity (complex, FFT, softmax, angle, power, where, etc.) |
-
-### Key Differentiators
-
-**Already in HoloVec:**
-- GHRR with diagonality → flexible non-commutativity and exact inverses
-- VTB/MBAT transform binding → directional facts without heavy permutations
-- FPE "done right" → multiple phase families, mixtures (M2), multivariate, periodic
-- BSDC-SEG → exact segmented sparsity + segment search utilities
-- Multi-backend (NumPy/Torch/JAX) + kernel framing approachable for ML engineers
-
-**What we delegate:**
-- Deep framework-specific training pipelines (→ HoloMem)
-- Graph-specific algebra (→ HoloGraph)
+**Key differentiators:**
+- GHRR with tunable diagonality for flexible non-commutativity
+- FPE with multiple phase distributions (Gaussian, Laplace, Cauchy, Student)
+- Multi-backend with unified API
+- Production-ready with comprehensive testing
 
 </details>
 
@@ -99,7 +76,7 @@ model = VSA.create('FHRR', dim=2048)
 a, b = model.random(), model.random()
 c = model.bind(a, b)
 a_recovered = model.unbind(c, b)
-print(f"Similarity: {model.similarity(a, a_recovered):.3f}")  # ~0.99
+print(f"Similarity: {model.similarity(a, a_recovered):.3f}")  # ~1.0 (exact inverse)
 
 # Encode continuous data with kernel-aware encoder
 from holovec.encoders import VectorFPE
@@ -511,7 +488,7 @@ holovec/
 ├── retrieval/        # Cleanup and retrieval (Codebook, ItemStore, strategies)
 └── utils/            # Utilities (CPSE/CPSD, search, operations)
 
-tests/                # 525+ test functions
+tests/                # 720+ test functions
 examples/             # Working examples and demos
 docs/                 # Documentation and theory guides
 ```
@@ -541,10 +518,10 @@ pytest tests/test_models.py -k numpy
 
 **Test Statistics:**
 
-- ✅ **525+ test functions**
-- ✅ **70% overall coverage** (core modules 90%+)
+- ✅ **720+ test functions** across all modules
+- ✅ **78% overall coverage**
 - ✅ **Property-based testing** with Hypothesis
-- ✅ **Cross-backend consistency** validation
+- ✅ **Cross-backend consistency** (NumPy, PyTorch, JAX)
 - ✅ **Numerical stability** verification
 
 ---
@@ -640,77 +617,23 @@ HoloVec is built on decades of academic research in hyperdimensional computing:
 
 ---
 
-## 📊 Project Status
+## 📊 Current Status
 
-### ✅ Phase 1: Core Foundation (COMPLETE)
+**Version 0.1.1** - Production-ready core with comprehensive test coverage.
 
-- Backend abstraction (NumPy, PyTorch, JAX)
-- Vector spaces (Bipolar, Binary, Real, Complex, Sparse, Matrix)
-- MAP and FHRR models
-- High-level API
-- Comprehensive test suite
+| Component | Status | Notes |
+|-----------|--------|-------|
+| **8 VSA Models** | ✅ Complete | MAP, FHRR, HRR, BSC, BSDC, BSDC-SEG, GHRR, VTB |
+| **3 Backends** | ✅ Complete | NumPy, PyTorch (GPU), JAX (JIT) |
+| **Encoders** | ✅ Complete | Scalar, sequence, spatial, structured |
+| **Retrieval** | ✅ Complete | Codebook, ItemStore, cleanup strategies |
+| **Test Suite** | ✅ 720+ tests | 78% coverage, property-based testing |
 
-### ✅ Phase 2: Model Library (COMPLETE)
+### What's Next
 
-- HRR, BSC, VTB, BSDC, GHRR models
-- All 7 models validated
-- Property-based testing
-- Cross-backend consistency
-
-### ✅ Phase 3A-C: Encoders & Utilities (COMPLETE)
-
-- Scalar encoders (FPE, Thermometer, Level)
-- Sequence encoders (Position, NGram, Trajectory)
-- Spatial encoder (Image)
-- Structured encoder (Vector)
-- Cleanup strategies (BruteForce, Resonator)
-- Search utilities (K-NN, threshold, batch)
-- CPSE/CPSD algorithms
-
-### 🚧 Phase 3D: Memory Systems (IN PROGRESS)
-
-- ItemMemory with cleanup strategies
-- SequenceMemory with temporal binding
-- Sparse Distributed Memory (SDM)
-- Attention-based memory
-- Probabilistic memory
-
-### 📋 Future Phases
-
-- Applications (classification, regression, clustering)
-- Analysis and visualization tools
-- Neural network integration
-- Hardware acceleration guides
-
----
-
-## 🧭 Roadmap (Near-Term)
-
-<details>
-<summary><b>P0 (within HoloVec)</b></summary>
-
-- **Docs**: "HDC for ML People" and "GHRR for Researchers"; literature-backed notes
-- **Bench**: factorization (3-5 factors) with convergence curves; bundling capacity curves; FPE kernel visualizations
-- **sklearn helpers**: thin wrappers for FPE + ItemStore; UCI demo
-- **Examples**: circular correlation HRR; role permutations; resonator factorization demo; FPE kernel shapes
-- **API polish**: top-level factory finalize; stabilize public surface; batched ItemStore query (done)
-</details>
-
-<details>
-<summary><b>P1 (HoloMem/HoloGraph scaffolds)</b></summary>
-
-- **HoloMem**: SDM variants; attention/Hopfield cleanup; learned β/α trainers; GPU batched memory; evaluation harness; PyTorch modules
-- **HoloGraph**: outer-product graph embeddings + algebra demos (subgraphs, homomorphisms, path powers)
-</details>
-
-<details>
-<summary><b>P2 (Ecosystem/Adoption)</b></summary>
-
-- **Website** with literate notebooks
-- **PyPI publish** and stable API
-- **Blog posts**: Attention≈SDM; GHRR holography; BSDC-SEG capacity
-- **Academic channels**: arXiv-style writeup linking library
-</details>
+- PyPI publication
+- Additional documentation and tutorials
+- Performance benchmarks and optimization guides
 
 ---
 
@@ -725,7 +648,7 @@ If you use HoloVec in your research, please cite:
   organization = {Twistient Corp.},
   year         = {2025},
   version      = {0.1.1},
-  url          = {https://github.com/Twistient/holovec},
+  url          = {https://github.com/Twistient/HoloVec},
   license      = {Apache-2.0}
 }
 ```

@@ -314,7 +314,7 @@ class TestImageEncoderErrors:
         image = np.ones((2, 2), dtype=np.uint8) * 128
         hv = encoder.encode(image)
 
-        with pytest.raises(NotImplementedError, match="not yet implemented"):
+        with pytest.raises(NotImplementedError, match="not implemented"):
             encoder.decode(hv, height=2, width=2, n_channels=1)
 
 

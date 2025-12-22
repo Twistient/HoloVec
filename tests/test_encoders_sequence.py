@@ -1053,7 +1053,7 @@ class TestTrajectoryEncoderDecoding:
         path = [(0, 0), (10, 10), (20, 20)]
         hv = encoder.encode(path)
 
-        with pytest.raises(NotImplementedError, match="not yet implemented"):
+        with pytest.raises(NotImplementedError, match="not implemented"):
             encoder.decode(hv)
 
 

@@ -1,5 +1,0 @@
-Core Concepts
-============
-
-Coming soon.
-

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/source/_static/logo.svg" alt="HoloVec Logo" width="400">
+  <img src="docs/assets/logo.svg" alt="HoloVec Logo" width="400">
 </div>
 
 <div align="center">
@@ -10,7 +10,7 @@
 
 **Vector Symbolic Architectures for compositional, high-dimensional computing.**
 
-[Installation](#installation) • [Quick Start](#quick-start) • [Concepts](#concepts) • [Examples](examples/)
+[Documentation](https://twistient.github.io/HoloVec/) • [Installation](#installation) • [Quick Start](#quick-start) • [Examples](examples/)
 
 </div>
 

@@ -1,0 +1,77 @@
+site_name: HoloVec
+site_description: Vector Symbolic Architectures for Python
+site_url: https://twistient.github.io/HoloVec/
+repo_url: https://github.com/Twistient/HoloVec
+repo_name: Twistient/HoloVec
+
+theme:
+  name: shadcn
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+            docstring_style: numpy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex:
+      generic: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Overview: overview.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - Core Concepts: getting-started/core-concepts.md
+  - Architecture:
+    - Overview: architecture/index.md
+    - Backends: architecture/backends.md
+    - Spaces: architecture/spaces.md
+  - Models:
+    - Comparison: models/index.md
+    - FHRR: models/fhrr.md
+    - GHRR: models/ghrr.md
+    - MAP: models/map.md
+    - HRR: models/hrr.md
+    - VTB: models/vtb.md
+    - BSC: models/bsc.md
+    - BSDC: models/bsdc.md
+    - BSDC-SEG: models/bsdc-seg.md
+  - Encoders:
+    - Overview: encoders/index.md
+    - Fractional Power: encoders/fractional-power.md
+    - Thermometer & Level: encoders/thermometer-level.md
+    - Sequences: encoders/sequence.md
+    - Spatial: encoders/spatial.md
+  - Retrieval:
+    - Overview: retrieval/index.md
+    - Cleanup Strategies: retrieval/cleanup.md
+  - Guides:
+    - Patterns: guides/patterns.md
+    - Performance: guides/performance.md
+    - Troubleshooting: guides/troubleshooting.md
+  - Reference:
+    - API: reference/api.md
+    - Glossary: reference/glossary.md
+    - Bibliography: reference/bibliography.md

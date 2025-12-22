@@ -35,8 +35,9 @@ markdown_extensions:
   - toc:
       permalink: false
 
-  # Code highlighting - MUST use codehilite for shadcn theme copy button
-  - codehilite:
+  # Code highlighting - use pymdownx.highlight with codehilite class for shadcn theme
+  - pymdownx.highlight:
+      css_class: codehilite
       guess_lang: false
 
   # Fenced code blocks with mermaid support

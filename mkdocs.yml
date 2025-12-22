@@ -6,9 +6,11 @@ repo_name: Twistient/HoloVec
 
 theme:
   name: shadcn
-  icon: assets/logo.svg
+  icon: assets/icon.svg
+  show_title: true
+  show_stargazers: true
   pygments_style:
-    light: default
+    light: shadcn-light
     dark: github-dark
 
 plugins:
@@ -22,24 +24,45 @@ plugins:
             docstring_style: numpy
 
 markdown_extensions:
+  # Standard extensions
   - admonition
-  - codehilite:
-      guess_lang: false
-  - pymdownx.details
-  - pymdownx.superfences
-  - pymdownx.tabbed:
-      alternate_style: true
-  - pymdownx.arithmatex:
-      generic: true
   - attr_list
+  - def_list
+  - footnotes
   - md_in_html
   - tables
   - toc:
-      permalink: true
+      permalink: false
+
+  # Code highlighting (pymdownx.highlight works better with superfences)
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+
+  # Code blocks with Mermaid support
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+  # UI components
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+
+  # Math support
+  - pymdownx.arithmatex:
+      generic: true
 
 extra_javascript:
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js
+  - assets/js/mermaid-init.js
+
+extra_css: []
 
 nav:
   - Home: index.md

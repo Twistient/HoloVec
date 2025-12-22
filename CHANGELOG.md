@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- BSDCSEGModel now exported in public API via `VSA.create('bsdc_seg')`
+- 'sparse_segment' space type registered in `create_space()` factory
+
+### Fixed
+
+- README: Updated version in citation block to 0.1.1
+- README: Corrected model count from 7 to 8 (includes BSDC-SEG)
+- README: Fixed GHRR inverse property (Approximate → Exact)
+- README: Fixed BSDC binding description (Segment sample → Sparse XOR)
+- README: Fixed Quick Start example to avoid private attribute access
+- README: Corrected coverage claim (90-98% → 70% overall)
+- README: Marked HoloMem/HoloGraph as planned companion libraries
+- CITATION.cff: Updated version to 0.1.1 and release date
+- examples/01_basic_operations.py: Removed broken sys.path hack
+- examples/00_quickstart.py: Fixed temperature encoder bandwidth so output matches comments
+- docs/README.md: Removed references to non-existent files
+
 ## [0.1.1] - 2025-12-21
 
 ### Added

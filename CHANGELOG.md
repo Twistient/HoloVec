@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved backend availability detection to check actual dependencies
 - Enhanced cross-backend test coverage
 
+### Fixed
+
+- HRR model: Replaced Wiener deconvolution with classic circular correlation for unbinding
+- HRR model: Removed incorrect normalization from bind() and bundle() operations
+- HRR model: Corrected docstring to reflect actual ~0.65-0.75 recovery similarity (was incorrectly stated as ~0.99)
+- VSA.create(): Now accepts Backend instances in addition to string names
+- VTB model: Clarified unbind() docstring to explain non-commutative recovery semantics
+
 ## [0.1.0] - 2025-11-06
 
 ### Added

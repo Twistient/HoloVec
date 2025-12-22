@@ -253,10 +253,10 @@ Work through all examples in numerical order (00 → 42)
 ## Support & Documentation
 
 - **Full Guide**: [README.md](README.md)
-- **Documentation**: <https://docs.holovecai.com>
-- **Issues**: <https://github.com/twistient/holovec/issues>
-- **Discussions**: <https://github.com/twistient/holovec/discussions>
+- **Documentation**: <https://holovec.readthedocs.io>
+- **Issues**: <https://github.com/Twistient/HoloVec/issues>
+- **Discussions**: <https://github.com/Twistient/HoloVec/discussions>
 
 ---
 
-*Last updated: 11-07-2025*
+*Last updated: 2025-12-21*

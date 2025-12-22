@@ -24,39 +24,30 @@ plugins:
             show_root_heading: true
             docstring_style: numpy
 
+# Match demo site extensions exactly
 markdown_extensions:
-  # Standard extensions
-  - admonition
-  - attr_list
-  - def_list
-  - footnotes
-  - md_in_html
-  - tables
-  - toc:
-      permalink: false
-
-  # Code highlighting - use pymdownx.highlight with codehilite class for shadcn theme
-  # NOTE: codehilite must be listed to trigger shadcn theme's pygments CSS loading
-  - codehilite
-  - pymdownx.highlight:
-      css_class: codehilite
-      guess_lang: false
-
-  # Fenced code blocks with mermaid support
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:mermaid2.fence_mermaid
-
-  # UI components
-  - pymdownx.details
-  - pymdownx.tabbed:
-      alternate_style: true
-
-  # Math support
-  - pymdownx.arithmatex:
-      generic: true
+  admonition:
+  codehilite:
+  fenced_code:
+  footnotes:
+  extra:
+  attr_list:
+  tables:
+  toc:
+    permalink: false
+  pymdownx.blocks.details:
+  pymdownx.tabbed:
+  pymdownx.blocks.tab:
+    combine_header_slug: true
+  pymdownx.arithmatex:
+    generic: true
+  pymdownx.highlight:
+    css_class: codehilite
+  pymdownx.superfences:
+    custom_fences:
+      - name: mermaid
+        class: mermaid
+        format: !!python/name:mermaid2.fence_mermaid
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

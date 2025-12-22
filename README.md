@@ -41,7 +41,7 @@ Hyperdimensional computing represents information as high-dimensional vectors (~
 
 - **Non-commutative first-class**: GHRR with tunable diagonality, MBAT/VTB transform binding
 - **Kernel theory integration**: FPE = RFF with multiple phase families and mixtures (M2)
-- **Production-ready**: 480+ tests, 90-98% coverage, type-safe, zero dependencies beyond NumPy
+- **Production-ready**: 525+ tests, 90-98% coverage, type-safe, zero dependencies beyond NumPy
 - **Clean separation**: HoloVec (algebra + encoders), HoloMem (memories + training), HoloGraph (graph algebra)
 
 <details>
@@ -511,7 +511,7 @@ holovec/
 ├── retrieval/        # Cleanup and retrieval (Codebook, ItemStore, strategies)
 └── utils/            # Utilities (CPSE/CPSD, search, operations)
 
-tests/                # 480+ test functions (90-98% coverage)
+tests/                # 525+ test functions (90-98% coverage)
 examples/             # Working examples and demos
 docs/                 # Documentation and theory guides
 ```
@@ -541,7 +541,7 @@ pytest tests/test_models.py -k numpy
 
 **Test Statistics:**
 
-- ✅ **480+ test functions**
+- ✅ **525+ test functions**
 - ✅ **90-98% code coverage**
 - ✅ **Property-based testing** with Hypothesis
 - ✅ **Cross-backend consistency** validation

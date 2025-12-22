@@ -51,7 +51,7 @@ from .backends import Backend, get_backend
 from .models import BSCModel, BSDCModel, FHRRModel, GHRRModel, HRRModel, MAPModel, VSAModel, VTBModel
 from .spaces import VectorSpace, create_space
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 class VSA:

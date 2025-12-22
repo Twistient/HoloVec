@@ -7,20 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-12-21
+
 ### Added
 
-- Retrieval module with Codebook and ItemStore classes
+- Retrieval module with Codebook, ItemStore, and AssocStore classes
 - Backend capability detection (supports_gpu, supports_jit, supports_complex, supports_sparse, supports_device)
-- Phase 3C utilities complete:
-  - Cleanup strategies (BruteForceCleanup, ResonatorCleanup)
-  - Search utilities (nearest_neighbors, threshold_search, batch_similarity)
-  - CPSE/CPSD utilities for context-preserving encoding
-  - General operations (select_top_k, add_noise, similarity_matrix)
+- Cleanup strategies: BruteForceCleanup and ResonatorCleanup (Kymn et al. 2024)
+- Search utilities: nearest_neighbors, threshold_search, batch_similarity
+- CPSE/CPSD utilities for context-preserving encoding (Malits & Mendelson 2025)
+- General operations: select_top_k, add_noise, similarity_matrix
+- hypothesis to dev dependencies for property-based testing
 
 ### Changed
 
 - Improved backend availability detection to check actual dependencies
-- Enhanced cross-backend test coverage
+- Enhanced cross-backend test coverage (525+ tests passing)
 
 ### Fixed
 
@@ -29,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HRR model: Corrected docstring to reflect actual ~0.65-0.75 recovery similarity (was incorrectly stated as ~0.99)
 - VSA.create(): Now accepts Backend instances in addition to string names
 - VTB model: Clarified unbind() docstring to explain non-commutative recovery semantics
+- Test assertions: Updated regex patterns and HRR threshold for property tests
 
 ## [0.1.0] - 2025-11-06
 
@@ -246,5 +249,6 @@ Based on comprehensive academic research:
 - Kymn et al. (2024) - Resonator cleanup networks
 - Malits & Mendelson (2025) - CPSE/CPSD algorithms
 
-[Unreleased]: https://github.com/Twistient/HoloVec/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Twistient/HoloVec/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Twistient/HoloVec/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Twistient/HoloVec/releases/tag/v0.1.0

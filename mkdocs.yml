@@ -36,6 +36,8 @@ markdown_extensions:
       permalink: false
 
   # Code highlighting - use pymdownx.highlight with codehilite class for shadcn theme
+  # NOTE: codehilite must be listed to trigger shadcn theme's pygments CSS loading
+  - codehilite
   - pymdownx.highlight:
       css_class: codehilite
       guess_lang: false

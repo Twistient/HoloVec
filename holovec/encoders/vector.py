@@ -1,6 +1,6 @@
-from __future__ import annotations
+from collections.abc import Iterable
 
-from typing import Dict, Iterable, Optional
+import numpy
 
 from holovec.encoders.base import Encoder
 from holovec.models.base import VSAModel
@@ -33,9 +33,9 @@ class VectorFPE(Encoder):
         self,
         model: VSAModel,
         input_dim: int,
-        bandwidth: float | Array | "numpy.ndarray" = 1.0,
+        bandwidth: float | Array | numpy.ndarray = 1.0,
         phase_dist: str = "gaussian",
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> None:
         super().__init__(model)
         self.input_dim = int(input_dim)
@@ -46,11 +46,13 @@ class VectorFPE(Encoder):
         if self.phase_dist not in valid:
             raise ValueError(f"Unsupported phase_dist '{phase_dist}'; choose from {sorted(valid)}")
 
-        self.is_complex = self.model.space.space_name in ("complex",) or "matrix" in self.model.space.space_name
+        self.is_complex = (
+            self.model.space.space_name in ("complex",) or "matrix" in self.model.space.space_name
+        )
         # Sample W (D x n)
         self.W = self._sample_W(self.phase_dist, self.model.dimension, self.input_dim, seed)
 
-    def _sample_W(self, phase_dist: str, D: int, n: int, seed: Optional[int]) -> Array:
+    def _sample_W(self, phase_dist: str, D: int, n: int, seed: int | None) -> Array:
         """Sample frequency matrix W from specified distribution.
 
         Parameters
@@ -170,7 +172,7 @@ class VectorFPE(Encoder):
             arr = x
 
         # Apply per-dimension or scalar bandwidth scaling
-        if isinstance(self.bandwidth, (int, float)):
+        if isinstance(self.bandwidth, int | float):
             # Scalar bandwidth: multiply all dimensions by same value
             return be.multiply_scalar(arr, float(self.bandwidth))
         else:
@@ -190,7 +192,7 @@ class VectorFPE(Encoder):
         else:
             return be.real(be.exp(1j * angle))
 
-    def decode(self, hv: Array, candidates: Optional[Dict[str, Array]] = None, k: int = 1):
+    def decode(self, hv: Array, candidates: dict[str, Array] | None = None, k: int = 1):
         """No closed-form inverse; use nearest in a codebook if provided."""
         if candidates is None:
             raise NotImplementedError("VectorFPE.decode requires a codebook for nearest lookup.")

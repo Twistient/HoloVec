@@ -6,7 +6,6 @@ and structured data into hypervector representations by composing scalar
 encoders with dimension binding.
 """
 
-from typing import List, Optional
 from holovec.encoders.base import StructuredEncoder, ScalarEncoder
 from holovec.models.base import VSAModel
 from holovec.backends.base import Array
@@ -67,7 +66,7 @@ class VectorEncoder(StructuredEncoder):
         scalar_encoder: ScalarEncoder,
         n_dimensions: int,
         normalize_input: bool = False,
-        seed: Optional[int] = None
+        seed: int | None = None
     ):
         """
         Initialize vector encoder.
@@ -106,7 +105,7 @@ class VectorEncoder(StructuredEncoder):
 
         # Generate dimension hypervectors (one per dimension)
         # These are the "roles" in role-filler binding
-        self.dim_vectors: List[Array] = []
+        self.dim_vectors: list[Array] = []
         for i in range(n_dimensions):
             # Use deterministic seeding for reproducibility
             if seed is not None:
@@ -228,7 +227,7 @@ class VectorEncoder(StructuredEncoder):
         return self.scalar_encoder.is_reversible
 
     @property
-    def compatible_models(self) -> List[str]:
+    def compatible_models(self) -> list[str]:
         """
         Works with all VSA models.
 

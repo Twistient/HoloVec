@@ -42,9 +42,6 @@ Vector Spaces:
     - Sparse: Sparse binary for BSDC
 """
 
-from __future__ import annotations
-
-from typing import Optional, Union
 
 from . import backends, models, spaces
 from .backends import Backend, get_backend
@@ -114,9 +111,9 @@ class VSA:
         cls,
         model_type: str,
         dim: int = 10000,
-        backend: Optional[Union[str, Backend]] = None,
-        space: Optional[str] = None,
-        seed: Optional[int] = None,
+        backend: str | Backend | None = None,
+        space: str | None = None,
+        seed: int | None = None,
         **kwargs,
     ) -> VSAModel:
         """Create a VSA model with the specified configuration.

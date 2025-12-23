@@ -26,10 +26,7 @@ Mathematical Foundation:
     - Convergence: similarity >= threshold or max_iterations reached
 """
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Tuple
 
 from ..backends.base import Array
 from ..models.base import VSAModel
@@ -72,9 +69,9 @@ class CleanupStrategy(ABC):
     def cleanup(
         self,
         query: Array,
-        codebook: Dict[str, Array],
+        codebook: dict[str, Array],
         model: VSAModel,
-    ) -> Tuple[str, float]:
+    ) -> tuple[str, float]:
         """Find the best matching codebook entry for a query.
 
         Args:
@@ -99,12 +96,12 @@ class CleanupStrategy(ABC):
     def factorize(
         self,
         query: Array,
-        codebook: Dict[str, Array],
+        codebook: dict[str, Array],
         model: VSAModel,
         n_factors: int = 2,
         max_iterations: int = 20,
         threshold: float = 0.99,
-    ) -> Tuple[List[str], List[float]]:
+    ) -> tuple[list[str], list[float]]:
         """Factorize a composition into constituent factors.
 
         Iteratively unbinds factors from a composite hypervector by
@@ -169,9 +166,9 @@ class BruteForceCleanup(CleanupStrategy):
     def cleanup(
         self,
         query: Array,
-        codebook: Dict[str, Array],
+        codebook: dict[str, Array],
         model: VSAModel,
-    ) -> Tuple[str, float]:
+    ) -> tuple[str, float]:
         """Find best match via exhaustive search.
 
         Computes similarity between query and every codebook entry,
@@ -235,12 +232,12 @@ class BruteForceCleanup(CleanupStrategy):
     def factorize(
         self,
         query: Array,
-        codebook: Dict[str, Array],
+        codebook: dict[str, Array],
         model: VSAModel,
         n_factors: int = 2,
         max_iterations: int = 20,
         threshold: float = 0.99,
-    ) -> Tuple[List[str], List[float]]:
+    ) -> tuple[list[str], list[float]]:
         """Factorize via iterative cleanup and unbinding.
 
         Repeatedly finds the best match, unbinds it from the query,
@@ -280,7 +277,7 @@ class BruteForceCleanup(CleanupStrategy):
             raise TypeError(f"n_factors must be int, got {type(n_factors)}")
         if not isinstance(max_iterations, int):
             raise TypeError(f"max_iterations must be int, got {type(max_iterations)}")
-        if not isinstance(threshold, (int, float)):
+        if not isinstance(threshold, int | float):
             raise TypeError(f"threshold must be numeric, got {type(threshold)}")
 
         # Value validation
@@ -376,9 +373,9 @@ class ResonatorCleanup(CleanupStrategy):
     def cleanup(
         self,
         query: Array,
-        codebook: Dict[str, Array],
+        codebook: dict[str, Array],
         model: VSAModel,
-    ) -> Tuple[str, float]:
+    ) -> tuple[str, float]:
         """Find best match via exhaustive search.
 
         For single-factor cleanup, resonator networks reduce to brute-force
@@ -407,7 +404,7 @@ class ResonatorCleanup(CleanupStrategy):
     def factorize(
         self,
         query: Array,
-        codebook: Dict[str, Array],
+        codebook: dict[str, Array],
         model: VSAModel,
         n_factors: int = 2,
         max_iterations: int = 20,
@@ -418,7 +415,7 @@ class ResonatorCleanup(CleanupStrategy):
         patience: int = 3,
         min_delta: float = 1e-4,
         mode: str = 'hard',
-    ) -> Tuple[List[str], List[float]]:
+    ) -> tuple[list[str], list[float]]:
         """Factorize via resonator network iteration.
 
         Uses iterative attention to refine factor estimates simultaneously,
@@ -470,7 +467,7 @@ class ResonatorCleanup(CleanupStrategy):
             raise TypeError(f"n_factors must be int, got {type(n_factors)}")
         if not isinstance(max_iterations, int):
             raise TypeError(f"max_iterations must be int, got {type(max_iterations)}")
-        if not isinstance(threshold, (int, float)):
+        if not isinstance(threshold, int | float):
             raise TypeError(f"threshold must be numeric, got {type(threshold)}")
 
         # Value validation
@@ -523,7 +520,7 @@ class ResonatorCleanup(CleanupStrategy):
                         isolated = model.unbind(isolated, estimates[j])
 
                 # Compute similarities to entire codebook
-                sims: List[Tuple[str, float]] = []
+                sims: list[tuple[str, float]] = []
                 for lbl, vec in codebook.items():
                     sims.append((lbl, float(model.similarity(isolated, vec))))
                 # Sort by similarity desc
@@ -580,7 +577,7 @@ class ResonatorCleanup(CleanupStrategy):
                 break
 
         # Compute final similarities (as in original API)
-        similarities: List[float] = []
+        similarities: list[float] = []
         for i in range(n_factors):
             isolated = query
             for j in range(n_factors):
@@ -594,7 +591,7 @@ class ResonatorCleanup(CleanupStrategy):
     def factorize_verbose(
         self,
         query: Array,
-        codebook: Dict[str, Array],
+        codebook: dict[str, Array],
         model: VSAModel,
         n_factors: int = 2,
         max_iterations: int = 20,
@@ -604,7 +601,7 @@ class ResonatorCleanup(CleanupStrategy):
         patience: int = 3,
         min_delta: float = 1e-4,
         mode: str = 'hard',
-    ) -> Tuple[List[str], List[float], List[float]]:
+    ) -> tuple[list[str], list[float], list[float]]:
         """Like factorize(), but also returns avg-similarity history per iteration."""
         # Lightweight wrapper: capture avg similarity after each iteration
         # Re-implement loop to record history.
@@ -617,7 +614,7 @@ class ResonatorCleanup(CleanupStrategy):
             estimates.append(codebook[label])
             estimate_labels.append(label)
 
-        history: List[float] = []
+        history: list[float] = []
         best_avg = -1.0
         no_improve = 0
         for _iter in range(max_iterations):

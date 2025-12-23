@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Dict, Iterable, List, Optional, Tuple
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -14,8 +12,8 @@ class Codebook:
     Keeps insertion order of labels. Vectors are backend arrays.
     """
 
-    def __init__(self, items: Optional[Dict[str, Array]] = None, backend: Optional[Backend] = None):
-        self._items: Dict[str, Array] = {}
+    def __init__(self, items: dict[str, Array] | None = None, backend: Backend | None = None):
+        self._items: dict[str, Array] = {}
         self._backend: Backend = backend if backend is not None else get_backend("numpy")
         if items:
             self.extend(items)
@@ -24,12 +22,12 @@ class Codebook:
     def add(self, label: str, vector: Array) -> None:
         self._items[label] = vector
 
-    def extend(self, items: Dict[str, Array]) -> None:
+    def extend(self, items: dict[str, Array]) -> None:
         for k, v in items.items():
             self.add(k, v)
 
     @property
-    def labels(self) -> List[str]:
+    def labels(self) -> list[str]:
         return list(self._items.keys())
 
     @property
@@ -65,14 +63,14 @@ class Codebook:
         """Return iterator over vectors."""
         return self._items.values()
 
-    def get(self, label: str, default: Optional[Array] = None) -> Optional[Array]:
+    def get(self, label: str, default: Array | None = None) -> Array | None:
         """Get vector by label, returning default if not found."""
         return self._items.get(label, default)
 
-    def as_list(self) -> List[Tuple[str, Array]]:
+    def as_list(self) -> list[tuple[str, Array]]:
         return list(self._items.items())
 
-    def as_matrix(self, backend: Optional[Backend] = None) -> Tuple[List[str], Array]:
+    def as_matrix(self, backend: Backend | None = None) -> tuple[list[str], Array]:
         """Return (labels, matrix) where matrix has shape (L, D)."""
         be = backend or self._backend
         if self.size == 0:
@@ -88,12 +86,12 @@ class Codebook:
         np.savez(path, labels=np.array(labels, dtype=object), matrix=mat_np)
 
     @classmethod
-    def load(cls, path: str, backend: Optional[Backend] = None) -> "Codebook":
+    def load(cls, path: str, backend: Backend | None = None) -> "Codebook":
         be = backend or get_backend("numpy")
         data = np.load(path, allow_pickle=True)
         labels = [str(x) for x in data["labels"].tolist()]
         mat = data["matrix"]
-        items: Dict[str, Array] = {}
+        items: dict[str, Array] = {}
         for i, lbl in enumerate(labels):
             items[lbl] = be.from_numpy(mat[i])
         return cls(items=items, backend=be)

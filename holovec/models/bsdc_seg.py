@@ -7,9 +7,7 @@ is segment-wise majority with deterministic tie-breaking.
 Similarity is provided by the space (fraction of matching segments).
 """
 
-from __future__ import annotations
-
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -33,10 +31,10 @@ class BSDCSEGModel(VSAModel):
     def __init__(
         self,
         dimension: int,
-        segments: Optional[int] = None,
-        space: Optional[VectorSpace] = None,
-        backend: Optional[Backend] = None,
-        seed: Optional[int] = None,
+        segments: int | None = None,
+        space: VectorSpace | None = None,
+        backend: Backend | None = None,
+        seed: int | None = None,
     ):
         if space is None:
             if segments is None:

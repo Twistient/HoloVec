@@ -17,9 +17,7 @@ References:
 - Frady et al. (2021): VFA framework and fractional power encoding
 """
 
-from __future__ import annotations
-
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 from ..backends import Backend
 from ..backends.base import Array
@@ -41,9 +39,9 @@ class FHRRModel(VSAModel):
     def __init__(
         self,
         dimension: int = 512,
-        space: Optional[VectorSpace] = None,
-        backend: Optional[Backend] = None,
-        seed: Optional[int] = None
+        space: VectorSpace | None = None,
+        backend: Backend | None = None,
+        seed: int | None = None
     ):
         """Initialize FHRR model.
 

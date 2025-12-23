@@ -15,9 +15,7 @@ References:
 - Schlegel et al. (2021): Comparison of VSA models
 """
 
-from __future__ import annotations
-
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -41,9 +39,9 @@ class MAPModel(VSAModel):
     def __init__(
         self,
         dimension: int = 10000,
-        space: Optional[VectorSpace] = None,
-        backend: Optional[Backend] = None,
-        seed: Optional[int] = None
+        space: VectorSpace | None = None,
+        backend: Backend | None = None,
+        seed: int | None = None
     ):
         """Initialize MAP model.
 

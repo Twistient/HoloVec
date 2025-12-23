@@ -24,10 +24,8 @@ Mathematical Foundation:
     - Total: 4-5 iterations for M ≥ 4 (near-constant)
 """
 
-from __future__ import annotations
-
 import json
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any
 
 from ..backends.base import Array
 from ..models.base import VSAModel
@@ -68,12 +66,7 @@ class CPSEMetadata:
         Malits & Mendelson (2025), Section 3.1: Position Encoding
     """
 
-    def __init__(
-        self,
-        n_components: int,
-        permutation_seeds: List[int],
-        base_seed: int = 42
-    ):
+    def __init__(self, n_components: int, permutation_seeds: list[int], base_seed: int = 42):
         """Initialize CPSE metadata.
 
         Args:
@@ -118,7 +111,7 @@ class CPSEMetadata:
         self.permutation_seeds = permutation_seeds
         self.base_seed = base_seed
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize metadata to dictionary.
 
         Returns:
@@ -131,13 +124,13 @@ class CPSEMetadata:
             {'n_components': 3, 'permutation_seeds': [42, 43, 44], 'base_seed': 42}
         """
         return {
-            'n_components': self.n_components,
-            'permutation_seeds': self.permutation_seeds,
-            'base_seed': self.base_seed
+            "n_components": self.n_components,
+            "permutation_seeds": self.permutation_seeds,
+            "base_seed": self.base_seed,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CPSEMetadata':
+    def from_dict(cls, data: dict[str, Any]) -> "CPSEMetadata":
         """Deserialize metadata from dictionary.
 
         Args:
@@ -157,9 +150,9 @@ class CPSEMetadata:
             3
         """
         return cls(
-            n_components=data['n_components'],
-            permutation_seeds=data['permutation_seeds'],
-            base_seed=data['base_seed']
+            n_components=data["n_components"],
+            permutation_seeds=data["permutation_seeds"],
+            base_seed=data["base_seed"],
         )
 
     def to_json(self, path: str):
@@ -172,11 +165,11 @@ class CPSEMetadata:
             >>> metadata = CPSEMetadata(3, [42, 43, 44])
             >>> metadata.to_json('my_cpse_metadata.json')
         """
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
-    def from_json(cls, path: str) -> 'CPSEMetadata':
+    def from_json(cls, path: str) -> "CPSEMetadata":
         """Load metadata from JSON file.
 
         Args:
@@ -195,7 +188,7 @@ class CPSEMetadata:
             >>> print(metadata.n_components)
             3
         """
-        with open(path, 'r') as f:
+        with open(path) as f:
             data = json.load(f)
         return cls.from_dict(data)
 
@@ -212,16 +205,13 @@ class CPSEMetadata:
         if not isinstance(other, CPSEMetadata):
             return False
         return (
-            self.n_components == other.n_components and
-            self.permutation_seeds == other.permutation_seeds and
-            self.base_seed == other.base_seed
+            self.n_components == other.n_components
+            and self.permutation_seeds == other.permutation_seeds
+            and self.base_seed == other.base_seed
         )
 
 
-def generate_permutation_patterns(
-    n_patterns: int,
-    base_seed: int = 42
-) -> List[int]:
+def generate_permutation_patterns(n_patterns: int, base_seed: int = 42) -> list[int]:
     """Generate permutation seeds for CPSE encoding.
 
     Creates deterministic permutation seeds for position-dependent
@@ -272,11 +262,11 @@ def generate_permutation_patterns(
 
 
 def validate_cpse_convergence(
-    original_components: List[Array],
-    decoded_components: List[Array],
+    original_components: list[Array],
+    decoded_components: list[Array],
     model: VSAModel,
-    threshold: float = 0.95
-) -> Tuple[bool, List[float]]:
+    threshold: float = 0.95,
+) -> tuple[bool, list[float]]:
     """Validate CPSE decoding convergence.
 
     Checks if decoded components are sufficiently similar to originals
@@ -329,16 +319,12 @@ def validate_cpse_convergence(
     """
     # Type validation
     if not isinstance(original_components, list):
-        raise TypeError(
-            f"original_components must be list, got {type(original_components)}"
-        )
+        raise TypeError(f"original_components must be list, got {type(original_components)}")
     if not isinstance(decoded_components, list):
-        raise TypeError(
-            f"decoded_components must be list, got {type(decoded_components)}"
-        )
+        raise TypeError(f"decoded_components must be list, got {type(decoded_components)}")
     if not isinstance(model, VSAModel):
         raise TypeError(f"model must be VSAModel, got {type(model)}")
-    if not isinstance(threshold, (int, float)):
+    if not isinstance(threshold, int | float):
         raise TypeError(f"threshold must be numeric, got {type(threshold)}")
 
     # Value validation
@@ -349,9 +335,7 @@ def validate_cpse_convergence(
         )
 
     if not (0.0 <= threshold <= 1.0):
-        raise ValueError(
-            f"threshold must be in range [0.0, 1.0], got {threshold}"
-        )
+        raise ValueError(f"threshold must be in range [0.0, 1.0], got {threshold}")
 
     # Compute similarities for each component pair
     similarities = [

@@ -15,9 +15,6 @@ References:
     Plate (2003): Holographic Reduced Representations
 """
 
-from __future__ import annotations
-
-from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -26,9 +23,9 @@ from ..models.base import VSAModel
 
 
 def select_top_k(
-    items: Dict[str, float],
+    items: dict[str, float],
     k: int = 5,
-) -> List[Tuple[str, float]]:
+) -> list[tuple[str, float]]:
     """Select top-k items by score.
 
     Sorts items by score (descending) and returns the top k items
@@ -126,7 +123,7 @@ def add_noise(
     # Type validation
     if not isinstance(model, VSAModel):
         raise TypeError(f"model must be VSAModel, got {type(model)}")
-    if not isinstance(noise_level, (int, float)):
+    if not isinstance(noise_level, int | float):
         raise TypeError(f"noise_level must be numeric, got {type(noise_level)}")
     if seed is not None and not isinstance(seed, int):
         raise TypeError(f"seed must be int or None, got {type(seed)}")
@@ -157,9 +154,9 @@ def add_noise(
 
 
 def similarity_matrix(
-    vectors: List[Array],
+    vectors: list[Array],
     model: VSAModel,
-    labels: List[str] = None,
+    labels: list[str] = None,
 ) -> np.ndarray:
     """Compute pairwise similarity matrix.
 

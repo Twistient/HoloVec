@@ -6,7 +6,6 @@ trajectories) into hypervector representations, preserving order and enabling
 partial matching.
 """
 
-from typing import Dict, List, Optional, Union, Tuple
 from holovec.encoders.base import SequenceEncoder, ScalarEncoder
 from holovec.models.base import VSAModel
 from holovec.backends.base import Array
@@ -53,10 +52,10 @@ class PositionBindingEncoder(SequenceEncoder):
     def __init__(
         self,
         model: VSAModel,
-        codebook: Optional[Dict[str, Array]] = None,
-        max_length: Optional[int] = None,
+        codebook: dict[str, Array] | None = None,
+        max_length: int | None = None,
         auto_generate: bool = True,
-        seed: Optional[int] = None
+        seed: int | None = None
     ):
         """
         Initialize position binding encoder.
@@ -78,7 +77,7 @@ class PositionBindingEncoder(SequenceEncoder):
         self.seed = seed
         self._next_symbol_seed = 0  # Counter for symbol generation
 
-    def encode(self, sequence: List[Union[str, int]]) -> Array:
+    def encode(self, sequence: list[str | int]) -> Array:
         """
         Encode sequence using position binding.
 
@@ -140,7 +139,7 @@ class PositionBindingEncoder(SequenceEncoder):
         hypervector: Array,
         max_positions: int = 10,
         threshold: float = 0.3
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Decode sequence hypervector to recover symbols.
 
@@ -199,7 +198,7 @@ class PositionBindingEncoder(SequenceEncoder):
 
         return decoded
 
-    def _generate_symbol_vector(self, symbol: Union[str, int]) -> Array:
+    def _generate_symbol_vector(self, symbol: str | int) -> Array:
         """
         Generate a random hypervector for a new symbol.
 
@@ -221,7 +220,7 @@ class PositionBindingEncoder(SequenceEncoder):
 
         return self.model.random(seed=symbol_seed)
 
-    def add_symbol(self, symbol: Union[str, int], vector: Optional[Array] = None):
+    def add_symbol(self, symbol: str | int, vector: Array | None = None):
         """
         Add a symbol to the codebook.
 
@@ -258,7 +257,7 @@ class PositionBindingEncoder(SequenceEncoder):
         return True
 
     @property
-    def compatible_models(self) -> List[str]:
+    def compatible_models(self) -> list[str]:
         """
         Works with all VSA models that support permutation.
 
@@ -332,9 +331,9 @@ class NGramEncoder(SequenceEncoder):
         n: int = 2,
         stride: int = 1,
         mode: str = 'bundling',
-        codebook: Optional[Dict[str, Array]] = None,
+        codebook: dict[str, Array] | None = None,
         auto_generate: bool = True,
-        seed: Optional[int] = None
+        seed: int | None = None
     ):
         """
         Initialize n-gram encoder.
@@ -374,7 +373,7 @@ class NGramEncoder(SequenceEncoder):
             seed=seed
         )
 
-    def encode(self, sequence: List[Union[str, int]]) -> Array:
+    def encode(self, sequence: list[str | int]) -> Array:
         """
         Encode sequence using n-gram representation.
 
@@ -441,7 +440,7 @@ class NGramEncoder(SequenceEncoder):
         hypervector: Array,
         max_ngrams: int = 10,
         threshold: float = 0.3
-    ) -> List[List[Union[str, int]]]:
+    ) -> list[list[str | int]]:
         """
         Decode n-gram hypervector to recover n-grams.
 
@@ -501,7 +500,7 @@ class NGramEncoder(SequenceEncoder):
 
         return decoded_ngrams
 
-    def get_codebook(self) -> Dict[str, Array]:
+    def get_codebook(self) -> dict[str, Array]:
         """
         Get the internal symbol codebook.
 
@@ -530,7 +529,7 @@ class NGramEncoder(SequenceEncoder):
         return self.mode == 'chaining'
 
     @property
-    def compatible_models(self) -> List[str]:
+    def compatible_models(self) -> list[str]:
         """
         Works with all VSA models.
 
@@ -609,8 +608,8 @@ class TrajectoryEncoder(SequenceEncoder):
         model: VSAModel,
         scalar_encoder: ScalarEncoder,
         n_dimensions: int = 1,
-        time_range: Optional[Tuple[float, float]] = None,
-        seed: Optional[int] = None
+        time_range: tuple[float, float] | None = None,
+        seed: int | None = None
     ):
         """
         Initialize trajectory encoder.
@@ -650,12 +649,12 @@ class TrajectoryEncoder(SequenceEncoder):
         self.seed = seed
 
         # Generate dimension hypervectors (for x, y, z coordinates)
-        self.dim_vectors: List[Array] = []
+        self.dim_vectors: list[Array] = []
         for i in range(n_dimensions):
             dim_seed = (seed + i) if seed is not None else (1000 + i)
             self.dim_vectors.append(model.random(seed=dim_seed))
 
-    def encode(self, trajectory: List[Union[float, Tuple[float, ...]]]) -> Array:
+    def encode(self, trajectory: list[float | tuple[float, ...]]) -> Array:
         """
         Encode a trajectory as a hypervector.
 
@@ -693,7 +692,7 @@ class TrajectoryEncoder(SequenceEncoder):
             # Normalize point to tuple format
             if self.n_dimensions == 1:
                 # 1D: scalar → (scalar,)
-                if isinstance(point, (int, float)):
+                if isinstance(point, int | float):
                     coords = (float(point),)
                 else:
                     coords = (float(point[0]),)
@@ -747,7 +746,7 @@ class TrajectoryEncoder(SequenceEncoder):
 
         return trajectory_hv
 
-    def decode(self, hypervector: Array, max_points: int = 10) -> List[Tuple[float, ...]]:
+    def decode(self, hypervector: Array, max_points: int = 10) -> list[tuple[float, ...]]:
         """
         Decode trajectory hypervector to recover approximate points.
 
@@ -868,7 +867,7 @@ class TrajectoryEncoder(SequenceEncoder):
         return False
 
     @property
-    def compatible_models(self) -> List[str]:
+    def compatible_models(self) -> list[str]:
         """
         Works with all VSA models.
 

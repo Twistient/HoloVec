@@ -3,9 +3,7 @@
 This is the default backend and requires only NumPy as a dependency.
 """
 
-from __future__ import annotations
-
-from typing import Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -19,7 +17,7 @@ class NumPyBackend(Backend):
     default backend with minimal dependencies.
     """
 
-    def __init__(self, seed: Optional[int] = None):
+    def __init__(self, seed: int | None = None):
         """Initialize NumPy backend with optional random seed.
 
         Args:
@@ -64,21 +62,21 @@ class NumPyBackend(Backend):
 
     # ===== Array Creation =====
 
-    def zeros(self, shape: Union[int, Tuple[int, ...]], dtype: str = 'float32') -> Array:
+    def zeros(self, shape: int | tuple[int, ...], dtype: str = 'float32') -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         return np.zeros(shape, dtype=dtype)
 
-    def ones(self, shape: Union[int, Tuple[int, ...]], dtype: str = 'float32') -> Array:
+    def ones(self, shape: int | tuple[int, ...], dtype: str = 'float32') -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         return np.ones(shape, dtype=dtype)
 
     def random_normal(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         mean: float = 0.0,
         std: float = 1.0,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         rng = np.random.default_rng(seed) if seed is not None else self._rng
@@ -86,11 +84,11 @@ class NumPyBackend(Backend):
 
     def random_uniform(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         low: float = 0.0,
         high: float = 1.0,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         rng = np.random.default_rng(seed) if seed is not None else self._rng
@@ -98,10 +96,10 @@ class NumPyBackend(Backend):
 
     def random_binary(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         p: float = 0.5,
         dtype: str = 'int32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         rng = np.random.default_rng(seed) if seed is not None else self._rng
@@ -109,10 +107,10 @@ class NumPyBackend(Backend):
 
     def random_bipolar(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         p: float = 0.5,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         rng = np.random.default_rng(seed) if seed is not None else self._rng
@@ -121,9 +119,9 @@ class NumPyBackend(Backend):
 
     def random_phasor(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         dtype: str = 'complex64',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         rng = np.random.default_rng(seed) if seed is not None else self._rng
@@ -143,7 +141,7 @@ class NumPyBackend(Backend):
         angles = rng.uniform(0, 2 * np.pi, shape)
         return np.exp(1j * angles).astype(dtype)
 
-    def array(self, data, dtype: Optional[str] = None) -> Array:
+    def array(self, data, dtype: str | None = None) -> Array:
         return np.array(data, dtype=dtype)
 
     # ===== Element-wise Operations =====
@@ -168,33 +166,33 @@ class NumPyBackend(Backend):
 
     # ===== Reductions =====
 
-    def sum(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def sum(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         return np.sum(a, axis=axis, keepdims=keepdims)
 
-    def mean(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def mean(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         return np.mean(a, axis=axis, keepdims=keepdims)
 
-    def norm(self, a: Array, ord: Union[int, str] = 2, axis: Optional[int] = None) -> Array:
+    def norm(self, a: Array, ord: int | str = 2, axis: int | None = None) -> Array:
         return np.linalg.norm(a, ord=ord, axis=axis)
 
     def dot(self, a: Array, b: Array) -> Array:
         return np.dot(a, b)
 
-    def max(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def max(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         return np.max(a, axis=axis, keepdims=keepdims)
 
-    def min(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def min(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         return np.min(a, axis=axis, keepdims=keepdims)
 
-    def argmax(self, a: Array, axis: Optional[int] = None) -> Array:
+    def argmax(self, a: Array, axis: int | None = None) -> Array:
         return np.argmax(a, axis=axis)
 
-    def argmin(self, a: Array, axis: Optional[int] = None) -> Array:
+    def argmin(self, a: Array, axis: int | None = None) -> Array:
         return np.argmin(a, axis=axis)
 
     # ===== Normalization =====
 
-    def normalize(self, a: Array, ord: Union[int, str] = 2, axis: Optional[int] = None, eps: float = 1e-12) -> Array:
+    def normalize(self, a: Array, ord: int | str = 2, axis: int | None = None, eps: float = 1e-12) -> Array:
         norm = np.linalg.norm(a, ord=ord, axis=axis, keepdims=True)
         return a / (norm + eps)
 
@@ -234,7 +232,7 @@ class NumPyBackend(Backend):
     def permute(self, a: Array, indices: Array) -> Array:
         return a[indices]
 
-    def roll(self, a: Array, shift: int, axis: Optional[int] = None) -> Array:
+    def roll(self, a: Array, shift: int, axis: int | None = None) -> Array:
         return np.roll(a, shift, axis=axis)
 
     # ===== Similarity Measures =====
@@ -268,7 +266,7 @@ class NumPyBackend(Backend):
 
     # ===== Utilities =====
 
-    def shape(self, a: Array) -> Tuple[int, ...]:
+    def shape(self, a: Array) -> tuple[int, ...]:
         return a.shape
 
     def dtype(self, a: Array) -> str:
@@ -325,7 +323,7 @@ class NumPyBackend(Backend):
         # For 3D+: trace along last two dims
         return np.trace(a, axis1=-2, axis2=-1)
 
-    def svd(self, a: Array, full_matrices: bool = True) -> Tuple[Array, Array, Array]:
+    def svd(self, a: Array, full_matrices: bool = True) -> tuple[Array, Array, Array]:
         """Compute Singular Value Decomposition.
 
         For batched matrices (3D+), computes SVD for each matrix in the batch.
@@ -370,7 +368,7 @@ class NumPyBackend(Backend):
 
             return U_batch, S_batch, Vh_batch
 
-    def reshape(self, a: Array, shape: Tuple[int, ...]) -> Array:
+    def reshape(self, a: Array, shape: tuple[int, ...]) -> Array:
         """Reshape array."""
         return np.reshape(a, shape)
 

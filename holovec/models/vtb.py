@@ -25,9 +25,7 @@ References:
 - Gayler (2003); Plate (2003); Schlegel et al. (2022)
 """
 
-from __future__ import annotations
-
-from typing import Optional, Sequence, List
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -51,11 +49,11 @@ class VTBModel(VSAModel):
     def __init__(
         self,
         dimension: int = 10000,
-        space: Optional[VectorSpace] = None,
-        backend: Optional[Backend] = None,
-        seed: Optional[int] = None,
+        space: VectorSpace | None = None,
+        backend: Backend | None = None,
+        seed: int | None = None,
         n_bases: int = 4,
-        shifts: Optional[List[int]] = None,
+        shifts: list[int] | None = None,
         temperature: float = 100.0,
     ):
         """Initialize VTB model.

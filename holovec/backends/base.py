@@ -5,10 +5,9 @@ must implement. Backends provide the underlying array operations for
 different computation frameworks (NumPy, PyTorch, JAX, etc.).
 """
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Sequence, Tuple, Union
+from typing import Any
+from collections.abc import Sequence
 
 # Type alias for arrays (backend-specific)
 Array = Any
@@ -98,23 +97,23 @@ class Backend(ABC):
     # ===== Array Creation =====
 
     @abstractmethod
-    def zeros(self, shape: Union[int, Tuple[int, ...]], dtype: str = 'float32') -> Array:
+    def zeros(self, shape: int | tuple[int, ...], dtype: str = 'float32') -> Array:
         """Create an array of zeros with the given shape and dtype."""
         pass
 
     @abstractmethod
-    def ones(self, shape: Union[int, Tuple[int, ...]], dtype: str = 'float32') -> Array:
+    def ones(self, shape: int | tuple[int, ...], dtype: str = 'float32') -> Array:
         """Create an array of ones with the given shape and dtype."""
         pass
 
     @abstractmethod
     def random_normal(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         mean: float = 0.0,
         std: float = 1.0,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         """Create an array of random values from a normal distribution."""
         pass
@@ -122,11 +121,11 @@ class Backend(ABC):
     @abstractmethod
     def random_uniform(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         low: float = 0.0,
         high: float = 1.0,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         """Create an array of random values from a uniform distribution."""
         pass
@@ -134,10 +133,10 @@ class Backend(ABC):
     @abstractmethod
     def random_binary(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         p: float = 0.5,
         dtype: str = 'int32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         """Create a binary array with probability p of being 1."""
         pass
@@ -145,10 +144,10 @@ class Backend(ABC):
     @abstractmethod
     def random_bipolar(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         p: float = 0.5,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         """Create a bipolar array {-1, +1} with probability p of being +1."""
         pass
@@ -156,15 +155,15 @@ class Backend(ABC):
     @abstractmethod
     def random_phasor(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         dtype: str = 'complex64',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         """Create an array of random unit phasors (complex numbers with magnitude 1)."""
         pass
 
     @abstractmethod
-    def array(self, data: Any, dtype: Optional[str] = None) -> Array:
+    def array(self, data: Any, dtype: str | None = None) -> Array:
         """Create an array from Python data (list, tuple, etc.)."""
         pass
 
@@ -259,17 +258,17 @@ class Backend(ABC):
     # ===== Reductions =====
 
     @abstractmethod
-    def sum(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def sum(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         """Sum along an axis."""
         pass
 
     @abstractmethod
-    def mean(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def mean(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         """Mean along an axis."""
         pass
 
     @abstractmethod
-    def norm(self, a: Array, ord: Union[int, str] = 2, axis: Optional[int] = None) -> Array:
+    def norm(self, a: Array, ord: int | str = 2, axis: int | None = None) -> Array:
         """Compute the norm of an array."""
         pass
 
@@ -279,7 +278,7 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def max(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def max(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         """Maximum value along an axis.
 
         Args:
@@ -293,7 +292,7 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def min(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def min(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         """Minimum value along an axis.
 
         Args:
@@ -307,7 +306,7 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def argmax(self, a: Array, axis: Optional[int] = None) -> Array:
+    def argmax(self, a: Array, axis: int | None = None) -> Array:
         """Index of maximum value along an axis.
 
         Args:
@@ -320,7 +319,7 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def argmin(self, a: Array, axis: Optional[int] = None) -> Array:
+    def argmin(self, a: Array, axis: int | None = None) -> Array:
         """Index of minimum value along an axis.
 
         Args:
@@ -335,7 +334,7 @@ class Backend(ABC):
     # ===== Normalization =====
 
     @abstractmethod
-    def normalize(self, a: Array, ord: Union[int, str] = 2, axis: Optional[int] = None, eps: float = 1e-12) -> Array:
+    def normalize(self, a: Array, ord: int | str = 2, axis: int | None = None, eps: float = 1e-12) -> Array:
         """Normalize an array to unit norm."""
         pass
 
@@ -393,7 +392,7 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def roll(self, a: Array, shift: int, axis: Optional[int] = None) -> Array:
+    def roll(self, a: Array, shift: int, axis: int | None = None) -> Array:
         """Roll array elements along an axis."""
         pass
 
@@ -417,7 +416,7 @@ class Backend(ABC):
     # ===== Utilities =====
 
     @abstractmethod
-    def shape(self, a: Array) -> Tuple[int, ...]:
+    def shape(self, a: Array) -> tuple[int, ...]:
         """Return the shape of an array."""
         pass
 
@@ -517,7 +516,7 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def svd(self, a: Array, full_matrices: bool = True) -> Tuple[Array, Array, Array]:
+    def svd(self, a: Array, full_matrices: bool = True) -> tuple[Array, Array, Array]:
         """Compute Singular Value Decomposition (SVD).
 
         Decomposes matrix A as A = U @ diag(S) @ Vh, where:
@@ -543,7 +542,7 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def reshape(self, a: Array, shape: Tuple[int, ...]) -> Array:
+    def reshape(self, a: Array, shape: tuple[int, ...]) -> Array:
         """Reshape array to new shape.
 
         Args:

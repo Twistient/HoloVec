@@ -24,9 +24,7 @@ References:
 - Plate (2003): "Holographic Reduced Representations" (FHRR foundation)
 """
 
-from __future__ import annotations
-
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -51,10 +49,10 @@ class GHRRModel(VSAModel):
         self,
         dimension: int = 100,
         matrix_size: int = 3,
-        space: Optional[VectorSpace] = None,
-        backend: Optional[Backend] = None,
-        seed: Optional[int] = None,
-        diagonality: Optional[float] = None
+        space: VectorSpace | None = None,
+        backend: Backend | None = None,
+        seed: int | None = None,
+        diagonality: float | None = None
     ):
         """Initialize GHRR model.
 

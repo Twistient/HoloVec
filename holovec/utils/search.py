@@ -19,9 +19,6 @@ References:
     Plate (2003): Holographic Reduced Representations
 """
 
-from __future__ import annotations
-
-from typing import Dict, List, Optional, Tuple
 
 from ..backends.base import Array
 from ..models.base import VSAModel
@@ -30,11 +27,11 @@ from ..spaces.spaces import SparseSegmentSpace
 
 def nearest_neighbors(
     query: Array,
-    codebook: Dict[str, Array],
+    codebook: dict[str, Array],
     model: VSAModel,
     k: int = 5,
     return_similarities: bool = True,
-) -> Tuple[List[str], Optional[List[float]]]:
+) -> tuple[list[str], list[float] | None]:
     """Find k-nearest neighbors in codebook.
 
     Computes similarity between query and all codebook entries,
@@ -112,11 +109,11 @@ def nearest_neighbors(
 
 def threshold_search(
     query: Array,
-    codebook: Dict[str, Array],
+    codebook: dict[str, Array],
     model: VSAModel,
     threshold: float = 0.8,
     return_similarities: bool = True,
-) -> Tuple[List[str], Optional[List[float]]]:
+) -> tuple[list[str], list[float] | None]:
     """Find all codebook entries above similarity threshold.
 
     Returns all entries where similarity(query, entry) >= threshold,
@@ -160,7 +157,7 @@ def threshold_search(
         raise TypeError(f"codebook must be dict, got {type(codebook)}")
     if not isinstance(model, VSAModel):
         raise TypeError(f"model must be VSAModel, got {type(model)}")
-    if not isinstance(threshold, (int, float)):
+    if not isinstance(threshold, int | float):
         raise TypeError(f"threshold must be numeric, got {type(threshold)}")
     if not isinstance(return_similarities, bool):
         raise TypeError(f"return_similarities must be bool, got {type(return_similarities)}")
@@ -188,10 +185,10 @@ def threshold_search(
 
 
 def batch_similarity(
-    queries: List[Array],
-    codebook: Dict[str, Array],
+    queries: list[Array],
+    codebook: dict[str, Array],
     model: VSAModel,
-) -> List[Dict[str, float]]:
+) -> list[dict[str, float]]:
     """Compute similarities between multiple queries and codebook.
 
     Efficiently computes similarity between each query and all codebook
@@ -253,7 +250,7 @@ def batch_similarity(
 
 # ===== Segment-wise search utilities (for BSDC-SEG) =====
 
-def segment_pattern(vec: Array, space: SparseSegmentSpace) -> List[int]:
+def segment_pattern(vec: Array, space: SparseSegmentSpace) -> list[int]:
     """Return per-segment argmax indices (length S) for a vector.
 
     Projects vec to the nearest valid segment pattern via space.normalize(), then
@@ -264,12 +261,12 @@ def segment_pattern(vec: Array, space: SparseSegmentSpace) -> List[int]:
 
 
 def find_by_segment_pattern(
-    codebook: Dict[str, Array],
+    codebook: dict[str, Array],
     space: SparseSegmentSpace,
-    pattern: List[Optional[int]],
+    pattern: list[int | None],
     match_mode: str = 'exact',
     min_fraction: float = 1.0,
-) -> List[Tuple[str, float]]:
+) -> list[tuple[str, float]]:
     """Find entries whose segment pattern matches the query pattern.
 
     - pattern: list of length S with segment indices or None/-1 as wildcards.
@@ -291,7 +288,7 @@ def find_by_segment_pattern(
         else:
             pat.append(int(p))
 
-    results: List[Tuple[str, float]] = []
+    results: list[tuple[str, float]] = []
     specified = [i for i, v in enumerate(pat) if v is not None]
     denom = max(1, len(specified))
 

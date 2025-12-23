@@ -6,7 +6,7 @@ into hypervectors for processing with VSA models.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Tuple
+from typing import Any
 from holovec.models.base import VSAModel
 from holovec.backends.base import Array
 
@@ -63,7 +63,7 @@ class Encoder(ABC):
         """
         pass
 
-    def encode_batch(self, data_list: List[Any]) -> List[Array]:
+    def encode_batch(self, data_list: list[Any]) -> list[Array]:
         """
         Encode multiple data points.
 
@@ -107,7 +107,7 @@ class Encoder(ABC):
 
     @property
     @abstractmethod
-    def compatible_models(self) -> List[str]:
+    def compatible_models(self) -> list[str]:
         """
         List of compatible VSA model names.
 
@@ -236,7 +236,7 @@ class SequenceEncoder(Encoder):
     def __init__(
         self,
         model: VSAModel,
-        max_length: Optional[int] = None
+        max_length: int | None = None
     ):
         """
         Initialize sequence encoder.

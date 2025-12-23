@@ -5,10 +5,7 @@ hyperdimensional computing. Each space defines how random vectors are
 generated and what similarity metric is appropriate.
 """
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from ..backends import Backend, get_backend
 from ..backends.base import Array
@@ -24,7 +21,7 @@ class VectorSpace(ABC):
     - What algebraic operations are natural
     """
 
-    def __init__(self, dimension: int, backend: Optional[Backend] = None, seed: Optional[int] = None):
+    def __init__(self, dimension: int, backend: Backend | None = None, seed: int | None = None):
         """Initialize vector space.
 
         Args:
@@ -40,7 +37,7 @@ class VectorSpace(ABC):
         self.seed = seed
 
     @abstractmethod
-    def random(self, seed: Optional[int] = None) -> Array:
+    def random(self, seed: int | None = None) -> Array:
         """Generate a random vector in this space.
 
         Args:

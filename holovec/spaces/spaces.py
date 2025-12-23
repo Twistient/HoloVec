@@ -8,9 +8,6 @@ This module implements the specific vector spaces used in various VSA models:
 - SparseSpace: Sparse binary for BSDC, SBC
 """
 
-from __future__ import annotations
-
-from typing import Optional
 
 import numpy as np
 
@@ -39,7 +36,7 @@ class BipolarSpace(DiscreteSpace):
     def dtype(self) -> str:
         return "float32"
 
-    def random(self, seed: Optional[int] = None) -> Array:
+    def random(self, seed: int | None = None) -> Array:
         """Generate random bipolar vector with equal probability for ±1.
 
         Args:
@@ -78,7 +75,7 @@ class BinarySpace(DiscreteSpace):
     def dtype(self) -> str:
         return "int32"
 
-    def random(self, seed: Optional[int] = None) -> Array:
+    def random(self, seed: int | None = None) -> Array:
         """Generate random binary vector with equal probability for 0 and 1.
 
         Args:
@@ -117,7 +114,7 @@ class RealSpace(ContinuousSpace):
     def dtype(self) -> str:
         return "float32"
 
-    def random(self, seed: Optional[int] = None) -> Array:
+    def random(self, seed: int | None = None) -> Array:
         """Generate random real vector from N(0, 1/D) and normalize.
 
         Args:
@@ -160,7 +157,7 @@ class ComplexSpace(ContinuousSpace):
     def dtype(self) -> str:
         return "complex64"
 
-    def random(self, seed: Optional[int] = None) -> Array:
+    def random(self, seed: int | None = None) -> Array:
         """Generate random unit phasor with uniform phase angle.
 
         Args:
@@ -216,9 +213,9 @@ class SparseSpace(DiscreteSpace):
     def __init__(
         self,
         dimension: int,
-        sparsity: Optional[float] = None,
-        backend: Optional[Backend] = None,
-        seed: Optional[int] = None
+        sparsity: float | None = None,
+        backend: Backend | None = None,
+        seed: int | None = None
     ):
         """Initialize sparse space.
 
@@ -247,7 +244,7 @@ class SparseSpace(DiscreteSpace):
     def dtype(self) -> str:
         return "int32"
 
-    def random(self, seed: Optional[int] = None) -> Array:
+    def random(self, seed: int | None = None) -> Array:
         """Generate random sparse binary vector.
 
         Args:
@@ -311,8 +308,8 @@ class SparseSegmentSpace(DiscreteSpace):
         self,
         dimension: int,
         segments: int,
-        backend: Optional[Backend] = None,
-        seed: Optional[int] = None,
+        backend: Backend | None = None,
+        seed: int | None = None,
     ):
         if segments < 1:
             raise ValueError(f"segments must be >= 1, got {segments}")
@@ -339,7 +336,7 @@ class SparseSegmentSpace(DiscreteSpace):
             end = start + L
             yield s, start, end
 
-    def random(self, seed: Optional[int] = None) -> Array:
+    def random(self, seed: int | None = None) -> Array:
         import numpy as _np
         rng = _np.random.default_rng(seed)
         vec = _np.zeros((self.dimension,), dtype=_np.int32)
@@ -388,7 +385,7 @@ class SparseSegmentSpace(DiscreteSpace):
         return matches / self.segments
 
     # ===== Segment-aware helpers =====
-    def segment_argmax(self, vec: Array) -> "np.ndarray":
+    def segment_argmax(self, vec: Array) -> np.ndarray:
         """Return indices (length S) of active positions per segment after normalize()."""
         import numpy as _np
         v = _np.array(self.backend.to_numpy(self.normalize(vec)))
@@ -398,7 +395,7 @@ class SparseSegmentSpace(DiscreteSpace):
             idx[s] = int(_np.argmax(v[start:end]))
         return idx
 
-    def mask_segments(self, vec: Array, keep: "np.ndarray | list[int]") -> Array:
+    def mask_segments(self, vec: Array, keep: np.ndarray | list[int]) -> Array:
         """Zero out all segments not in keep.
 
         keep: iterable of segment indices to retain (0..S-1).
@@ -414,7 +411,7 @@ class SparseSegmentSpace(DiscreteSpace):
                 v[start:end] = 0
         return self.backend.from_numpy(v.astype(_np.int32))
 
-    def select_segments(self, vec: Array, select: "np.ndarray | list[int]") -> Array:
+    def select_segments(self, vec: Array, select: np.ndarray | list[int]) -> Array:
         """Return a compacted vector consisting of concatenated selected segments.
 
         This is often useful for analysis; not a fixed-length holovec vector.
@@ -442,7 +439,7 @@ class SparseSegmentSpace(DiscreteSpace):
             out[start:end] = _np.roll(seg, kk)
         return self.backend.from_numpy(out.astype(_np.int32))
 
-    def block_permute(self, vec: Array, perm: "np.ndarray | list[int]") -> Array:
+    def block_permute(self, vec: Array, perm: np.ndarray | list[int]) -> Array:
         """Apply a fixed within-segment permutation (length L) to every segment."""
         import numpy as _np
         v = _np.array(self.backend.to_numpy(vec))
@@ -474,9 +471,9 @@ class MatrixSpace(ContinuousSpace):
         self,
         dimension: int,
         matrix_size: int = 3,
-        backend: Optional[Backend] = None,
-        seed: Optional[int] = None,
-        diagonality: Optional[float] = None,
+        backend: Backend | None = None,
+        seed: int | None = None,
+        diagonality: float | None = None,
     ):
         """Initialize matrix space.
 
@@ -501,7 +498,7 @@ class MatrixSpace(ContinuousSpace):
     def dtype(self) -> str:
         return "complex64"
 
-    def random(self, seed: Optional[int] = None) -> Array:
+    def random(self, seed: int | None = None) -> Array:
         """Generate random GHRR hypervector with QΛ structure.
 
         Returns a stack of D matrices of size (m×m): H_j = Q_j @ Λ_j
@@ -546,7 +543,7 @@ class MatrixSpace(ContinuousSpace):
         result_np = np.stack(mats, axis=0)
         return self.backend.from_numpy(result_np)
 
-    def _generate_unitary_matrices(self, D: int, m: int, seed: Optional[int]) -> Array:
+    def _generate_unitary_matrices(self, D: int, m: int, seed: int | None) -> Array:
         """Generate D random m×m unitary matrices.
 
         Uses Ginibre ensemble (random complex Gaussian) + Gram-Schmidt/normalization.
@@ -652,8 +649,8 @@ class MatrixSpace(ContinuousSpace):
 def create_space(
     space_type: str,
     dimension: int,
-    backend: Optional[Backend] = None,
-    seed: Optional[int] = None,
+    backend: Backend | None = None,
+    seed: int | None = None,
     **kwargs
 ) -> DiscreteSpace | ContinuousSpace:
     """Factory function to create vector spaces.

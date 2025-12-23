@@ -3,9 +3,7 @@
 This backend enables GPU acceleration and integration with PyTorch models.
 """
 
-from __future__ import annotations
-
-from typing import Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -26,7 +24,7 @@ class TorchBackend(Backend):
     integration. Requires PyTorch to be installed.
     """
 
-    def __init__(self, device: str = 'cpu', seed: Optional[int] = None):
+    def __init__(self, device: str = 'cpu', seed: int | None = None):
         """Initialize PyTorch backend.
 
         Args:
@@ -101,23 +99,23 @@ class TorchBackend(Backend):
 
     # ===== Array Creation =====
 
-    def zeros(self, shape: Union[int, Tuple[int, ...]], dtype: str = 'float32') -> Array:
+    def zeros(self, shape: int | tuple[int, ...], dtype: str = 'float32') -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         torch_dtype = self._to_torch_dtype(dtype)
         return torch.zeros(shape, dtype=torch_dtype, device=self._device)
 
-    def ones(self, shape: Union[int, Tuple[int, ...]], dtype: str = 'float32') -> Array:
+    def ones(self, shape: int | tuple[int, ...], dtype: str = 'float32') -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         torch_dtype = self._to_torch_dtype(dtype)
         return torch.ones(shape, dtype=torch_dtype, device=self._device)
 
     def random_normal(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         mean: float = 0.0,
         std: float = 1.0,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         torch_dtype = self._to_torch_dtype(dtype)
@@ -131,11 +129,11 @@ class TorchBackend(Backend):
 
     def random_uniform(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         low: float = 0.0,
         high: float = 1.0,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         torch_dtype = self._to_torch_dtype(dtype)
@@ -150,10 +148,10 @@ class TorchBackend(Backend):
 
     def random_binary(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         p: float = 0.5,
         dtype: str = 'int32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         torch_dtype = self._to_torch_dtype(dtype)
@@ -168,10 +166,10 @@ class TorchBackend(Backend):
 
     def random_bipolar(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         p: float = 0.5,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         torch_dtype = self._to_torch_dtype(dtype)
@@ -187,9 +185,9 @@ class TorchBackend(Backend):
 
     def random_phasor(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         dtype: str = 'complex64',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         torch_dtype = self._to_torch_dtype(dtype)
@@ -214,7 +212,7 @@ class TorchBackend(Backend):
         angles = torch.rand(shape, generator=generator, device=self._device) * 2 * np.pi
         return torch.exp(1j * angles).to(torch_dtype)
 
-    def array(self, data, dtype: Optional[str] = None) -> Array:
+    def array(self, data, dtype: str | None = None) -> Array:
         torch_dtype = self._to_torch_dtype(dtype) if dtype else None
         return torch.tensor(data, dtype=torch_dtype, device=self._device)
 
@@ -248,17 +246,17 @@ class TorchBackend(Backend):
 
     # ===== Reductions =====
 
-    def sum(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def sum(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         if axis is None:
             return torch.sum(a)
         return torch.sum(a, dim=axis, keepdim=keepdims)
 
-    def mean(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def mean(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         if axis is None:
             return torch.mean(a)
         return torch.mean(a, dim=axis, keepdim=keepdims)
 
-    def norm(self, a: Array, ord: Union[int, str] = 2, axis: Optional[int] = None) -> Array:
+    def norm(self, a: Array, ord: int | str = 2, axis: int | None = None) -> Array:
         if axis is None:
             return torch.linalg.norm(a, ord=ord)
         return torch.linalg.norm(a, ord=ord, dim=axis)
@@ -270,29 +268,29 @@ class TorchBackend(Backend):
             return torch.sum(a.flatten() * b.flatten())
         return torch.dot(a.flatten(), b.flatten())
 
-    def max(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def max(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         if axis is None:
             return torch.max(a)
         return torch.max(a, dim=axis, keepdim=keepdims).values
 
-    def min(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def min(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         if axis is None:
             return torch.min(a)
         return torch.min(a, dim=axis, keepdim=keepdims).values
 
-    def argmax(self, a: Array, axis: Optional[int] = None) -> Array:
+    def argmax(self, a: Array, axis: int | None = None) -> Array:
         if axis is None:
             return torch.argmax(a)
         return torch.argmax(a, dim=axis)
 
-    def argmin(self, a: Array, axis: Optional[int] = None) -> Array:
+    def argmin(self, a: Array, axis: int | None = None) -> Array:
         if axis is None:
             return torch.argmin(a)
         return torch.argmin(a, dim=axis)
 
     # ===== Normalization =====
 
-    def normalize(self, a: Array, ord: Union[int, str] = 2, axis: Optional[int] = None, eps: float = 1e-12) -> Array:
+    def normalize(self, a: Array, ord: int | str = 2, axis: int | None = None, eps: float = 1e-12) -> Array:
         norm = torch.linalg.norm(a, ord=ord, dim=axis, keepdim=True)
         return a / (norm + eps)
 
@@ -328,7 +326,7 @@ class TorchBackend(Backend):
     def permute(self, a: Array, indices: Array) -> Array:
         return a[indices]
 
-    def roll(self, a: Array, shift: int, axis: Optional[int] = None) -> Array:
+    def roll(self, a: Array, shift: int, axis: int | None = None) -> Array:
         if axis is None:
             dims = tuple(range(len(a.shape)))
         else:
@@ -360,7 +358,7 @@ class TorchBackend(Backend):
 
     # ===== Utilities =====
 
-    def shape(self, a: Array) -> Tuple[int, ...]:
+    def shape(self, a: Array) -> tuple[int, ...]:
         return tuple(a.shape)
 
     def dtype(self, a: Array) -> str:
@@ -417,7 +415,7 @@ class TorchBackend(Backend):
         # PyTorch doesn't have batched trace, so we do it manually
         return torch.diagonal(a, dim1=-2, dim2=-1).sum(-1)
 
-    def svd(self, a: Array, full_matrices: bool = True) -> Tuple[Array, Array, Array]:
+    def svd(self, a: Array, full_matrices: bool = True) -> tuple[Array, Array, Array]:
         """Compute Singular Value Decomposition.
 
         PyTorch's SVD natively supports batched operations.
@@ -432,7 +430,7 @@ class TorchBackend(Backend):
             Vh = V.transpose(-2, -1)
         return U, S, Vh
 
-    def reshape(self, a: Array, shape: Tuple[int, ...]) -> Array:
+    def reshape(self, a: Array, shape: tuple[int, ...]) -> Array:
         """Reshape array."""
         return a.reshape(shape)
 

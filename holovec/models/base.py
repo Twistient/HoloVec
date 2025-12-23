@@ -5,10 +5,8 @@ Each model provides binding, unbinding, bundling, and permutation operations
 with different algebraic properties.
 """
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
-from typing import List, Optional, Sequence
+from collections.abc import Sequence
 
 from ..backends import Backend, get_backend
 from ..backends.base import Array
@@ -33,7 +31,7 @@ class VSAModel(ABC):
     def __init__(
         self,
         space: VectorSpace,
-        backend: Optional[Backend] = None
+        backend: Backend | None = None
     ):
         """Initialize VSA model.
 
@@ -154,7 +152,7 @@ class VSAModel(ABC):
 
     # ===== Vector Generation =====
 
-    def random(self, seed: Optional[int] = None) -> Array:
+    def random(self, seed: int | None = None) -> Array:
         """Generate a random vector from the space.
 
         Args:
@@ -165,7 +163,7 @@ class VSAModel(ABC):
         """
         return self.space.random(seed=seed)
 
-    def random_sequence(self, n: int, seed: Optional[int] = None) -> List[Array]:
+    def random_sequence(self, n: int, seed: int | None = None) -> list[Array]:
         """Generate n random vectors.
 
         Args:

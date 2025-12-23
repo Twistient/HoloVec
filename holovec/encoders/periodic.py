@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Iterable, List, Optional
+from collections.abc import Iterable
 import math
 
 from holovec.encoders.base import ScalarEncoder
@@ -30,9 +28,9 @@ class PeriodicAngleEncoder(ScalarEncoder):
     def __init__(
         self,
         model: VSAModel,
-        harmonics: List[int] | int = 3,
+        harmonics: list[int] | int = 3,
         radians: bool = True,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> None:
         super().__init__(model, min_val=0.0, max_val=2 * math.pi)
         self.is_complex = self.model.space.space_name in ("complex",) or "matrix" in self.model.space.space_name
@@ -147,14 +145,14 @@ class PeriodicAngleEncoder(ScalarEncoder):
 
 
 # Convenience thin wrappers for common periodic domains
-def encode_day_of_week(model: VSAModel, day_index: int, harmonics: int = 3, seed: Optional[int] = None) -> Array:
+def encode_day_of_week(model: VSAModel, day_index: int, harmonics: int = 3, seed: int | None = None) -> Array:
     """Encode day of week as periodic angle on 7-cycle (0..6)."""
     enc = PeriodicAngleEncoder(model, harmonics=harmonics, radians=True, seed=seed)
     theta = 2 * np.pi * (int(day_index) % 7) / 7.0
     return enc.encode(theta)
 
 
-def encode_time_of_day(model: VSAModel, hour: float, harmonics: int = 3, seed: Optional[int] = None) -> Array:
+def encode_time_of_day(model: VSAModel, hour: float, harmonics: int = 3, seed: int | None = None) -> Array:
     """Encode time of day (0..24) as periodic angle."""
     enc = PeriodicAngleEncoder(model, harmonics=harmonics, radians=True, seed=seed)
     theta = 2 * np.pi * (float(hour) % 24.0) / 24.0

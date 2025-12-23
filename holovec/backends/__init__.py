@@ -4,9 +4,6 @@ This module provides automatic backend detection and a unified interface
 for accessing different computational backends (NumPy, PyTorch, JAX).
 """
 
-from __future__ import annotations
-
-from typing import Dict, Optional, Type, Union
 
 from .base import Backend, BackendError, BackendNotAvailableError
 from .numpy_backend import NumPyBackend
@@ -26,7 +23,7 @@ except ImportError:
 
 
 # Backend registry
-_BACKENDS: Dict[str, Type[Backend]] = {
+_BACKENDS: dict[str, type[Backend]] = {
     'numpy': NumPyBackend,
 }
 
@@ -40,7 +37,7 @@ if JAX_AVAILABLE and JAXBackend is not None:
 
 
 # Default backend
-_DEFAULT_BACKEND: Optional[Backend] = None
+_DEFAULT_BACKEND: Backend | None = None
 
 
 def get_available_backends() -> list[str]:
@@ -64,7 +61,7 @@ def is_backend_available(name: str) -> bool:
     return name.lower() in _BACKENDS
 
 
-def get_backend(name: Union[str, Backend, None] = None, **kwargs) -> Backend:
+def get_backend(name: str | Backend | None = None, **kwargs) -> Backend:
     """Get a backend instance by name.
 
     Args:

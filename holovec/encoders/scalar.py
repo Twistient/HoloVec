@@ -5,7 +5,6 @@ This module implements various methods for encoding scalar values,
 preserving locality: similar scalars map to similar hypervectors.
 """
 
-from typing import List, Optional
 from holovec.encoders.base import ScalarEncoder
 from holovec.models.base import VSAModel
 from holovec.backends.base import Array
@@ -40,10 +39,10 @@ class FractionalPowerEncoder(ScalarEncoder):
         min_val: float,
         max_val: float,
         bandwidth: float = 1.0,
-        seed: Optional[int] = None,
+        seed: int | None = None,
         phase_dist: str = "uniform",
-        mixture_bandwidths: Optional[List[float]] = None,
-        mixture_weights: Optional[List[float]] = None,
+        mixture_bandwidths: list[float] | None = None,
+        mixture_weights: list[float] | None = None,
     ):
         """
         Initialize FractionalPowerEncoder.
@@ -229,7 +228,7 @@ class FractionalPowerEncoder(ScalarEncoder):
             # For complex path we do not need base_phasor; for real path, we’ll compute cos(theta * exponent)
             self.base_phasor = None
 
-    def _generate_base_phasor(self, seed: Optional[int]) -> Array:
+    def _generate_base_phasor(self, seed: int | None) -> Array:
         """
         Generate random phasor base vector with uniform phase distribution.
 
@@ -264,7 +263,7 @@ class FractionalPowerEncoder(ScalarEncoder):
 
         return phasor
 
-    def _generate_theta_distribution(self, phase_dist: str, seed: Optional[int]) -> Array:
+    def _generate_theta_distribution(self, phase_dist: str, seed: int | None) -> Array:
         """
         Generate frequency vector θ according to specified distribution.
 
@@ -485,8 +484,8 @@ class FractionalPowerEncoder(ScalarEncoder):
         normalized = self.normalize(value)
 
         # Handle mixture: list of beta_k and weights alpha_k
-        betas: List[float]
-        alphas: List[float]
+        betas: list[float]
+        alphas: list[float]
         if self.mixture_bandwidths is not None:
             betas = list(self.mixture_bandwidths)
             alphas = list(self.mixture_weights or [])
@@ -716,7 +715,7 @@ class FractionalPowerEncoder(ScalarEncoder):
         return True
 
     @property
-    def compatible_models(self) -> List[str]:
+    def compatible_models(self) -> list[str]:
         """FPE works best with FHRR, also compatible with HRR."""
         return ["FHRR", "HRR"]
 
@@ -735,10 +734,10 @@ class FractionalPowerEncoder(ScalarEncoder):
     # ====== M2: Learned mixture weights (ridge-style closed form) ======
     def learn_mixture_weights(
         self,
-        values: List[float],
-        labels: List[int],
+        values: list[float],
+        labels: list[int],
         reg: float = 1e-3,
-    ) -> List[float]:
+    ) -> list[float]:
         """
         Learn mixture weights (alphas) for fixed mixture_bandwidths using a simple
         ridge-style objective that aligns encoded mixtures to per-class prototypes.
@@ -856,7 +855,7 @@ class ThermometerEncoder(ScalarEncoder):
         min_val: float,
         max_val: float,
         n_bins: int = 100,
-        seed: Optional[int] = None
+        seed: int | None = None
     ):
         """
         Initialize ThermometerEncoder.
@@ -933,7 +932,7 @@ class ThermometerEncoder(ScalarEncoder):
         return False
 
     @property
-    def compatible_models(self) -> List[str]:
+    def compatible_models(self) -> list[str]:
         """Works with all VSA models."""
         return ["MAP", "FHRR", "HRR", "BSC", "GHRR", "VTB", "BSDC"]
 
@@ -972,7 +971,7 @@ class LevelEncoder(ScalarEncoder):
         min_val: float,
         max_val: float,
         n_levels: int,
-        seed: Optional[int] = None
+        seed: int | None = None
     ):
         """
         Initialize LevelEncoder.
@@ -1057,7 +1056,7 @@ class LevelEncoder(ScalarEncoder):
         return True
 
     @property
-    def compatible_models(self) -> List[str]:
+    def compatible_models(self) -> list[str]:
         """Works with all VSA models."""
         return ["MAP", "FHRR", "HRR", "BSC", "GHRR", "VTB", "BSDC"]
 

@@ -4,9 +4,7 @@ This backend enables JIT compilation and automatic vectorization for fast
 research code and automatic differentiation.
 """
 
-from __future__ import annotations
-
-from typing import Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -31,7 +29,7 @@ class JAXBackend(Backend):
     and functional programming patterns. Requires JAX to be installed.
     """
 
-    def __init__(self, seed: Optional[int] = None):
+    def __init__(self, seed: int | None = None):
         """Initialize JAX backend.
 
         Args:
@@ -107,7 +105,7 @@ class JAXBackend(Backend):
 
         return False
 
-    def _get_key(self, seed: Optional[int] = None):
+    def _get_key(self, seed: int | None = None):
         """Get a PRNG key, optionally splitting the internal key."""
         if seed is not None:
             return jax_random.PRNGKey(seed)
@@ -116,23 +114,23 @@ class JAXBackend(Backend):
 
     # ===== Array Creation =====
 
-    def zeros(self, shape: Union[int, Tuple[int, ...]], dtype: str = 'float32') -> Array:
+    def zeros(self, shape: int | tuple[int, ...], dtype: str = 'float32') -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         jax_dtype = self._to_jax_dtype(dtype)
         return jnp.zeros(shape, dtype=jax_dtype)
 
-    def ones(self, shape: Union[int, Tuple[int, ...]], dtype: str = 'float32') -> Array:
+    def ones(self, shape: int | tuple[int, ...], dtype: str = 'float32') -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         jax_dtype = self._to_jax_dtype(dtype)
         return jnp.ones(shape, dtype=jax_dtype)
 
     def random_normal(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         mean: float = 0.0,
         std: float = 1.0,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         jax_dtype = self._to_jax_dtype(dtype)
@@ -141,11 +139,11 @@ class JAXBackend(Backend):
 
     def random_uniform(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         low: float = 0.0,
         high: float = 1.0,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         jax_dtype = self._to_jax_dtype(dtype)
@@ -154,10 +152,10 @@ class JAXBackend(Backend):
 
     def random_binary(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         p: float = 0.5,
         dtype: str = 'int32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         jax_dtype = self._to_jax_dtype(dtype)
@@ -166,10 +164,10 @@ class JAXBackend(Backend):
 
     def random_bipolar(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         p: float = 0.5,
         dtype: str = 'float32',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         jax_dtype = self._to_jax_dtype(dtype)
@@ -179,9 +177,9 @@ class JAXBackend(Backend):
 
     def random_phasor(
         self,
-        shape: Union[int, Tuple[int, ...]],
+        shape: int | tuple[int, ...],
         dtype: str = 'complex64',
-        seed: Optional[int] = None
+        seed: int | None = None
     ) -> Array:
         shape = (shape,) if isinstance(shape, int) else shape
         jax_dtype = self._to_jax_dtype(dtype)
@@ -200,7 +198,7 @@ class JAXBackend(Backend):
         angles = jax_random.uniform(key, shape, minval=0.0, maxval=2 * np.pi)
         return jnp.exp(1j * angles).astype(jax_dtype)
 
-    def array(self, data, dtype: Optional[str] = None) -> Array:
+    def array(self, data, dtype: str | None = None) -> Array:
         jax_dtype = self._to_jax_dtype(dtype) if dtype else None
         return jnp.array(data, dtype=jax_dtype)
 
@@ -234,33 +232,33 @@ class JAXBackend(Backend):
 
     # ===== Reductions =====
 
-    def sum(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def sum(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         return jnp.sum(a, axis=axis, keepdims=keepdims)
 
-    def mean(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def mean(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         return jnp.mean(a, axis=axis, keepdims=keepdims)
 
-    def norm(self, a: Array, ord: Union[int, str] = 2, axis: Optional[int] = None) -> Array:
+    def norm(self, a: Array, ord: int | str = 2, axis: int | None = None) -> Array:
         return jnp.linalg.norm(a, ord=ord, axis=axis)
 
     def dot(self, a: Array, b: Array) -> Array:
         return jnp.dot(a, b)
 
-    def max(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def max(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         return jnp.max(a, axis=axis, keepdims=keepdims)
 
-    def min(self, a: Array, axis: Optional[int] = None, keepdims: bool = False) -> Array:
+    def min(self, a: Array, axis: int | None = None, keepdims: bool = False) -> Array:
         return jnp.min(a, axis=axis, keepdims=keepdims)
 
-    def argmax(self, a: Array, axis: Optional[int] = None) -> Array:
+    def argmax(self, a: Array, axis: int | None = None) -> Array:
         return jnp.argmax(a, axis=axis)
 
-    def argmin(self, a: Array, axis: Optional[int] = None) -> Array:
+    def argmin(self, a: Array, axis: int | None = None) -> Array:
         return jnp.argmin(a, axis=axis)
 
     # ===== Normalization =====
 
-    def normalize(self, a: Array, ord: Union[int, str] = 2, axis: Optional[int] = None, eps: float = 1e-12) -> Array:
+    def normalize(self, a: Array, ord: int | str = 2, axis: int | None = None, eps: float = 1e-12) -> Array:
         norm = jnp.linalg.norm(a, ord=ord, axis=axis, keepdims=True)
         return a / (norm + eps)
 
@@ -296,7 +294,7 @@ class JAXBackend(Backend):
     def permute(self, a: Array, indices: Array) -> Array:
         return a[indices]
 
-    def roll(self, a: Array, shift: int, axis: Optional[int] = None) -> Array:
+    def roll(self, a: Array, shift: int, axis: int | None = None) -> Array:
         return jnp.roll(a, shift, axis=axis)
 
     # ===== Similarity Measures =====
@@ -324,7 +322,7 @@ class JAXBackend(Backend):
 
     # ===== Utilities =====
 
-    def shape(self, a: Array) -> Tuple[int, ...]:
+    def shape(self, a: Array) -> tuple[int, ...]:
         return tuple(a.shape)
 
     def dtype(self, a: Array) -> str:
@@ -378,7 +376,7 @@ class JAXBackend(Backend):
         # For 3D+: trace along last two dims
         return jnp.trace(a, axis1=-2, axis2=-1)
 
-    def svd(self, a: Array, full_matrices: bool = True) -> Tuple[Array, Array, Array]:
+    def svd(self, a: Array, full_matrices: bool = True) -> tuple[Array, Array, Array]:
         """Compute Singular Value Decomposition.
 
         JAX's SVD natively supports batched operations.
@@ -387,7 +385,7 @@ class JAXBackend(Backend):
         U, S, Vh = jnp.linalg.svd(a, full_matrices=full_matrices)
         return U, S, Vh
 
-    def reshape(self, a: Array, shape: Tuple[int, ...]) -> Array:
+    def reshape(self, a: Array, shape: tuple[int, ...]) -> Array:
         """Reshape array."""
         return jnp.reshape(a, shape)
 

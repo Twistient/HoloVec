@@ -5,7 +5,6 @@ This module provides encoders for spatial data structures like images,
 where both position and value information must be encoded.
 """
 
-from typing import Optional, Tuple, Union, List
 from holovec.models.base import VSAModel
 from holovec.encoders.base import Encoder
 from holovec.encoders.scalar import ScalarEncoder
@@ -76,20 +75,16 @@ class ImageEncoder(Encoder):
         model: VSAModel,
         scalar_encoder: ScalarEncoder,
         normalize_pixels: bool = True,
-        seed: Optional[int] = None
+        seed: int | None = None,
     ):
         """Initialize ImageEncoder."""
         # Validate and set scalar_encoder BEFORE calling super().__init__
         # because base class checks compatible_models which references it
         if not isinstance(scalar_encoder, ScalarEncoder):
-            raise TypeError(
-                f"scalar_encoder must be a ScalarEncoder, got {type(scalar_encoder)}"
-            )
+            raise TypeError(f"scalar_encoder must be a ScalarEncoder, got {type(scalar_encoder)}")
 
         if scalar_encoder.model != model:
-            raise ValueError(
-                "scalar_encoder must use the same VSA model as the ImageEncoder"
-            )
+            raise ValueError("scalar_encoder must use the same VSA model as the ImageEncoder")
 
         self.scalar_encoder = scalar_encoder
         self.normalize_pixels = normalize_pixels
@@ -98,7 +93,7 @@ class ImageEncoder(Encoder):
 
         # Generate dimension vectors for spatial coordinates
         base_seed = seed if seed is not None else 2000
-        self.X = model.random(seed=base_seed)      # X dimension
+        self.X = model.random(seed=base_seed)  # X dimension
         self.Y = model.random(seed=base_seed + 1)  # Y dimension
 
         # Generate dimension vectors for color channels (RGB/RGBA)
@@ -108,10 +103,10 @@ class ImageEncoder(Encoder):
         self.A = model.random(seed=base_seed + 5)  # Alpha channel
 
         # Track last encoded image properties
-        self.n_channels: Optional[int] = None
-        self.image_shape: Optional[Tuple[int, ...]] = None
+        self.n_channels: int | None = None
+        self.image_shape: tuple[int, ...] | None = None
 
-    def encode(self, image: Union[Array, "numpy.ndarray"]) -> Array:
+    def encode(self, image: "Array | numpy.ndarray") -> Array:
         """
         Encode an image into a hypervector.
 
@@ -159,13 +154,9 @@ class ImageEncoder(Encoder):
         elif image.ndim == 3:
             height, width, n_channels = image.shape
             if n_channels not in [1, 3, 4]:
-                raise ValueError(
-                    f"Image must have 1, 3, or 4 channels, got {n_channels}"
-                )
+                raise ValueError(f"Image must have 1, 3, or 4 channels, got {n_channels}")
         else:
-            raise ValueError(
-                f"Image must be 2D (grayscale) or 3D (color), got shape {image.shape}"
-            )
+            raise ValueError(f"Image must be 2D (grayscale) or 3D (color), got shape {image.shape}")
 
         # Store image properties
         self.n_channels = n_channels
@@ -175,9 +166,9 @@ class ImageEncoder(Encoder):
         if self.normalize_pixels:
             # Check dtype using string representation to avoid dtype dependency
             dtype_str = str(image.dtype)
-            if 'uint8' in dtype_str:
+            if "uint8" in dtype_str:
                 image = image.astype(_np.float32) / 255.0
-            elif 'int' in dtype_str:
+            elif "int" in dtype_str:
                 # Other integer types: normalize assuming 0-255 range
                 image = image.astype(_np.float32) / 255.0
             # If already float, assume it's in [0, 1]
@@ -234,11 +225,7 @@ class ImageEncoder(Encoder):
         return image_hv
 
     def decode(
-        self,
-        hypervector: Array,
-        height: int,
-        width: int,
-        n_channels: int = 1
+        self, hypervector: Array, height: int, width: int, n_channels: int = 1
     ) -> "numpy.ndarray":
         """
         Decode a hypervector to reconstruct an approximate image.
@@ -337,7 +324,7 @@ class ImageEncoder(Encoder):
         return False
 
     @property
-    def compatible_models(self) -> List[str]:
+    def compatible_models(self) -> list[str]:
         """
         List of compatible VSA model names.
 

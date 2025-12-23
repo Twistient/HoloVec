@@ -29,9 +29,7 @@ References:
 - Kleyko et al. (2023): HDC/VSA Survey (BSDC comparison)
 """
 
-from __future__ import annotations
-
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -55,10 +53,10 @@ class BSDCModel(VSAModel):
     def __init__(
         self,
         dimension: int = 10000,
-        sparsity: Optional[float] = None,
-        space: Optional[VectorSpace] = None,
-        backend: Optional[Backend] = None,
-        seed: Optional[int] = None
+        sparsity: float | None = None,
+        space: VectorSpace | None = None,
+        backend: Backend | None = None,
+        seed: int | None = None
     ):
         """Initialize BSDC model.
 
@@ -342,7 +340,7 @@ def optimal_sparsity(dimension: int) -> float:
     return 1.0 / math.sqrt(dimension)
 
 
-def expected_ones(dimension: int, sparsity: Optional[float] = None) -> int:
+def expected_ones(dimension: int, sparsity: float | None = None) -> int:
     """Calculate expected number of 1s for given dimension and sparsity.
 
     Args:

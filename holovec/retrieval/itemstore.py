@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Dict, List, Optional, Sequence, Tuple
+from collections.abc import Sequence
 
 from ..backends.base import Array
 from ..models.base import VSAModel
@@ -19,13 +17,13 @@ class ItemStore:
     def __init__(
         self,
         model: VSAModel,
-        cleanup: Optional[CleanupStrategy] = None,
+        cleanup: CleanupStrategy | None = None,
     ) -> None:
         self.model = model
         self.cleanup: CleanupStrategy = cleanup if cleanup is not None else BruteForceCleanup()
         self.codebook = Codebook(backend=model.backend)
 
-    def fit(self, items: Dict[str, Array] | Codebook) -> "ItemStore":
+    def fit(self, items: dict[str, Array] | Codebook) -> "ItemStore":
         if isinstance(items, Codebook):
             self.codebook = items
         else:
@@ -35,7 +33,7 @@ class ItemStore:
     def add(self, label: str, vector: Array) -> None:
         self.codebook.add(label, vector)
 
-    def extend(self, items: Dict[str, Array]) -> None:
+    def extend(self, items: dict[str, Array]) -> None:
         self.codebook.extend(items)
 
     def query(
@@ -44,7 +42,7 @@ class ItemStore:
         k: int = 1,
         return_similarities: bool = True,
         fast: bool = True,
-    ) -> List[Tuple[str, float]]:
+    ) -> list[tuple[str, float]]:
         """Query top-k nearest items.
 
         If fast=True, uses a batched matrix routine when possible, otherwise
@@ -75,12 +73,13 @@ class ItemStore:
                     sims_np = be.to_numpy(sims_arr)
                 # Prepare top-k
                 import numpy as _np
+
                 sims_np = sims_np.astype(float)
                 if k >= len(labels):
                     order = _np.argsort(-sims_np)
                 else:
                     # partial sort then full sort within top-k
-                    idx_part = _np.argpartition(-sims_np, kth=k-1)[:k]
+                    idx_part = _np.argpartition(-sims_np, kth=k - 1)[:k]
                     order = idx_part[_np.argsort(-sims_np[idx_part])]
                 out = [(labels[i], float(sims_np[i])) for i in order[:k]]
                 if return_similarities:
@@ -91,15 +90,19 @@ class ItemStore:
                 # Fallback to scalar path on any backend issues
                 pass
 
-        labels, sims = nearest_neighbors(vec, self.codebook._items, self.model, k=k, return_similarities=True)
-        return list(zip(labels, sims or [])) if return_similarities else [(lbl, 0.0) for lbl in labels]
+        labels, sims = nearest_neighbors(
+            vec, self.codebook._items, self.model, k=k, return_similarities=True
+        )
+        return (
+            list(zip(labels, sims or [])) if return_similarities else [(lbl, 0.0) for lbl in labels]
+        )
 
     def factorize(
         self,
         vec: Array,
         n_factors: int,
         **kwargs,
-    ) -> Tuple[List[str], List[float]]:
+    ) -> tuple[list[str], list[float]]:
         return self.cleanup.factorize(
             vec,
             self.codebook._items,
@@ -117,7 +120,7 @@ class ItemStore:
         cls,
         model: VSAModel,
         path: str,
-        cleanup: Optional[CleanupStrategy] = None,
+        cleanup: CleanupStrategy | None = None,
     ) -> "ItemStore":
         store = cls(model=model, cleanup=cleanup)
         store.codebook = Codebook.load(path, backend=model.backend)

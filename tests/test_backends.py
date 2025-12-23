@@ -29,13 +29,13 @@ class TestBackendAvailability:
 
     def test_numpy_always_available(self):
         """NumPy backend should always be available."""
-        assert is_backend_available('numpy')
-        assert 'numpy' in get_available_backends()
+        assert is_backend_available("numpy")
+        assert "numpy" in get_available_backends()
 
     def test_get_backend_numpy(self):
         """Should be able to create NumPy backend."""
-        backend = get_backend('numpy')
-        assert backend.name == 'numpy'
+        backend = get_backend("numpy")
+        assert backend.name == "numpy"
         assert isinstance(backend, NumPyBackend)
 
     def test_get_default_backend(self):
@@ -50,13 +50,13 @@ class TestBasicOperations:
 
     def test_zeros(self, backend):
         """Test zeros creation."""
-        arr = backend.zeros(100, dtype='float32')
+        arr = backend.zeros(100, dtype="float32")
         assert backend.shape(arr) == (100,)
         assert np.allclose(backend.to_numpy(arr), 0.0)
 
     def test_ones(self, backend):
         """Test ones creation."""
-        arr = backend.ones(50, dtype='float32')
+        arr = backend.ones(50, dtype="float32")
         assert backend.shape(arr) == (50,)
         assert np.allclose(backend.to_numpy(arr), 1.0)
 
@@ -145,8 +145,8 @@ class TestElementWiseOperations:
 
     def test_xor(self, backend):
         """Test XOR operation."""
-        a = backend.array([0, 1, 0, 1], dtype='int32')
-        b = backend.array([0, 0, 1, 1], dtype='int32')
+        a = backend.array([0, 1, 0, 1], dtype="int32")
+        b = backend.array([0, 0, 1, 1], dtype="int32")
         result = backend.xor(a, b)
         expected = np.array([0, 1, 1, 0])
         assert np.array_equal(backend.to_numpy(result), expected)
@@ -178,7 +178,7 @@ class TestReductions:
         a = backend.array([1.0, 2.0, 3.0])
         b = backend.array([4.0, 5.0, 6.0])
         result = backend.dot(a, b)
-        expected = 1*4 + 2*5 + 3*6  # = 32
+        expected = 1 * 4 + 2 * 5 + 3 * 6  # = 32
         assert np.allclose(backend.to_numpy(result), expected)
 
 
@@ -286,35 +286,61 @@ class TestPermutations:
 
 
 class TestBackendConsistency:
-    """Test that different backends give consistent results."""
+    """Test that backends are internally consistent with seeds."""
 
-    @pytest.mark.parametrize("operation", [
-        'random_normal',
-        'random_bipolar',
-        'random_binary',
-    ])
-    def test_random_consistency(self, operation):
-        """Random operations with same seed should give same results."""
-        if len(AVAILABLE_BACKENDS) < 2:
-            pytest.skip("Need at least 2 backends for consistency test")
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            "random_normal",
+            "random_bipolar",
+            "random_binary",
+        ],
+    )
+    @pytest.mark.parametrize("backend_name", AVAILABLE_BACKENDS)
+    def test_same_backend_seed_consistency(self, operation, backend_name):
+        """Same backend with same seed should give identical results."""
+        backend = get_backend(backend_name)
 
-        # Create two different backends
-        backend1 = get_backend(AVAILABLE_BACKENDS[0])
-        backend2 = get_backend(AVAILABLE_BACKENDS[1] if len(AVAILABLE_BACKENDS) > 1 else AVAILABLE_BACKENDS[0])
+        method = getattr(backend, operation)
 
-        # Generate random vectors with same seed
-        method1 = getattr(backend1, operation)
-        method2 = getattr(backend2, operation)
-
-        arr1 = method1(100, seed=42)
-        arr2 = method2(100, seed=42)
+        # Generate two vectors with same seed
+        arr1 = method(100, seed=42)
+        arr2 = method(100, seed=42)
 
         # Convert to numpy for comparison
-        arr1_np = backend1.to_numpy(arr1)
-        arr2_np = backend2.to_numpy(arr2)
+        arr1_np = backend.to_numpy(arr1)
+        arr2_np = backend.to_numpy(arr2)
 
-        # Should be very close (allowing for minor numerical differences)
-        assert np.allclose(arr1_np, arr2_np, atol=1e-5)
+        # Same backend + same seed = identical output
+        assert np.allclose(arr1_np, arr2_np, atol=1e-10), (
+            f"{backend_name}.{operation} with same seed produced different results"
+        )
+
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            "random_normal",
+            "random_bipolar",
+            "random_binary",
+        ],
+    )
+    @pytest.mark.parametrize("backend_name", AVAILABLE_BACKENDS)
+    def test_different_seeds_produce_different_results(self, operation, backend_name):
+        """Different seeds should produce different results."""
+        backend = get_backend(backend_name)
+
+        method = getattr(backend, operation)
+
+        arr1 = method(100, seed=42)
+        arr2 = method(100, seed=43)
+
+        arr1_np = backend.to_numpy(arr1)
+        arr2_np = backend.to_numpy(arr2)
+
+        # Different seeds should produce different outputs
+        assert not np.allclose(arr1_np, arr2_np), (
+            f"{backend_name}.{operation} with different seeds produced identical results"
+        )
 
 
 class TestNewMathOperations:
@@ -348,8 +374,7 @@ class TestNewMathOperations:
 
     def test_max_with_axis(self, backend):
         """Test max along specific axis."""
-        arr = backend.array([[1.0, 5.0, 3.0],
-                             [4.0, 2.0, 6.0]])
+        arr = backend.array([[1.0, 5.0, 3.0], [4.0, 2.0, 6.0]])
         result = backend.max(arr, axis=0)
         expected = np.array([4.0, 5.0, 6.0])
         assert np.allclose(backend.to_numpy(result), expected)
@@ -370,8 +395,7 @@ class TestNewMathOperations:
 
     def test_min_with_axis(self, backend):
         """Test min along specific axis."""
-        arr = backend.array([[1.0, 5.0, 3.0],
-                             [4.0, 2.0, 6.0]])
+        arr = backend.array([[1.0, 5.0, 3.0], [4.0, 2.0, 6.0]])
         result = backend.min(arr, axis=0)
         expected = np.array([1.0, 2.0, 3.0])
         assert np.allclose(backend.to_numpy(result), expected)
@@ -392,8 +416,7 @@ class TestNewMathOperations:
 
     def test_argmax_with_axis(self, backend):
         """Test argmax along specific axis."""
-        arr = backend.array([[1.0, 5.0, 3.0],
-                             [4.0, 2.0, 6.0]])
+        arr = backend.array([[1.0, 5.0, 3.0], [4.0, 2.0, 6.0]])
         result = backend.argmax(arr, axis=0)
         expected = np.array([1, 0, 1])  # Indices of max along axis 0
         assert np.array_equal(backend.to_numpy(result), expected)
@@ -406,8 +429,7 @@ class TestNewMathOperations:
 
     def test_argmin_with_axis(self, backend):
         """Test argmin along specific axis."""
-        arr = backend.array([[1.0, 5.0, 3.0],
-                             [4.0, 2.0, 6.0]])
+        arr = backend.array([[1.0, 5.0, 3.0], [4.0, 2.0, 6.0]])
         result = backend.argmin(arr, axis=0)
         expected = np.array([0, 1, 0])  # Indices of min along axis 0
         assert np.array_equal(backend.to_numpy(result), expected)
@@ -439,8 +461,7 @@ class TestNewMathOperations:
 
     def test_softmax_with_axis(self, backend):
         """Test softmax along specific axis."""
-        arr = backend.array([[1.0, 2.0, 3.0],
-                             [4.0, 5.0, 6.0]])
+        arr = backend.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
         result = backend.softmax(arr, axis=1)
 
         # Each row should sum to 1
@@ -455,7 +476,7 @@ class TestNewMathOperations:
 
         # Should give uniform distribution
         result_np = backend.to_numpy(result)
-        expected = np.array([1/3, 1/3, 1/3])
+        expected = np.array([1 / 3, 1 / 3, 1 / 3])
         assert np.allclose(result_np, expected, atol=1e-6)
 
 
@@ -481,7 +502,9 @@ class TestOperationsConsistency:
         result1 = available[0][1].exp(available[0][1].array(arr_data))
         result2 = available[1][1].exp(available[1][1].array(arr_data))
 
-        assert np.allclose(available[0][1].to_numpy(result1), available[1][1].to_numpy(result2), atol=1e-6)
+        assert np.allclose(
+            available[0][1].to_numpy(result1), available[1][1].to_numpy(result2), atol=1e-6
+        )
 
     def test_softmax_consistency(self):
         """Test softmax gives same results across backends."""
@@ -502,7 +525,9 @@ class TestOperationsConsistency:
         result1 = available[0][1].softmax(available[0][1].array(arr_data))
         result2 = available[1][1].softmax(available[1][1].array(arr_data))
 
-        assert np.allclose(available[0][1].to_numpy(result1), available[1][1].to_numpy(result2), atol=1e-6)
+        assert np.allclose(
+            available[0][1].to_numpy(result1), available[1][1].to_numpy(result2), atol=1e-6
+        )
 
 
 class TestCapabilityProbes:
@@ -523,11 +548,11 @@ class TestCapabilityProbes:
 
         # NumPy and JAX don't support sparse (currently)
         # PyTorch does support sparse
-        if backend.name == 'numpy':
+        if backend.name == "numpy":
             assert result is False
-        elif backend.name == 'jax':
+        elif backend.name == "jax":
             assert result is False  # jax.experimental.sparse not production-ready
-        elif backend.name == 'torch':
+        elif backend.name == "torch":
             assert result is True
 
     def test_supports_gpu(self, backend):
@@ -536,10 +561,10 @@ class TestCapabilityProbes:
         assert isinstance(result, bool)
 
         # NumPy never supports GPU
-        if backend.name == 'numpy':
+        if backend.name == "numpy":
             assert result is False
         # PyTorch and JAX may or may not have GPU depending on installation
-        elif backend.name in ('torch', 'jax'):
+        elif backend.name in ("torch", "jax"):
             # Result is system-dependent, just check it returns a bool
             pass
 
@@ -549,21 +574,21 @@ class TestCapabilityProbes:
         assert isinstance(result, bool)
 
         # Only JAX has JIT compilation
-        if backend.name == 'jax':
+        if backend.name == "jax":
             assert result is True
         else:
             assert result is False
 
     def test_supports_device_cpu(self, backend):
         """Test supports_device('cpu') - should always be True."""
-        assert backend.supports_device('cpu') is True
-        assert backend.supports_device('CPU') is True  # Case insensitive
-        assert backend.supports_device('cpu:0') is True
+        assert backend.supports_device("cpu") is True
+        assert backend.supports_device("CPU") is True  # Case insensitive
+        assert backend.supports_device("cpu:0") is True
 
     def test_supports_device_invalid(self, backend):
         """Test supports_device() with invalid device."""
-        assert backend.supports_device('invalid_device') is False
-        assert backend.supports_device('quantum') is False
+        assert backend.supports_device("invalid_device") is False
+        assert backend.supports_device("quantum") is False
 
     def test_capability_probes_consistent(self, backend):
         """Test that capability probes are consistent.
@@ -573,13 +598,13 @@ class TestCapabilityProbes:
         # If supports_complex, should be able to create complex arrays
         if backend.supports_complex():
             try:
-                arr = backend.zeros(10, dtype='complex64')
-                assert backend.dtype(arr) in ('complex64', 'complex128')
+                arr = backend.zeros(10, dtype="complex64")
+                assert backend.dtype(arr) in ("complex64", "complex128")
             except Exception as e:
                 pytest.fail(f"Backend claims complex support but failed: {e}")
 
         # If supports_device('cpu'), should be able to use it
-        if backend.supports_device('cpu'):
+        if backend.supports_device("cpu"):
             try:
                 arr = backend.zeros(10)
                 # Should not raise
@@ -592,39 +617,39 @@ class TestCapabilityProbeDetails:
 
     def test_numpy_capabilities(self):
         """Test NumPy backend capabilities."""
-        backend = get_backend('numpy')
+        backend = get_backend("numpy")
 
         assert backend.supports_complex() is True
         assert backend.supports_sparse() is False
         assert backend.supports_gpu() is False
         assert backend.supports_jit() is False
-        assert backend.supports_device('cpu') is True
-        assert backend.supports_device('cuda') is False
+        assert backend.supports_device("cpu") is True
+        assert backend.supports_device("cuda") is False
 
     def test_torch_capabilities(self):
         """Test PyTorch backend capabilities (if available)."""
-        if not is_backend_available('torch'):
+        if not is_backend_available("torch"):
             pytest.skip("PyTorch not available")
 
-        backend = get_backend('torch')
+        backend = get_backend("torch")
 
         assert backend.supports_complex() is True
         assert backend.supports_sparse() is True  # PyTorch has sparse tensors
         # GPU support is system-dependent
         assert isinstance(backend.supports_gpu(), bool)
         assert backend.supports_jit() is False  # We don't expose TorchScript
-        assert backend.supports_device('cpu') is True
+        assert backend.supports_device("cpu") is True
 
     def test_jax_capabilities(self):
         """Test JAX backend capabilities (if available)."""
-        if not is_backend_available('jax'):
+        if not is_backend_available("jax"):
             pytest.skip("JAX not available")
 
-        backend = get_backend('jax')
+        backend = get_backend("jax")
 
         assert backend.supports_complex() is True
         assert backend.supports_sparse() is False  # Experimental, not production
         # GPU support is system-dependent
         assert isinstance(backend.supports_gpu(), bool)
         assert backend.supports_jit() is True  # JAX's key feature
-        assert backend.supports_device('cpu') is True
+        assert backend.supports_device("cpu") is True

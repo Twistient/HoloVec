@@ -17,8 +17,6 @@ References:
 
 from collections.abc import Sequence
 
-import numpy as np
-
 from ..backends import Backend
 from ..backends.base import Array
 from ..spaces import BipolarSpace, VectorSpace
@@ -41,7 +39,7 @@ class MAPModel(VSAModel):
         dimension: int = 10000,
         space: VectorSpace | None = None,
         backend: Backend | None = None,
-        seed: int | None = None
+        seed: int | None = None,
     ):
         """Initialize MAP model.
 
@@ -53,6 +51,7 @@ class MAPModel(VSAModel):
         """
         if space is None:
             from ..backends import get_backend
+
             backend = backend if backend is not None else get_backend()
             space = BipolarSpace(dimension, backend=backend, seed=seed)
 
@@ -141,7 +140,7 @@ class MAPModel(VSAModel):
             result = self.backend.sign(result)
             # Handle zeros (shouldn't happen in practice, but be safe)
             # If sum is 0, randomly choose ±1
-            zeros_mask = (result == 0)
+            zeros_mask = result == 0
             if self.backend.to_numpy(zeros_mask).any():
                 # For any zeros, use the first vector's value
                 first_vec = vectors[0]
@@ -168,6 +167,8 @@ class MAPModel(VSAModel):
         return self.backend.roll(vec, shift=k)
 
     def __repr__(self) -> str:
-        return (f"MAPModel(dimension={self.dimension}, "
-                f"space={self.space.space_name}, "
-                f"backend={self.backend.name})")
+        return (
+            f"MAPModel(dimension={self.dimension}, "
+            f"space={self.space.space_name}, "
+            f"backend={self.backend.name})"
+        )

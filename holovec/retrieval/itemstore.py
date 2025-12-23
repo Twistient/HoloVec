@@ -1,8 +1,7 @@
-from collections.abc import Sequence
 
 from ..backends.base import Array
 from ..models.base import VSAModel
-from ..utils.cleanup import CleanupStrategy, BruteForceCleanup, ResonatorCleanup
+from ..utils.cleanup import CleanupStrategy, BruteForceCleanup
 from ..utils.search import nearest_neighbors
 from .codebook import Codebook
 

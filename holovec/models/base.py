@@ -8,7 +8,7 @@ with different algebraic properties.
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 
-from ..backends import Backend, get_backend
+from ..backends import Backend
 from ..backends.base import Array
 from ..spaces.base import VectorSpace
 

@@ -1,4 +1,3 @@
-from collections.abc import Iterable
 import math
 
 from holovec.encoders.base import ScalarEncoder

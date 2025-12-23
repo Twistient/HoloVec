@@ -9,8 +9,6 @@ Similarity is provided by the space (fraction of matching segments).
 
 from collections.abc import Sequence
 
-import numpy as np
-
 from ..backends import Backend
 from ..backends.base import Array
 from ..spaces import SparseSegmentSpace, VectorSpace
@@ -40,6 +38,7 @@ class BSDCSEGModel(VSAModel):
             if segments is None:
                 raise ValueError("segments is required when space is not provided")
             from ..backends import get_backend
+
             backend = backend if backend is not None else get_backend()
             space = SparseSegmentSpace(dimension, segments=segments, backend=backend, seed=seed)
         elif not isinstance(space, SparseSegmentSpace):
@@ -82,6 +81,7 @@ class BSDCSEGModel(VSAModel):
         if not vectors:
             raise ValueError("Cannot bundle empty sequence")
         import numpy as _np
+
         # Normalize each to a valid segment pattern first
         seg_norm = [self.space.normalize(v) for v in vectors]
         arrs = [_np.array(self.backend.to_numpy(v)) for v in seg_norm]
@@ -101,4 +101,3 @@ class BSDCSEGModel(VSAModel):
 
     def permute(self, vec: Array, k: int = 1) -> Array:
         return self.backend.roll(vec, shift=k, axis=0)
-

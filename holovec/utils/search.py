@@ -275,7 +275,6 @@ def find_by_segment_pattern(
         - 'fraction': return fraction of matching specified segments, filter by min_fraction
     Returns a list of (label, score) sorted by score desc.
     """
-    import numpy as _np
 
     S = space.segments
     if len(pattern) != S:

@@ -39,6 +39,140 @@ def test_itemstore_batched_query_matches_scalar():
     assert {l for l, _ in fast} == {l for l, _ in slow}
 
 
+class TestAssocStore:
+    """Tests for AssocStore heteroassociative memory."""
+
+    def test_basic_fit_and_query(self):
+        """Test basic fit and query operations."""
+        from holovec.retrieval import AssocStore
+
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        # Create key-value pairs
+        keys = {
+            "a": model.random(seed=1),
+            "b": model.random(seed=2),
+            "c": model.random(seed=3),
+        }
+        values = {
+            "a": model.random(seed=10),
+            "b": model.random(seed=20),
+            "c": model.random(seed=30),
+        }
+
+        store = AssocStore(model).fit(keys, values)
+
+        # Query with exact key should return correct label
+        result = store.query_label(keys["b"], k=1)
+        assert result[0][0] == "b"
+        assert result[0][1] > 0.99  # High similarity for exact match
+
+    def test_query_value_returns_correct_vector(self):
+        """Test that query_value returns the associated value vector."""
+        from holovec.retrieval import AssocStore
+
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        keys = {"x": model.random(seed=1)}
+        values = {"x": model.random(seed=100)}
+
+        store = AssocStore(model).fit(keys, values)
+
+        label, value_vec = store.query_value(keys["x"])
+        assert label == "x"
+        # Value should match what we stored
+        assert np.allclose(be.to_numpy(value_vec), be.to_numpy(values["x"]))
+
+    def test_add_method(self):
+        """Test adding individual key-value pairs."""
+        from holovec.retrieval import AssocStore
+
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        store = AssocStore(model)
+        store.add("item1", model.random(seed=1), model.random(seed=10))
+        store.add("item2", model.random(seed=2), model.random(seed=20))
+
+        assert len(store.keys) == 2
+        assert len(store.values) == 2
+        assert "item1" in store.keys
+        assert "item2" in store.keys
+
+    def test_fit_with_partial_overlap(self):
+        """Test fit when keys and values have partial label overlap."""
+        from holovec.retrieval import AssocStore
+
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        # Keys has 'a', 'b', 'c'; values has 'b', 'c', 'd'
+        # Only 'b' and 'c' should be in the store
+        keys = {
+            "a": model.random(seed=1),
+            "b": model.random(seed=2),
+            "c": model.random(seed=3),
+        }
+        values = {
+            "b": model.random(seed=20),
+            "c": model.random(seed=30),
+            "d": model.random(seed=40),
+        }
+
+        store = AssocStore(model).fit(keys, values)
+
+        assert len(store.keys) == 2
+        assert "b" in store.keys
+        assert "c" in store.keys
+        assert "a" not in store.keys
+        assert "d" not in store.keys
+
+    def test_query_empty_store_raises(self):
+        """Test that querying empty store raises ValueError."""
+        from holovec.retrieval import AssocStore
+        import pytest
+
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        store = AssocStore(model)
+        query_vec = model.random(seed=1)
+
+        with pytest.raises(ValueError):
+            store.query_value(query_vec)
+
+    def test_save_and_load(self, tmp_path):
+        """Test saving and loading an AssocStore."""
+        from holovec.retrieval import AssocStore
+
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        keys = {"a": model.random(seed=1), "b": model.random(seed=2)}
+        values = {"a": model.random(seed=10), "b": model.random(seed=20)}
+
+        store = AssocStore(model).fit(keys, values)
+
+        keys_path = str(tmp_path / "keys.npz")
+        values_path = str(tmp_path / "values.npz")
+        store.save(keys_path, values_path)
+
+        # Load into new store
+        loaded = AssocStore.load(model, keys_path, values_path)
+
+        assert len(loaded.keys) == 2
+        assert "a" in loaded.keys
+        assert "b" in loaded.keys
+
+        # Verify vectors match
+        for label in ["a", "b"]:
+            orig_key = be.to_numpy(store.keys[label])
+            load_key = be.to_numpy(loaded.keys[label])
+            assert np.allclose(orig_key, load_key)
+
+
 class TestCodebookDictInterface:
     """Tests for dict-like interface on Codebook."""
 

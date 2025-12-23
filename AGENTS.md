@@ -95,11 +95,18 @@ Release a new version when:
    git commit -m "chore: Release vX.Y.Z"
    ```
 
-4. **Tag the release**:
+4. **Push and tag** (Option A - CLI):
    ```bash
+   git push origin master
    git tag -a vX.Y.Z -m "Release vX.Y.Z"
-   git push origin main --tags
+   git push origin --tags
    ```
+
+   **Or** (Option B - GitHub UI):
+   ```bash
+   git push origin master
+   ```
+   Then create the release on GitHub via Releases → "Draft a new release", which creates the tag automatically.
 
 ### Semantic Versioning
 
@@ -180,6 +187,33 @@ Update AGENTS.md when:
 - Duplicate information from other docs (link instead)
 
 ## Project-Specific Notes
+
+### Git Repository
+
+- **Default branch**: `master` (not `main`)
+- **Remote**: `origin` points to `github.com:Twistient/HoloVec`
+
+### Dependency Management
+
+This project uses `uv` for dependency management.
+
+**Keep `uv.lock` committed** - it ensures reproducible builds:
+- Pins exact dependency versions for CI consistency
+- Enables security auditing of specific versions
+- Makes debugging dependency issues easier
+
+```bash
+# Install dependencies
+uv pip install -e .[all]
+
+# Update dependencies
+uv lock --upgrade
+
+# Update a specific package
+uv lock --upgrade-package <package-name>
+```
+
+**Do NOT add `uv.lock` to `.gitignore`** - it should always be tracked.
 
 ### Backend Architecture
 

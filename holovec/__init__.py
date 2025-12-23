@@ -48,7 +48,17 @@ from typing import Optional, Union
 
 from . import backends, models, spaces
 from .backends import Backend, get_backend
-from .models import BSCModel, BSDCModel, BSDCSEGModel, FHRRModel, GHRRModel, HRRModel, MAPModel, VSAModel, VTBModel
+from .models import (
+    BSCModel,
+    BSDCModel,
+    BSDCSEGModel,
+    FHRRModel,
+    GHRRModel,
+    HRRModel,
+    MAPModel,
+    VSAModel,
+    VTBModel,
+)
 from .spaces import VectorSpace, create_space
 
 __version__ = "0.1.1"
@@ -75,26 +85,28 @@ class VSA:
 
     # Model registry
     _MODELS = {
-        'map': MAPModel,
-        'fhrr': FHRRModel,
-        'hrr': HRRModel,
-        'bsc': BSCModel,
-        'bsdc': BSDCModel,
-        'bsdc_seg': BSDCSEGModel,
-        'ghrr': GHRRModel,
-        'vtb': VTBModel,
+        "map": MAPModel,
+        "fhrr": FHRRModel,
+        "hrr": HRRModel,
+        "bsc": BSCModel,
+        "bsdc": BSDCModel,
+        "bsdc_seg": BSDCSEGModel,
+        "bsdc-seg": BSDCSEGModel,  # alias with hyphen to match model_name
+        "ghrr": GHRRModel,
+        "vtb": VTBModel,
     }
 
     # Default vector spaces for each model
     _DEFAULT_SPACES = {
-        'map': 'bipolar',
-        'fhrr': 'complex',
-        'hrr': 'real',
-        'bsc': 'binary',
-        'bsdc': 'sparse',
-        'bsdc_seg': 'sparse_segment',
-        'ghrr': 'matrix',
-        'vtb': 'real',
+        "map": "bipolar",
+        "fhrr": "complex",
+        "hrr": "real",
+        "bsc": "binary",
+        "bsdc": "sparse",
+        "bsdc_seg": "sparse_segment",
+        "bsdc-seg": "sparse_segment",  # alias with hyphen
+        "ghrr": "matrix",
+        "vtb": "real",
     }
 
     @classmethod
@@ -105,7 +117,7 @@ class VSA:
         backend: Optional[Union[str, Backend]] = None,
         space: Optional[str] = None,
         seed: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> VSAModel:
         """Create a VSA model with the specified configuration.
 
@@ -134,15 +146,13 @@ class VSA:
 
         if model_type_lower not in cls._MODELS:
             available = list(cls._MODELS.keys())
-            raise ValueError(
-                f"Unknown model type '{model_type}'. Available models: {available}"
-            )
+            raise ValueError(f"Unknown model type '{model_type}'. Available models: {available}")
 
         # Get model class
         model_class = cls._MODELS[model_type_lower]
 
         # Create backend
-        backend_kwargs = {k: v for k, v in kwargs.items() if k in ['device']}
+        backend_kwargs = {k: v for k, v in kwargs.items() if k in ["device"]}
         if isinstance(backend, Backend):
             backend_instance = backend
         elif isinstance(backend, str):
@@ -150,9 +160,7 @@ class VSA:
         elif backend is None:
             backend_instance = None
         else:
-            raise TypeError(
-                "backend must be a backend name (str) or a Backend instance"
-            )
+            raise TypeError("backend must be a backend name (str) or a Backend instance")
 
         # Determine space type
         if space is None:
@@ -160,28 +168,21 @@ class VSA:
 
         # Collect space-specific kwargs
         space_kwargs = {}
-        if space == 'sparse_segment':
+        if space == "sparse_segment":
             # For BSDC-SEG: default to dim/10 segments (segment_length=10)
-            space_kwargs['segments'] = kwargs.get('segments', max(1, dim // 10))
+            space_kwargs["segments"] = kwargs.get("segments", max(1, dim // 10))
 
         # Create space if string provided
         if isinstance(space, str):
             space_instance = create_space(
-                space,
-                dimension=dim,
-                backend=backend_instance,
-                seed=seed,
-                **space_kwargs
+                space, dimension=dim, backend=backend_instance, seed=seed, **space_kwargs
             )
         else:
             space_instance = space
 
         # Create model
         model = model_class(
-            dimension=dim,
-            space=space_instance,
-            backend=backend_instance,
-            seed=seed
+            dimension=dim, space=space_instance, backend=backend_instance, seed=seed
         )
 
         return model
@@ -217,12 +218,12 @@ class VSA:
         model = cls.create(model_type, dim=100)
 
         return {
-            'name': model.model_name,
-            'is_self_inverse': model.is_self_inverse,
-            'is_commutative': model.is_commutative,
-            'is_exact_inverse': model.is_exact_inverse,
-            'default_space': cls._DEFAULT_SPACES.get(model_type_lower),
-            'class': model.__class__.__name__,
+            "name": model.model_name,
+            "is_self_inverse": model.is_self_inverse,
+            "is_commutative": model.is_commutative,
+            "is_exact_inverse": model.is_exact_inverse,
+            "default_space": cls._DEFAULT_SPACES.get(model_type_lower),
+            "class": model.__class__.__name__,
         }
 
 
@@ -261,27 +262,27 @@ def backend_info() -> dict:
 
 __all__ = [
     # Main API
-    'VSA',
-    'create_model',
-    'backend_info',
+    "VSA",
+    "create_model",
+    "backend_info",
     # Models
-    'VSAModel',
-    'MAPModel',
-    'FHRRModel',
-    'HRRModel',
-    'BSCModel',
-    'BSDCModel',
-    'BSDCSEGModel',
-    'GHRRModel',
-    'VTBModel',
+    "VSAModel",
+    "MAPModel",
+    "FHRRModel",
+    "HRRModel",
+    "BSCModel",
+    "BSDCModel",
+    "BSDCSEGModel",
+    "GHRRModel",
+    "VTBModel",
     # Spaces
-    'VectorSpace',
-    'create_space',
+    "VectorSpace",
+    "create_space",
     # Backends
-    'Backend',
-    'get_backend',
+    "Backend",
+    "get_backend",
     # Submodules
-    'models',
-    'spaces',
-    'backends',
+    "models",
+    "spaces",
+    "backends",
 ]

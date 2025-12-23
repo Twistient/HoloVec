@@ -15,7 +15,7 @@ from holovec import VSA
 
 # Test parameters
 DIMENSIONS = [512, 1024]  # Test with different dimensions
-MODELS = ['MAP', 'FHRR']  # Models to test
+MODELS = ["MAP", "FHRR"]  # Models to test
 
 
 @pytest.fixture(params=MODELS)
@@ -41,10 +41,23 @@ class TestModelCreation:
         assert model is not None
         assert model.dimension == 512
 
+    def test_bsdc_seg_hyphen_alias(self):
+        """Test that 'bsdc-seg' works as alias for 'bsdc_seg'."""
+        # Both should create the same model type
+        model_underscore = VSA.create("bsdc_seg", dim=100, segments=10)
+        model_hyphen = VSA.create("bsdc-seg", dim=100, segments=10)
+
+        assert model_underscore.model_name == "BSDC-SEG"
+        assert model_hyphen.model_name == "BSDC-SEG"
+        assert model_underscore.dimension == model_hyphen.dimension
+        # Both should have segments attribute (BSDC-SEG specific)
+        assert hasattr(model_underscore, "segments")
+        assert hasattr(model_hyphen, "segments")
+
     @pytest.mark.parametrize("dim", DIMENSIONS)
     def test_model_dimension(self, dim):
         """Test models work with different dimensions."""
-        model = VSA.create('MAP', dim=dim)
+        model = VSA.create("MAP", dim=dim)
         assert model.dimension == dim
 
         vec = model.random()
@@ -52,10 +65,10 @@ class TestModelCreation:
 
     def test_model_properties(self, model, model_name):
         """Test model properties are correctly reported."""
-        if model_name == 'MAP':
+        if model_name == "MAP":
             assert model.is_self_inverse == True
             assert model.is_commutative == True
-        elif model_name == 'FHRR':
+        elif model_name == "FHRR":
             assert model.is_self_inverse == False
             assert model.is_commutative == True
             assert model.is_exact_inverse == True
@@ -324,11 +337,7 @@ class TestPermutationOperation:
         c = model.random(seed=3)
 
         # Position encoding: s = a + ρ(b) + ρ²(c)
-        sequence = model.bundle([
-            a,
-            model.permute(b, k=1),
-            model.permute(c, k=2)
-        ])
+        sequence = model.bundle([a, model.permute(b, k=1), model.permute(c, k=2)])
 
         # Should be able to query for position 0
         sim_a = model.similarity(sequence, a)
@@ -410,16 +419,17 @@ class TestEdgeCases:
 
 # Model-specific tests
 
+
 class TestMAPSpecific:
     """MAP-specific tests."""
 
     @pytest.fixture
     def map_model(self):
-        return VSA.create('MAP', dim=512, seed=42)
+        return VSA.create("MAP", dim=512, seed=42)
 
     def test_bipolar_values(self, map_model):
         """MAP with bipolar space should have ±1 values."""
-        if map_model.space.space_name != 'bipolar':
+        if map_model.space.space_name != "bipolar":
             pytest.skip("Not using bipolar space")
 
         vec = map_model.random()
@@ -434,7 +444,7 @@ class TestFHRRSpecific:
 
     @pytest.fixture
     def fhrr_model(self):
-        return VSA.create('FHRR', dim=512, seed=42)
+        return VSA.create("FHRR", dim=512, seed=42)
 
     def test_unit_magnitude(self, fhrr_model):
         """FHRR vectors should have unit magnitude."""

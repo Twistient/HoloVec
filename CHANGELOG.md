@@ -7,22 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-12-23
+
 ### Added
 
-- BSDCSEGModel now exported in public API via `VSA.create('bsdc_seg')`
-- 'sparse_segment' space type registered in `create_space()` factory
+- **Codebook dict-like interface**: `__getitem__`, `__contains__`, `__len__`, `__iter__`, `items()`, `keys()`, `values()`, `get()` methods for intuitive codebook access
+- **'bsdc-seg' model alias**: `VSA.create('bsdc-seg')` now works alongside 'bsdc_seg' to match `model_name` output
+- Pre-commit configuration for automated code quality checks
+- HoloVec favicon for documentation site
+
+### Changed
+
+- **BREAKING: Minimum Python version raised to 3.11** (from 3.9)
+- Modernized type annotations using Python 3.11+ syntax (`X | None` instead of `Optional[X]`)
+- Migrated documentation from Sphinx to MkDocs with shadcn theme
+- Updated ruff configuration to non-deprecated `[tool.ruff.lint]` format
+- Cleaned up unused imports and encapsulated numpy usage in backend modules
 
 ### Fixed
 
 - PyTorch backend: Fixed complex dot product double-conjugation bug causing FHRR similarity to return near-zero instead of 1.0
-- README: Major cleanup - removed aspirational content, updated test count (525→720+), coverage (70→78%), fixed citation URL
-- README: Replaced "Project Status" phases with accurate "Current Status" table
-- README: Simplified "Technical Positioning" into concise "Feature Summary"
-- CITATION.cff: Updated version to 0.1.1 and release date
-- examples/01_basic_operations.py: Removed broken sys.path hack
-- examples/00_quickstart.py: Fixed temperature encoder bandwidth so output matches comments
-- examples/INDEX.md: Fixed URLs and updated date
-- docs/README.md: Removed references to non-existent files
+- HRR docstring: Corrected unbind accuracy claims (actual ~0.71, not ~0.99)
+- pytest configuration: Removed coverage from addopts to fix `--no-cov` conflict
+- Backend RNG test: Rewritten for same-backend consistency instead of cross-backend comparison
+- BSDC-SEG documentation: Fixed model name references
+
+### Testing
+
+- Improved overall test coverage from 79% to 84%
+- GHRR model coverage: 46% → 100%
+- ResonatorCleanup coverage: 56% → 98%
+- AssocStore coverage: 36% → 98%
+- Codebook coverage: 97% → 100%
+- ItemStore coverage: 70% → 95%
+- Total tests: 761 → 805 passing
+
+### Documentation
+
+- Major README cleanup: removed aspirational content, updated metrics (tests 525→805, coverage 70→84%)
+- Replaced "Project Status" phases with accurate "Current Status" table
+- Simplified "Technical Positioning" into concise "Feature Summary"
+- Fixed URLs and dates in examples/INDEX.md
+- Fixed CITATION.cff version and release date
 
 ## [0.1.1] - 2025-12-21
 
@@ -266,6 +292,7 @@ Based on comprehensive academic research:
 - Kymn et al. (2024) - Resonator cleanup networks
 - Malits & Mendelson (2025) - CPSE/CPSD algorithms
 
-[Unreleased]: https://github.com/Twistient/HoloVec/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/Twistient/HoloVec/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Twistient/HoloVec/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/Twistient/HoloVec/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Twistient/HoloVec/releases/tag/v0.1.0

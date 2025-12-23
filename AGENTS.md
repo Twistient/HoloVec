@@ -1,20 +1,200 @@
-# Repository Guidelines
+# AGENTS.md
 
-## Project Structure & Module Organization
-Core runtime code resides in `holovec/` with focused subpackages: `models/` for algebra primitives, `encoders/` for kernel-aware mappings, `retrieval/` and `spaces/` for cleanup/search utilities, and `backends/` to keep NumPy/PyTorch/JAX shims isolated. Shared helpers live in `utils/` and `constants.py`. Tests mirror this layout in `tests/` (`test_encoders_*`, `test_utils_*`, etc.) and should add fixtures beside the closest module. Documentation sources live under `docs/source`, while runnable walkthroughs belong in `examples/`; performance notebooks can go in `benchmarks/`. Coverage HTML drops into `htmlcov/`, so avoid checking it in.
+This file provides guidance for AI coding agents working on the HoloVec codebase.
 
-## Build, Test, and Development Commands
-- `uv pip install -e .[all]` (or `pip install -e .[all]`) sets up local development with optional torch/jax, linting, typing, and docs extras.
-- `pytest -v --cov=holovec --cov-report=term-missing --cov-report=html` is the canonical test run; it matches the `pyproject` defaults and refreshes `htmlcov/`.
-- `ruff check holovec tests` and `black holovec tests` keep formatting consistent; run them before pushing.
-- `mypy holovec tests` enforces the strict typing gates (no implicit optional, disallow untyped defs).
-- `sphinx-build -b html docs/source docs/_build/html` generates the ReadTheDocs build locally when editing docs.
+## Commands
 
-## Coding Style & Naming Conventions
-Python 3.9+ code must remain fully typed; prefer `typing.Protocol`/`TypedDict` over `Any`. Use 4-space indentation, 100-character lines, `snake_case` for functions/modules, `PascalCase` for public classes, and leading underscores for private helpers. Keep binding/encoder factories pure and deterministic—inject backends via parameters instead of globals.
+- **Install**: `uv pip install -e .[all]` (includes torch, jax, dev, docs extras)
+- **Test all**: `pytest`
+- **Test single file**: `pytest tests/test_models.py -v`
+- **Test single test**: `pytest tests/test_models.py::test_function_name -v`
+- **Test with coverage**: `pytest --cov=holovec --cov-report=term-missing`
+- **Test without coverage**: `pytest --no-cov`
+- **Lint**: `ruff check holovec tests`
+- **Format**: `black holovec tests`
+- **Type check**: `mypy holovec tests`
 
-## Testing Guidelines
-Each new feature needs at least one `tests/test_<area>*.py` case that exercises NumPy plus any newly supported backends. Mirror the naming of the implementation module, e.g., `holovec/encoders/vector.py` → `tests/test_encoders_vector.py`. Maintain ≥90% coverage by extending existing parametrized suites instead of duplicating fixtures. When tests generate artefacts or temporary vectors, use `pytest` fixtures and mark backend-specific skips explicitly.
+## Code Style
 
-## Commit & Pull Request Guidelines
-Commits follow short, imperative subjects with optional prefixes (`Fix:`, `Refactor`, `Add`). Write body text when behavior changes or migrations occur. Pull requests should include: (1) a high-level summary with links to issues/roadmap items, (2) test evidence (command output or coverage deltas), (3) screenshots for doc/demo updates, and (4) notes on backward compatibility or runtime impact. Reference `SECURITY.md` if a change touches cryptographic or trust boundaries, and ensure CI stays green before requesting review.
+- Python 3.11+, fully typed (no `Any`, use `Protocol`/`TypedDict`)
+- 100-char lines, 4-space indent, Black formatting
+- `snake_case` functions/modules, `PascalCase` classes, `_leading_underscore` for private
+- Imports: stdlib → third-party → local (isort via ruff handles this)
+- Keep encoders/factories pure and deterministic; inject backends via parameters
+
+## Testing
+
+- Test files mirror source: `holovec/encoders/vector.py` → `tests/test_encoders_vector.py`
+- Extend existing parametrized suites; use pytest fixtures for temp artifacts
+- Target ≥90% coverage; mark backend-specific skips explicitly
+
+## Commit Convention
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>: <description>
+
+Types:
+- feat:     New feature (triggers minor version bump)
+- fix:      Bug fix (triggers patch version bump)
+- docs:     Documentation only
+- test:     Adding/updating tests
+- refactor: Code change that neither fixes a bug nor adds a feature
+- chore:    Maintenance tasks (deps, configs, etc.)
+- perf:     Performance improvement
+- ci:       CI/CD changes
+
+Examples:
+- feat: Add dict-like interface to Codebook
+- fix: Correct HRR unbind similarity calculation
+- test: Improve GHRR model coverage (46% → 100%)
+- docs: Update installation instructions
+- chore: Bump minimum Python version to 3.11
+```
+
+## Release Process
+
+### When to Release
+
+Release a new version when:
+- Breaking changes have accumulated (→ major bump)
+- New features are ready for users (→ minor bump)
+- Bug fixes need to reach users (→ patch bump)
+- Significant test/doc improvements warrant visibility
+
+### Pre-Release Checklist
+
+1. **Ensure all tests pass**:
+   ```bash
+   pytest tests/ -q
+   ```
+
+2. **Review unreleased changes**:
+   ```bash
+   git log $(git describe --tags --abbrev=0)..HEAD --oneline
+   ```
+
+3. **Determine version bump** (see Semantic Versioning below)
+
+### Creating a Release
+
+1. **Update CHANGELOG.md**:
+   - Move items from `[Unreleased]` to new version section
+   - Add release date: `## [X.Y.Z] - YYYY-MM-DD`
+   - Categorize changes: Added, Changed, Deprecated, Removed, Fixed, Security, Testing, Documentation
+   - Update comparison links at bottom of file
+
+2. **Update version numbers**:
+   - `pyproject.toml`: `version = "X.Y.Z"`
+   - `CITATION.cff`: `version: X.Y.Z` and `date-released: YYYY-MM-DD`
+
+3. **Commit the release**:
+   ```bash
+   git add CHANGELOG.md pyproject.toml CITATION.cff
+   git commit -m "chore: Release vX.Y.Z"
+   ```
+
+4. **Tag the release**:
+   ```bash
+   git tag -a vX.Y.Z -m "Release vX.Y.Z"
+   git push origin main --tags
+   ```
+
+### Semantic Versioning
+
+Follow [SemVer](https://semver.org/):
+
+- **MAJOR** (X.0.0): Breaking changes
+  - Removed public API
+  - Changed function signatures
+  - Dropped Python version support
+  
+- **MINOR** (0.X.0): New features (backwards compatible)
+  - New models, encoders, or utilities
+  - New optional parameters
+  - New CLI commands
+  
+- **PATCH** (0.0.X): Bug fixes (backwards compatible)
+  - Bug fixes
+  - Documentation fixes
+  - Test improvements (no API changes)
+
+### CHANGELOG Format
+
+```markdown
+## [X.Y.Z] - YYYY-MM-DD
+
+### Added
+- New features
+
+### Changed
+- Changes to existing functionality
+- Use "BREAKING:" prefix for breaking changes
+
+### Deprecated
+- Features that will be removed
+
+### Removed
+- Removed features
+
+### Fixed
+- Bug fixes
+
+### Security
+- Security fixes
+
+### Testing
+- Test improvements
+
+### Documentation
+- Documentation updates
+```
+
+## Maintaining AGENTS.md
+
+### When to Propose Updates
+
+Update AGENTS.md when:
+
+1. **Process changes**: New workflows, release procedures, or conventions are established
+2. **Command changes**: Build/test/lint commands are added, modified, or deprecated
+3. **Style changes**: Code style guidelines are updated (linter rules, formatting, etc.)
+4. **Lessons learned**: Recurring issues reveal missing guidance
+5. **Tool changes**: New tools are adopted or existing tools are replaced
+6. **Version changes**: Python version requirements change
+
+### How to Propose Updates
+
+1. **Identify the gap**: Note what guidance was missing or unclear during your session
+2. **Draft the addition**: Write clear, concise guidance following existing format
+3. **Include examples**: Add concrete examples where helpful
+4. **Keep it current**: Remove outdated information when adding new guidance
+5. **Commit separately**: Use `docs: Update AGENTS.md with <topic>` commit message
+
+### What NOT to Include
+
+- Temporary workarounds (fix the root cause instead)
+- Project-specific secrets or credentials
+- Verbose explanations (keep it scannable)
+- Duplicate information from other docs (link instead)
+
+## Project-Specific Notes
+
+### Backend Architecture
+
+HoloVec supports multiple computational backends (NumPy, PyTorch, JAX). When writing code:
+- Never import a specific backend at module level (except numpy for type stubs)
+- Use `backend.method()` calls, not direct numpy/torch/jax calls
+- Test across all available backends when possible
+
+### Test Coverage Targets
+
+| Module | Target |
+|--------|--------|
+| models/ | ≥90% |
+| encoders/ | ≥90% |
+| retrieval/ | ≥90% |
+| utils/ | ≥90% |
+| backends/ | ≥80% |
+| spaces/ | ≥80% |

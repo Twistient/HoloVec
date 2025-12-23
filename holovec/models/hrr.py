@@ -44,7 +44,7 @@ class HRRModel(VSAModel):
         dimension: int = 10000,
         space: Optional[VectorSpace] = None,
         backend: Optional[Backend] = None,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
     ):
         """Initialize HRR model.
 
@@ -56,6 +56,7 @@ class HRRModel(VSAModel):
         """
         if space is None:
             from ..backends import get_backend
+
             backend = backend if backend is not None else get_backend()
             space = RealSpace(dimension, backend=backend, seed=seed)
 
@@ -140,10 +141,14 @@ class HRRModel(VSAModel):
         - Bundle size: More items → more interference
 
         Empirical performance (D=10000):
-        - Clean unbind: similarity ≈ 0.65-0.75 (approximate inverse)
+        - Clean unbind: similarity ≈ 0.70-0.72 (approximate inverse)
         - After bundling 2 items: similarity ≈ 0.57
         - After bundling 10 items: similarity ≈ 0.30
         - After bundling 100 items: similarity decreases further
+
+        Note: Unlike FHRR which achieves exact (1.0) recovery, HRR's circular
+        correlation provides only approximate recovery. The ~0.71 similarity
+        is sufficient for retrieval tasks but requires cleanup/thresholding.
 
         References
         ----------
@@ -158,7 +163,7 @@ class HRRModel(VSAModel):
         >>> c = model.bind(x, b)
         >>> x_recovered = model.unbind(c, b)
         >>> similarity = model.similarity(x, x_recovered)
-        >>> print(f"Recovery similarity: {similarity:.3f}")  # ~0.99
+        >>> print(f"Recovery similarity: {similarity:.3f}")  # ~0.71
         """
         # Transform to frequency domain
         fa = self.backend.fft(a)
@@ -223,6 +228,8 @@ class HRRModel(VSAModel):
         return self.backend.roll(vec, shift=k)
 
     def __repr__(self) -> str:
-        return (f"HRRModel(dimension={self.dimension}, "
-                f"space={self.space.space_name}, "
-                f"backend={self.backend.name})")
+        return (
+            f"HRRModel(dimension={self.dimension}, "
+            f"space={self.space.space_name}, "
+            f"backend={self.backend.name})"
+        )

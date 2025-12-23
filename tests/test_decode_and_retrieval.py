@@ -285,3 +285,196 @@ class TestCodebookDictInterface:
 
         assert cb.get("missing") is None
         assert cb.get("missing", "default") == "default"
+
+    def test_as_list(self):
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=64, backend=be, seed=0)
+        vec_a = model.random(seed=1)
+        vec_b = model.random(seed=2)
+        cb = Codebook({"a": vec_a, "b": vec_b}, backend=be)
+
+        result = cb.as_list()
+        assert len(result) == 2
+        assert result[0][0] == "a"
+        assert result[1][0] == "b"
+        assert np.allclose(be.to_numpy(result[0][1]), be.to_numpy(vec_a))
+
+    def test_as_matrix_empty(self):
+        """Test as_matrix with empty codebook."""
+        be = get_backend("numpy")
+        cb = Codebook({}, backend=be)
+
+        labels, matrix = cb.as_matrix(be)
+        assert labels == []
+        assert matrix.shape == (0,)
+
+
+class TestItemStoreExtended:
+    """Additional tests for ItemStore coverage."""
+
+    def test_fit_with_dict(self):
+        """Test fit() with a dict instead of Codebook."""
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        items = {
+            "a": model.random(seed=1),
+            "b": model.random(seed=2),
+        }
+
+        store = ItemStore(model)
+        result = store.fit(items)
+
+        # Should return self for chaining
+        assert result is store
+        assert store.codebook.size == 2
+        assert "a" in store.codebook
+        assert "b" in store.codebook
+
+    def test_add_method(self):
+        """Test add() method on ItemStore."""
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        store = ItemStore(model)
+        store.add("item1", model.random(seed=1))
+        store.add("item2", model.random(seed=2))
+
+        assert store.codebook.size == 2
+        assert "item1" in store.codebook
+        assert "item2" in store.codebook
+
+    def test_extend_method(self):
+        """Test extend() method on ItemStore."""
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        store = ItemStore(model)
+        store.extend(
+            {
+                "a": model.random(seed=1),
+                "b": model.random(seed=2),
+                "c": model.random(seed=3),
+            }
+        )
+
+        assert store.codebook.size == 3
+
+    def test_query_return_similarities_false(self):
+        """Test query with return_similarities=False."""
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        items = {f"item{i}": model.random(seed=i) for i in range(5)}
+        store = ItemStore(model).fit(items)
+
+        # Query without similarities
+        results = store.query(items["item2"], k=3, return_similarities=False)
+
+        assert len(results) == 3
+        # All similarities should be 0.0 when not returned
+        for label, sim in results:
+            assert sim == 0.0
+            assert isinstance(label, str)
+
+    def test_query_with_map_model(self):
+        """Test query with non-complex space (MAP uses real vectors)."""
+        from holovec import VSA
+
+        model = VSA.create("MAP", dim=256, seed=42)
+
+        items = {f"item{i}": model.random(seed=i) for i in range(10)}
+        store = ItemStore(model).fit(items)
+
+        # Query should use cosine similarity path
+        results = store.query(items["item5"], k=3, fast=True)
+
+        assert len(results) == 3
+        assert results[0][0] == "item5"  # Exact match should be first
+        assert results[0][1] > 0.99  # High similarity
+
+    def test_query_partial_sort(self):
+        """Test query with k < codebook size triggers partial sort."""
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        # Large codebook
+        items = {f"item{i}": model.random(seed=i) for i in range(100)}
+        store = ItemStore(model).fit(items)
+
+        # Query with small k should trigger partial sort
+        results = store.query(items["item50"], k=5, fast=True)
+
+        assert len(results) == 5
+        assert results[0][0] == "item50"
+
+    def test_factorize(self):
+        """Test factorize method on ItemStore."""
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=1000, backend=be, seed=0)
+
+        items = {
+            "a": model.random(seed=1),
+            "b": model.random(seed=2),
+            "c": model.random(seed=3),
+        }
+        store = ItemStore(model).fit(items)
+
+        # Create a composition to factorize
+        composition = model.bind(items["a"], items["b"])
+
+        labels, similarities = store.factorize(composition, n_factors=2)
+
+        assert len(labels) == 2
+        assert len(similarities) == 2
+        assert all(isinstance(s, float) for s in similarities)
+
+    def test_save_and_load(self, tmp_path):
+        """Test save and load round-trip for ItemStore."""
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        items = {
+            "alpha": model.random(seed=1),
+            "beta": model.random(seed=2),
+            "gamma": model.random(seed=3),
+        }
+        store = ItemStore(model).fit(items)
+
+        # Save
+        save_path = str(tmp_path / "itemstore.npz")
+        store.save(save_path)
+
+        # Load into new store
+        loaded = ItemStore.load(model, save_path)
+
+        # Verify
+        assert loaded.codebook.size == 3
+        assert "alpha" in loaded.codebook
+        assert "beta" in loaded.codebook
+        assert "gamma" in loaded.codebook
+
+        # Vectors should match
+        for label in ["alpha", "beta", "gamma"]:
+            orig = be.to_numpy(store.codebook[label])
+            load = be.to_numpy(loaded.codebook[label])
+            assert np.allclose(orig, load)
+
+    def test_load_with_custom_cleanup(self, tmp_path):
+        """Test load with custom cleanup strategy."""
+        from holovec.utils.cleanup import ResonatorCleanup
+
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=256, backend=be, seed=0)
+
+        items = {"a": model.random(seed=1)}
+        store = ItemStore(model).fit(items)
+
+        save_path = str(tmp_path / "itemstore.npz")
+        store.save(save_path)
+
+        # Load with custom cleanup
+        loaded = ItemStore.load(model, save_path, cleanup=ResonatorCleanup())
+
+        assert isinstance(loaded.cleanup, ResonatorCleanup)
+        assert loaded.codebook.size == 1

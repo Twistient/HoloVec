@@ -88,7 +88,7 @@ More segments = higher capacity but more memory.
 from holovec import VSA
 
 # Create BSDC-SEG model: 10000 dims, 100 segments
-model = VSA.create('BSDC_SEG', dim=10000, segments=100)
+model = VSA.create('bsdc-seg', dim=10000, segments=100)
 
 print(f"Segments: {model.segments}")         # 100
 print(f"Segment length: {model.segment_length}")  # 100

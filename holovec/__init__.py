@@ -43,7 +43,13 @@ Vector Spaces:
 """
 
 
-from . import backends, models, spaces
+from . import analysis, backends, models, spaces
+from .analysis import (
+    compare_models,
+    empirical_capacity_test,
+    recommend_dimension,
+    theoretical_capacity,
+)
 from .backends import Backend, get_backend
 from .models import (
     BSCModel,
@@ -278,8 +284,14 @@ __all__ = [
     # Backends
     "Backend",
     "get_backend",
+    # Analysis
+    "theoretical_capacity",
+    "recommend_dimension",
+    "compare_models",
+    "empirical_capacity_test",
     # Submodules
     "models",
     "spaces",
     "backends",
+    "analysis",
 ]

@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **AttentionResonatorCleanup**: Softmax attention-based resonator network (Yeung et al. 2024)
+  - Works with FHRR models (unlike traditional ResonatorCleanup which requires self-inverse)
+  - Leverages Modern Hopfield Network theory with exponential memory capacity
+  - Configurable temperature parameter (β) for attention sharpness
+  - Supports multi-factor decomposition with convergence detection
+  - 10-100x faster than brute force for composite vector factorization
+- **Capacity Analysis Module** (`holovec.analysis`):
+  - `theoretical_capacity()`: Theoretical capacity metrics from literature (Schlegel et al. 2022, Kleyko et al. 2023)
+  - `recommend_dimension()`: Dimension recommendations based on items, bindings, and target accuracy
+  - `compare_models()`: Side-by-side comparison of all VSA models at given dimension
+  - `empirical_capacity_test()`: Empirical validation of model capacity via progressive testing
+
+### Testing
+
+- Added 27 tests for AttentionResonatorCleanup (initialization, factorization, edge cases)
+- Added 24 tests for capacity analysis module
+- Total tests: 805 → 856 passing
+
 ## [0.2.0] - 2025-12-23
 
 ### Added

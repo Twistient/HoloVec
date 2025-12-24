@@ -23,6 +23,7 @@ from .cleanup import (
     CleanupStrategy,
     BruteForceCleanup,
     ResonatorCleanup,
+    AttentionResonatorCleanup,
 )
 
 from .search import (
@@ -46,6 +47,7 @@ __all__ = [
     'CleanupStrategy',
     'BruteForceCleanup',
     'ResonatorCleanup',
+    'AttentionResonatorCleanup',
     # Search utilities
     'nearest_neighbors',
     'threshold_search',

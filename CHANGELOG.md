@@ -20,12 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `recommend_dimension()`: Dimension recommendations based on items, bindings, and target accuracy
   - `compare_models()`: Side-by-side comparison of all VSA models at given dimension
   - `empirical_capacity_test()`: Empirical validation of model capacity via progressive testing
+- **Context-Dependent Thinning (CDT)** binding mode for BSDC (Rachkovskij 2001):
+  - Alternative to XOR binding that preserves similarity to components
+  - Preserves both unstructured similarity (result ~ components) and structured similarity (similar inputs → similar outputs)
+  - Useful for analogical reasoning where component similarity matters
+  - Enable with `VSA.create('BSDC', binding_mode='cdt')`
+  - Multi-component binding via `model.context_dependent_thinning([a, b, c])`
 
 ### Testing
 
 - Added 27 tests for AttentionResonatorCleanup (initialization, factorization, edge cases)
 - Added 24 tests for capacity analysis module
-- Total tests: 805 → 856 passing
+- Added 17 tests for BSDC CDT binding mode
+- Total tests: 805 → 873 passing
 
 ## [0.2.0] - 2025-12-23
 

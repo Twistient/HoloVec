@@ -183,9 +183,17 @@ class VSA:
         else:
             space_instance = space
 
+        # Collect model-specific kwargs
+        model_kwargs = {}
+        if model_type_lower == 'bsdc':
+            # BSDC supports binding_mode parameter
+            if 'binding_mode' in kwargs:
+                model_kwargs['binding_mode'] = kwargs['binding_mode']
+
         # Create model
         model = model_class(
-            dimension=dim, space=space_instance, backend=backend_instance, seed=seed
+            dimension=dim, space=space_instance, backend=backend_instance, seed=seed,
+            **model_kwargs
         )
 
         return model

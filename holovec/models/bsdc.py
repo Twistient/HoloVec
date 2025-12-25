@@ -5,18 +5,22 @@ This makes them memory-efficient and biologically plausible, while maintaining
 the key properties of hyperdimensional computing.
 
 Properties:
-- Binding: XOR (self-inverse)
+- Binding: XOR (self-inverse) or CDT (context-dependent thinning)
 - Bundling: Majority voting with sparsity preservation
 - Sparsity: Typically p = 1/√D (optimal for capacity)
 - Memory efficient: Can use sparse data structures
 - Biologically plausible: Similar to sparse neural codes
-- Self-inverse binding
+
+Binding Modes:
+- 'xor': Traditional XOR binding (self-inverse, result dissimilar to inputs)
+- 'cdt': Context-Dependent Thinning (preserves similarity to components)
 
 Key Advantages:
 - Very memory efficient for high dimensions (D > 10000)
 - Biological plausibility (cortical neurons ~1% active)
 - Fast operations on sparse representations
 - Good capacity with much lower memory footprint
+- CDT mode preserves both structured and unstructured similarity
 
 Optimal Sparsity:
 - p = 1/√D maximizes capacity (from information theory)
@@ -25,7 +29,7 @@ Optimal Sparsity:
 
 References:
 - Kanerva (1988): "Sparse Distributed Memory" (foundational work)
-- Rachkovskij & Kussul (2001): "Binding and normalization of binary sparse codes"
+- Rachkovskij (2001): "Binary Sparse Distributed Codes for Structures" (CDT)
 - Kleyko et al. (2023): HDC/VSA Survey (BSDC comparison)
 """
 
@@ -42,12 +46,25 @@ from .base import VSAModel
 class BSDCModel(VSAModel):
     """BSDC (Binary Sparse Distributed Codes) model.
 
-    Binding: XOR (element-wise, self-inverse)
-    Unbinding: XOR (same as binding, self-inverse)
+    Binding: XOR (element-wise, self-inverse) or CDT (context-dependent thinning)
+    Unbinding: XOR (same as binding) or similarity-based (CDT)
     Bundling: Majority voting with sparsity preservation
     Permutation: circular shift
 
     Uses SparseSpace with optimal sparsity p = 1/√D.
+
+    Binding Modes:
+        - 'xor': Traditional XOR binding. Self-inverse, result dissimilar to inputs.
+        - 'cdt': Context-Dependent Thinning (Rachkovskij 2001). Preserves both
+          structured similarity (similar inputs → similar outputs) and unstructured
+          similarity (result similar to its components).
+
+    Example:
+        >>> # Default XOR mode
+        >>> model = BSDCModel(dimension=10000)
+        >>>
+        >>> # CDT mode for analogical reasoning
+        >>> model = BSDCModel(dimension=10000, binding_mode='cdt')
     """
 
     def __init__(
@@ -56,7 +73,8 @@ class BSDCModel(VSAModel):
         sparsity: float | None = None,
         space: VectorSpace | None = None,
         backend: Backend | None = None,
-        seed: int | None = None
+        seed: int | None = None,
+        binding_mode: str = 'xor',
     ):
         """Initialize BSDC model.
 
@@ -66,13 +84,20 @@ class BSDCModel(VSAModel):
             space: Vector space (defaults to SparseSpace with optimal sparsity)
             backend: Computational backend
             seed: Random seed for space
+            binding_mode: 'xor' (default) or 'cdt' for context-dependent thinning
         """
+        if binding_mode not in ('xor', 'cdt'):
+            raise ValueError(f"binding_mode must be 'xor' or 'cdt', got '{binding_mode}'")
+
         if space is None:
             from ..backends import get_backend
             backend = backend if backend is not None else get_backend()
             space = SparseSpace(dimension, sparsity=sparsity, backend=backend, seed=seed)
 
         super().__init__(space, backend)
+
+        self.binding_mode = binding_mode
+        self._seed = seed
 
         # Store sparsity for easy access
         if isinstance(space, SparseSpace):
@@ -82,57 +107,187 @@ class BSDCModel(VSAModel):
             import math
             self.sparsity = sparsity if sparsity is not None else 1.0 / math.sqrt(dimension)
 
+        # Pre-generate permutation patterns for CDT
+        if binding_mode == 'cdt':
+            self._cdt_permutations = self._generate_cdt_permutations()
+
     @property
     def model_name(self) -> str:
         return "BSDC"
 
     @property
     def is_self_inverse(self) -> bool:
-        return True  # XOR is self-inverse
+        return self.binding_mode == 'xor'  # Only XOR is self-inverse
 
     @property
     def is_commutative(self) -> bool:
-        return True  # XOR is commutative
+        return True  # Both XOR and CDT are commutative
 
     @property
     def is_exact_inverse(self) -> bool:
-        return True  # XOR is exact inverse of itself
+        return self.binding_mode == 'xor'  # Only XOR has exact inverse
+
+    def _generate_cdt_permutations(self, n_permutations: int = 20) -> list:
+        """Generate fixed permutation patterns for CDT thinning.
+
+        Args:
+            n_permutations: Number of permutation patterns to generate
+
+        Returns:
+            List of permutation index arrays
+        """
+        rng = np.random.default_rng(self._seed if self._seed is not None else 42)
+        return [rng.permutation(self.dimension) for _ in range(n_permutations)]
+
+    def _compute_thinning_iterations(
+        self,
+        n_components: int,
+        current_density: float,
+    ) -> int:
+        """Compute K iterations needed to reach target sparsity.
+
+        The CDT algorithm thins a superposition by applying permuted self-conjunction.
+        After OR of S components: p(Z) ≈ 1 - (1-p)^S ≈ p*S (for small p)
+        We need K iterations to reduce back to target sparsity.
+
+        Args:
+            n_components: Number of components in superposition
+            current_density: Current density after OR superposition
+
+        Returns:
+            Number of thinning iterations K
+        """
+        import math
+
+        if current_density <= self.sparsity:
+            return 0
+
+        # From Rachkovskij 2001:
+        # p(Z ∧ Z^~) ≈ p(Z)^2 for random permutations
+        # After K iterations with OR of permutations:
+        # Expected density ≈ current_density * (density of OR of K permuted copies)
+        # We want: current_density * OR_density ≈ target_sparsity
+
+        # Simplified: K ≈ target_sparsity / current_density^2
+        K = max(1, int(math.ceil(self.sparsity / (current_density ** 2))))
+        return min(K, len(self._cdt_permutations))
+
+    def context_dependent_thinning(
+        self,
+        components: Sequence[Array],
+    ) -> Array:
+        """Bind components using context-dependent thinning (CDT).
+
+        Algorithm (Rachkovskij 2001):
+            1. Superpose components via OR: Z = X₁ ∨ X₂ ∨ ... ∨ Xₛ
+            2. Thin via permuted self-conjunction:
+               ⟨Z⟩ = Z ∧ (Z^~(1) ∨ Z^~(2) ∨ ... ∨ Z^~(K))
+
+        Properties:
+            - Preserves unstructured similarity: result is similar to each component
+            - Preserves structured similarity: similar inputs → similar outputs
+            - Maintains target sparsity automatically
+
+        Args:
+            components: Sequence of hypervectors to bind together
+
+        Returns:
+            Bound hypervector with preserved similarity to components
+
+        Example:
+            >>> model = BSDCModel(dimension=10000, binding_mode='cdt')
+            >>> a, b, c = model.random(), model.random(), model.random()
+            >>> bound = model.context_dependent_thinning([a, b, c])
+            >>> # bound is similar to a, b, and c (unstructured similarity)
+        """
+        if not components:
+            raise ValueError("Cannot bind empty sequence")
+
+        components = list(components)
+
+        if len(components) == 1:
+            return components[0].copy() if hasattr(components[0], 'copy') else components[0]
+
+        # Convert to numpy for efficient logical operations
+        components_np = [self.backend.to_numpy(c) for c in components]
+
+        # Step 1: Superpose via OR
+        z = components_np[0].astype(bool)
+        for c in components_np[1:]:
+            z = np.logical_or(z, c.astype(bool))
+
+        # Step 2: Compute required thinning iterations
+        current_density = float(np.sum(z)) / self.dimension
+        K = self._compute_thinning_iterations(len(components), current_density)
+
+        if K == 0:
+            # Already at or below target sparsity
+            result = z.astype(np.int32)
+            return self.backend.from_numpy(result)
+
+        # Step 3: Thin via permuted self-conjunction
+        # ⟨Z⟩ = Z ∧ (Z^~(1) ∨ Z^~(2) ∨ ... ∨ Z^~(K))
+        permuted_or = np.zeros(self.dimension, dtype=bool)
+        for k in range(K):
+            perm_idx = k % len(self._cdt_permutations)
+            z_permuted = z[self._cdt_permutations[perm_idx]]
+            permuted_or = np.logical_or(permuted_or, z_permuted)
+
+        result = np.logical_and(z, permuted_or).astype(np.int32)
+        return self.backend.from_numpy(result)
 
     def bind(self, a: Array, b: Array) -> Array:
-        """Bind using XOR.
+        """Bind two hypervectors.
 
-        For sparse binary codes, XOR preserves sparsity on average.
-        Expected sparsity of result: p(1-p) + (1-p)p = 2p(1-p)
+        Behavior depends on binding_mode:
+        - 'xor': XOR binding (self-inverse, result dissimilar to inputs)
+        - 'cdt': Context-dependent thinning (preserves similarity to inputs)
 
-        For optimal p = 1/√D, result sparsity ≈ 2/√D (slightly increased).
+        For XOR mode:
+            - Preserves sparsity on average: p(1-p) + (1-p)p = 2p(1-p)
+            - For optimal p = 1/√D, result sparsity ≈ 2/√D
+
+        For CDT mode:
+            - Result is similar to both a and b (unstructured similarity)
+            - Similar inputs produce similar outputs (structured similarity)
 
         Args:
             a: First hypervector
             b: Second hypervector
 
         Returns:
-            Bound hypervector c = a XOR b
+            Bound hypervector
         """
-        result = self.backend.xor(a, b)
-
-        # Optional: re-sparsify if needed to maintain sparsity
-        # For now, let XOR naturally handle it
-        return result
+        if self.binding_mode == 'cdt':
+            return self.context_dependent_thinning([a, b])
+        else:
+            # XOR binding (default)
+            return self.backend.xor(a, b)
 
     def unbind(self, a: Array, b: Array) -> Array:
-        """Unbind using XOR (self-inverse).
+        """Unbind to recover value.
 
-        Since XOR is self-inverse: unbind(bind(a, b), b) = a
+        Behavior depends on binding_mode:
+        - 'xor': XOR is self-inverse, exact recovery: unbind(bind(a, b), b) = a
+        - 'cdt': No inverse exists; returns the bound vector itself since it's
+          already similar to the components (use similarity search for retrieval)
 
         Args:
             a: Bound hypervector (or first operand)
-            b: Second operand
+            b: Second operand (key for XOR mode, ignored for CDT mode)
 
         Returns:
-            Unbound hypervector (exact recovery)
+            For XOR: Exact unbound hypervector
+            For CDT: The bound vector (use similarity search to find components)
         """
-        # XOR is self-inverse
-        return self.bind(a, b)
+        if self.binding_mode == 'cdt':
+            # CDT doesn't have an inverse operation
+            # The bound vector is already similar to its components,
+            # so return it for similarity-based retrieval
+            return a
+        else:
+            # XOR is self-inverse
+            return self.backend.xor(a, b)
 
     def bundle(self, vectors: Sequence[Array], maintain_sparsity: bool = True) -> Array:
         """Bundle using majority voting.
@@ -314,6 +469,7 @@ class BSDCModel(VSAModel):
     def __repr__(self) -> str:
         return (f"BSDCModel(dimension={self.dimension}, "
                 f"sparsity={self.sparsity:.4f}, "
+                f"binding_mode='{self.binding_mode}', "
                 f"space={self.space.space_name}, "
                 f"backend={self.backend.name})")
 

@@ -36,6 +36,9 @@ from holovec.encoders.structured import (
 from holovec.encoders.spatial import (
     ImageEncoder,
 )
+from holovec.encoders.residue import (
+    ResidueEncoder,
+)
 
 __all__ = [
     # Base classes
@@ -59,4 +62,6 @@ __all__ = [
     "VectorEncoder",
     # Spatial encoders
     "ImageEncoder",
+    # Residue HDC encoders
+    "ResidueEncoder",
 ]

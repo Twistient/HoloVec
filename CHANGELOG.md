@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **ResidueEncoder**: Residue Hyperdimensional Computing encoder (Kymn et al. 2024)
+  - Encodes integers using residue number system with co-prime moduli
+  - Enables addition on encoded integers: z(x₁ + x₂) = z(x₁) ⊙ z(x₂)
+  - Enables subtraction: z(x₁ - x₂) = z(x₁) ⊙ z(x₂)*
+  - Logarithmic codebook scaling: range M = ∏mᵢ, codebook size = ∑mᵢ
+  - Chinese Remainder Theorem for unique integer encoding
+  - Example: moduli [97, 101, 103] → range ~1M, only 301 codebook vectors
 - **AttentionResonatorCleanup**: Softmax attention-based resonator network (Yeung et al. 2024)
   - Works with FHRR models (unlike traditional ResonatorCleanup which requires self-inverse)
   - Leverages Modern Hopfield Network theory with exponential memory capacity
@@ -29,10 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Testing
 
+- Added 48 tests for ResidueEncoder (encoding, addition, subtraction, decoding, CRT)
 - Added 27 tests for AttentionResonatorCleanup (initialization, factorization, edge cases)
 - Added 24 tests for capacity analysis module
 - Added 17 tests for BSDC CDT binding mode
-- Total tests: 805 → 873 passing
+- Total tests: 805 → 921 passing
 
 ## [0.2.0] - 2025-12-23
 

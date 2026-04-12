@@ -154,7 +154,7 @@ Example: FHRR at dim=4096 → 0.06 × 4096 ≈ 250 items.
 Each model has a dedicated page with full theory:
 
 - **[FHRR](../models/fhrr.md)** — Fourier Holographic Reduced Representations
-- **[GHRR](../models/ghrr.md)** — Generalized HRR (2024 state-of-the-art)
+- **[GHRR](../models/ghrr.md)** — Generalized HRR matrix extension
 - **[MAP](../models/map.md)** — Multiply-Add-Permute
 - **[HRR](../models/hrr.md)** — Holographic Reduced Representations
 - **[VTB](../models/vtb.md)** — Vector-derived Transformation Binding

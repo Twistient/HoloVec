@@ -2,121 +2,59 @@
 
 ## Supported Versions
 
-We release security updates for the following versions of HoloVec:
+Security fixes are provided for the latest released version line of HoloVec.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
-| < 0.1.0 | :x:                |
+| Version | Supported |
+| ------- | --------- |
+| 0.3.x   | :white_check_mark: |
+| < 0.3.0 | :x: |
 
 ## Reporting a Vulnerability
 
-We take the security of HoloVec seriously. If you discover a security vulnerability, please follow these steps:
+Please avoid posting exploit details in a public issue.
 
-### How to Report
+Preferred path:
+- Use GitHub's private vulnerability reporting flow from the repository Security tab when it is
+  available.
 
-**DO NOT** create a public GitHub issue for security vulnerabilities.
-
-Instead, please email security details to:
-
-**security@twistient.com**
+Fallback path:
+- If private reporting is not available, open a regular issue with only enough detail to identify
+  the affected area and request a private follow-up before sharing reproduction details.
 
 Include:
+- A short description of the issue
+- Expected impact
+- Affected versions or commits, if known
+- Reproduction notes or proof of concept, if you have them
+- Any suggested mitigation, if you have one
 
-- **Description**: Clear description of the vulnerability
-- **Impact**: What could an attacker accomplish?
-- **Reproduction**: Steps to reproduce the issue
-- **Affected versions**: Which versions are affected
-- **Suggested fix**: If you have one (optional)
-- **Credit preferences**: How you'd like to be credited (if desired)
+## Response Expectations
 
-### What to Expect
-
-1. **Acknowledgment**: We will acknowledge receipt within 48 hours
-2. **Assessment**: We will assess the vulnerability and determine severity
-3. **Updates**: We will keep you informed of our progress
-4. **Resolution**: We will work on a fix and coordinate disclosure
-5. **Credit**: We will credit you in the security advisory (if you wish)
-
-### Disclosure Timeline
-
-- **Day 0**: You report the vulnerability
-- **Day 1-2**: We acknowledge and begin assessment
-- **Day 3-7**: We develop and test a fix
-- **Day 7-14**: We prepare a security release
-- **Day 14+**: Public disclosure after fix is released
-
-We aim to disclose vulnerabilities within 90 days of the initial report.
-
-## Security Considerations
-
-### Data Sensitivity
-
-HoloVec is a computational library and does not:
-- Collect user data
-- Make network requests
-- Store credentials
-- Execute arbitrary code from untrusted sources
-
-### Dependency Security
-
-HoloVec has minimal dependencies:
-- **Core**: Only NumPy (required)
-- **Optional**: PyTorch, JAX (for GPU/JIT support)
-- **Development**: pytest, black, ruff, mypy
-
-We monitor dependencies for security advisories and update promptly.
-
-### Input Validation
-
-When using HoloVec:
-- Validate numeric inputs to prevent numeric overflow
-- Be cautious with user-supplied dimensions (memory consumption)
-- Sanitize file paths when loading/saving codebooks
-
-### Best Practices
-
-1. **Keep Updated**: Use the latest version of HoloVec
-2. **Pin Dependencies**: Use exact versions in production
-3. **Audit Dependencies**: Regularly check dependency security
-4. **Validate Input**: Always validate user input before encoding
-5. **Limit Resources**: Set reasonable limits on vector dimensions
+HoloVec is maintained on a best-effort basis. When possible, we will:
+- acknowledge reports
+- assess whether the issue is in scope for the project
+- work toward a fix or mitigation
+- coordinate public disclosure after a fix is available when that makes sense
 
 ## Scope
 
-This security policy covers:
-- The HoloVec library code (holovec/ directory)
-- Example code (examples/ directory)
-- Documentation (docs/ directory)
-- Build and distribution (setup, pyproject.toml)
+This policy covers:
+- the `holovec/` library code
+- project build and packaging configuration
+- the documentation and example code shipped in this repository
 
 Out of scope:
-- Third-party dependencies (report to respective projects)
-- User code that uses HoloVec
-- Deployment environments
+- third-party dependencies themselves
+- user applications built on top of HoloVec
+- deployment environments outside this repository
 
-## Security Updates
+## General Guidance
 
-Security updates will be announced via:
-- GitHub Security Advisories
-- Release notes in CHANGELOG.md
-- Tagged releases with security fixes
+HoloVec is a local computational library. It does not provide a network service or hosted control
+plane, but callers should still treat untrusted input carefully and validate dimensions, file
+paths, and resource usage in their own applications.
 
-Subscribe to repository notifications to stay informed.
+## Updates
 
-## Contact
-
-- **Security issues**: security@twistient.com
-- **General issues**: https://github.com/Twistient/HoloVec/issues
-- **Private concerns**: brodie@twistient.com
-
-## Acknowledgments
-
-We appreciate security researchers who responsibly disclose vulnerabilities.
-
-Past security contributors:
-- (None yet - be the first!)
-
----
-
-Thank you for helping keep HoloVec and its users safe!
+Security-relevant fixes will be documented through normal release notes and, when appropriate,
+GitHub Security Advisories.

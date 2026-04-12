@@ -47,7 +47,7 @@ model = VSA.create('FHRR', dim=2048, backend='numpy')
 
 ### PyTorch
 
-**Best for:** GPU acceleration, integration with neural networks, production deployment.
+**Best for:** GPU acceleration, integration with neural networks, and larger batch workloads.
 
 ```python
 # Auto-select available device
@@ -71,7 +71,7 @@ model = VSA.create('FHRR', dim=2048, backend='torch', device=device)
 
 ### JAX
 
-**Best for:** JIT compilation, TPU deployment, automatic differentiation research.
+**Best for:** JIT compilation, accelerator experiments, and automatic differentiation research.
 
 ```python
 model = VSA.create('FHRR', dim=2048, backend='jax')

@@ -15,12 +15,10 @@ class AssocStore:
         self.model = model
         self.keys = Codebook(backend=model.backend)
         self.values = Codebook(backend=model.backend)
-        self._label_order: list[str] = []
 
     def fit(self, key_items: dict[str, Array], value_items: dict[str, Array]) -> "AssocStore":
         # Intersect labels and preserve deterministic order
         labels = [lbl for lbl in key_items.keys() if lbl in value_items]
-        self._label_order = labels
         self.keys = Codebook({lbl: key_items[lbl] for lbl in labels}, backend=self.model.backend)
         self.values = Codebook(
             {lbl: value_items[lbl] for lbl in labels}, backend=self.model.backend
@@ -30,8 +28,6 @@ class AssocStore:
     def add(self, label: str, key_vec: Array, value_vec: Array) -> None:
         self.keys.add(label, key_vec)
         self.values.add(label, value_vec)
-        if label not in self._label_order:
-            self._label_order.append(label)
 
     def query_label(self, key_vec: Array, k: int = 1) -> list[tuple[str, float]]:
         labels, sims = nearest_neighbors(
@@ -39,7 +35,7 @@ class AssocStore:
         )
         return list(zip(labels, sims or [], strict=True))
 
-    def query_value(self, key_vec: Array, top: int = 1) -> tuple[str, Array]:
+    def query_value(self, key_vec: Array) -> tuple[str, Array]:
         lbls = self.query_label(key_vec, k=1)
         if not lbls:
             raise ValueError("No items in store")
@@ -51,9 +47,23 @@ class AssocStore:
         self.values.save(values_path)
 
     @classmethod
-    def load(cls, model: VSAModel, keys_path: str, values_path: str) -> "AssocStore":
+    def load(
+        cls,
+        model: VSAModel,
+        keys_path: str,
+        values_path: str,
+        *,
+        allow_unsafe_legacy: bool = False,
+    ) -> "AssocStore":
         st = cls(model)
-        st.keys = Codebook.load(keys_path, backend=model.backend)
-        st.values = Codebook.load(values_path, backend=model.backend)
-        st._label_order = st.keys.labels
+        st.keys = Codebook.load(
+            keys_path,
+            backend=model.backend,
+            allow_unsafe_legacy=allow_unsafe_legacy,
+        )
+        st.values = Codebook.load(
+            values_path,
+            backend=model.backend,
+            allow_unsafe_legacy=allow_unsafe_legacy,
+        )
         return st

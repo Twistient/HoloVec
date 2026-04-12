@@ -22,7 +22,15 @@ References:
 
 from ..backends.base import Array
 from ..models.base import VSAModel
+from ..spaces.base import ContinuousSpace
 from ..spaces.spaces import SparseSegmentSpace
+
+
+def _similarity_bounds(model: VSAModel) -> tuple[float, float]:
+    """Return the valid threshold range for a model's similarity metric."""
+    if isinstance(model.space, ContinuousSpace):
+        return -1.0, 1.0
+    return 0.0, 1.0
 
 
 def nearest_neighbors(
@@ -134,7 +142,8 @@ def threshold_search(
 
     Raises:
         TypeError: If arguments are not correct types
-        ValueError: If threshold not in [0.0, 1.0] or codebook is empty
+        ValueError: If threshold is outside the model-specific similarity range
+            or codebook is empty
 
     Examples:
         >>> # Find all matches above 0.9 similarity
@@ -165,8 +174,11 @@ def threshold_search(
     # Value validation
     if len(codebook) == 0:
         raise ValueError("codebook must not be empty")
-    if not (0.0 <= threshold <= 1.0):
-        raise ValueError(f"threshold must be in [0.0, 1.0], got {threshold}")
+    min_threshold, max_threshold = _similarity_bounds(model)
+    if not (min_threshold <= threshold <= max_threshold):
+        raise ValueError(
+            f"threshold must be in [{min_threshold}, {max_threshold}], got {threshold}"
+        )
 
     # Compute similarities and filter by threshold
     filtered_items = []

@@ -12,6 +12,8 @@ class Codebook:
     Keeps insertion order of labels. Vectors are backend arrays.
     """
 
+    FORMAT_VERSION = 2
+
     def __init__(self, items: dict[str, Array] | None = None, backend: Backend | None = None):
         self._items: dict[str, Array] = {}
         self._backend: Backend = backend if backend is not None else get_backend("numpy")
@@ -83,14 +85,55 @@ class Codebook:
     def save(self, path: str) -> None:
         labels, mat = self.as_matrix()
         mat_np = self._backend.to_numpy(mat)
-        np.savez(path, labels=np.array(labels, dtype=object), matrix=mat_np)
+        np.savez(
+            path,
+            format_version=np.array(self.FORMAT_VERSION, dtype=np.int64),
+            labels=np.asarray(labels, dtype=np.str_),
+            matrix=mat_np,
+        )
 
     @classmethod
-    def load(cls, path: str, backend: Backend | None = None) -> "Codebook":
+    def load(
+        cls,
+        path: str,
+        backend: Backend | None = None,
+        *,
+        allow_unsafe_legacy: bool = False,
+    ) -> "Codebook":
         be = backend or get_backend("numpy")
-        data = np.load(path, allow_pickle=True)
-        labels = [str(x) for x in data["labels"].tolist()]
-        mat = data["matrix"]
+        try:
+            with np.load(path, allow_pickle=False) as data:
+                format_version = int(np.asarray(data["format_version"]).item())
+                if format_version != cls.FORMAT_VERSION:
+                    raise ValueError(
+                        f"Unsupported codebook format version {format_version}; "
+                        f"expected {cls.FORMAT_VERSION}"
+                    )
+                labels = [str(x) for x in data["labels"].tolist()]
+                mat = data["matrix"]
+        except KeyError as exc:
+            if not allow_unsafe_legacy:
+                raise ValueError(
+                    "Legacy codebook files require unsafe pickle-backed loading. "
+                    "Re-run with allow_unsafe_legacy=True, then re-save the file."
+                ) from exc
+            with np.load(path, allow_pickle=True) as data:
+                labels = [str(x) for x in data["labels"].tolist()]
+                mat = data["matrix"]
+        except ValueError as exc:
+            message = str(exc)
+            is_pickle_error = "Object arrays cannot be loaded when allow_pickle=False" in message
+            if not is_pickle_error or not allow_unsafe_legacy:
+                if is_pickle_error:
+                    raise ValueError(
+                        "Legacy codebook files require unsafe pickle-backed loading. "
+                        "Re-run with allow_unsafe_legacy=True, then re-save the file."
+                    ) from exc
+                raise
+            with np.load(path, allow_pickle=True) as data:
+                labels = [str(x) for x in data["labels"].tolist()]
+                mat = data["matrix"]
+
         items: dict[str, Array] = {}
         for i, lbl in enumerate(labels):
             items[lbl] = be.from_numpy(mat[i])

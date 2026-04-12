@@ -307,6 +307,39 @@ class TestCodebookDictInterface:
         assert labels == []
         assert matrix.shape == (0,)
 
+    def test_save_and_load_roundtrip_uses_safe_format(self, tmp_path):
+        """Test Codebook persistence round-trip with versioned safe format."""
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=64, backend=be, seed=0)
+        cb = Codebook({"a": model.random(seed=1), "b": model.random(seed=2)}, backend=be)
+
+        path = tmp_path / "codebook.npz"
+        cb.save(str(path))
+
+        with np.load(path, allow_pickle=False) as data:
+            assert int(np.asarray(data["format_version"]).item()) == Codebook.FORMAT_VERSION
+            assert data["labels"].dtype.kind in {"U", "S"}
+
+        loaded = Codebook.load(str(path), backend=be)
+        assert list(loaded.keys()) == ["a", "b"]
+
+    def test_load_legacy_codebook_requires_explicit_unsafe_flag(self, tmp_path):
+        """Test legacy pickle-backed codebooks fail closed by default."""
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=64, backend=be, seed=0)
+        matrix = np.stack(
+            [be.to_numpy(model.random(seed=1)), be.to_numpy(model.random(seed=2))],
+            axis=0,
+        )
+        path = tmp_path / "legacy_codebook.npz"
+        np.savez(path, labels=np.array(["a", "b"], dtype=object), matrix=matrix)
+
+        with pytest.raises(ValueError, match="allow_unsafe_legacy=True"):
+            Codebook.load(str(path), backend=be)
+
+        loaded = Codebook.load(str(path), backend=be, allow_unsafe_legacy=True)
+        assert list(loaded.keys()) == ["a", "b"]
+
 
 class TestItemStoreExtended:
     """Additional tests for ItemStore coverage."""
@@ -477,3 +510,20 @@ class TestItemStoreExtended:
 
         assert isinstance(loaded.cleanup, ResonatorCleanup)
         assert loaded.codebook.size == 1
+
+    def test_load_legacy_codebook_requires_explicit_unsafe_flag(self, tmp_path):
+        """Test ItemStore exposes the legacy codebook migration flag."""
+        be = get_backend("numpy")
+        model = FHRRModel(dimension=64, backend=be, seed=0)
+        matrix = np.stack(
+            [be.to_numpy(model.random(seed=1)), be.to_numpy(model.random(seed=2))],
+            axis=0,
+        )
+        path = tmp_path / "legacy_itemstore.npz"
+        np.savez(path, labels=np.array(["a", "b"], dtype=object), matrix=matrix)
+
+        with pytest.raises(ValueError, match="allow_unsafe_legacy=True"):
+            ItemStore.load(model, str(path))
+
+        loaded = ItemStore.load(model, str(path), allow_unsafe_legacy=True)
+        assert loaded.codebook.size == 2

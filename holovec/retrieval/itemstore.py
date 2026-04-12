@@ -85,7 +85,7 @@ class ItemStore:
                     return out
                 else:
                     return [(lbl, 0.0) for lbl, _ in out]
-            except Exception:
+            except (AttributeError, NotImplementedError, TypeError, ValueError):
                 # Fallback to scalar path on any backend issues
                 pass
 
@@ -134,7 +134,13 @@ class ItemStore:
         model: VSAModel,
         path: str,
         cleanup: CleanupStrategy | None = None,
+        *,
+        allow_unsafe_legacy: bool = False,
     ) -> "ItemStore":
         store = cls(model=model, cleanup=cleanup)
-        store.codebook = Codebook.load(path, backend=model.backend)
+        store.codebook = Codebook.load(
+            path,
+            backend=model.backend,
+            allow_unsafe_legacy=allow_unsafe_legacy,
+        )
         return store

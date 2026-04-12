@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 No unreleased changes yet.
 
+## [1.0.2] - 2026-04-12
+
+### Documentation
+
+- Corrected the README BibTeX block and documentation bibliography so published citation examples
+  match the current release version
+
 ## [1.0.1] - 2026-04-12
 
 ### Documentation
@@ -426,7 +433,8 @@ Based on comprehensive academic research:
 - Kymn et al. (2024) - Resonator cleanup networks
 - Malits & Mendelson (2025) - CPSE/CPSD algorithms
 
-[Unreleased]: https://github.com/Twistient/HoloVec/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/Twistient/HoloVec/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/Twistient/HoloVec/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/Twistient/HoloVec/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Twistient/HoloVec/compare/v0.3.2...v1.0.0
 [0.3.2]: https://github.com/Twistient/HoloVec/compare/v0.3.1...v0.3.2

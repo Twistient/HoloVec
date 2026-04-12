@@ -105,6 +105,9 @@ Release a new version when:
    git push origin --tags
    ```
 
+   When `.github/workflows/publish.yml` is configured as a PyPI trusted publisher, pushing the tag
+   is enough to publish the release to PyPI automatically.
+
    **Or** (Option B - GitHub UI):
    ```bash
    git push origin master

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/assets/logo.svg" alt="HoloVec Logo" width="400">
+  <img src="https://raw.githubusercontent.com/Twistient/HoloVec/master/docs/assets/logo.svg" alt="HoloVec Logo" width="400">
 </div>
 
 <div align="center">
@@ -10,7 +10,7 @@
 
 **Vector Symbolic Architectures for compositional, high-dimensional computing.**
 
-[Documentation](https://twistient.github.io/HoloVec/) • [Installation](#installation) • [Quick Start](#quick-start) • [Examples](examples/)
+[Documentation](https://twistient.github.io/HoloVec/) • [Installation](#installation) • [Quick Start](#quick-start) • [Examples](https://github.com/Twistient/HoloVec/tree/master/examples)
 
 </div>
 
@@ -25,6 +25,20 @@ This approach enables one-shot learning, noise-tolerant representations, and tra
 ---
 
 ## Installation
+
+```bash
+pip install holovec
+```
+
+Optional extras:
+
+```bash
+pip install "holovec[torch]"   # PyTorch backend
+pip install "holovec[jax]"     # JAX backend
+pip install "holovec[all]"     # all optional extras
+```
+
+For source and development work:
 
 ```bash
 git clone https://github.com/Twistient/HoloVec.git

@@ -58,6 +58,7 @@ Welcome to the HoloVec documentation.
 
 - [Patterns](guides/patterns.md) — Common VSA patterns and recipes
 - [Performance](guides/performance.md) — Backend selection and optimization
+- [Benchmarks](guides/benchmarks.md) — Literature-informed benchmark methodology and CLI
 - [Troubleshooting](guides/troubleshooting.md) — Common issues and solutions
 
 ---

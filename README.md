@@ -163,6 +163,7 @@ path.
 - [Model Comparison](https://twistient.github.io/HoloVec/models/index/)
 - [Design Patterns](https://twistient.github.io/HoloVec/guides/patterns/)
 - [Performance Guidance](https://twistient.github.io/HoloVec/guides/performance/)
+- [Benchmark Methodology](https://twistient.github.io/HoloVec/guides/benchmarks/)
 - [Migration Notes](https://twistient.github.io/HoloVec/guides/migration/)
 
 ---

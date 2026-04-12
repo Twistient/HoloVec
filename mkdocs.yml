@@ -89,6 +89,7 @@ nav:
   - Guides:
     - Patterns: guides/patterns.md
     - Performance: guides/performance.md
+    - Benchmarks: guides/benchmarks.md
     - Migration: guides/migration.md
     - Troubleshooting: guides/troubleshooting.md
   - Reference:

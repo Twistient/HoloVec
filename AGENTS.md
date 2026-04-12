@@ -13,6 +13,7 @@ This file provides guidance for AI coding agents working on the HoloVec codebase
 - **Lint**: `uv run --extra dev ruff check holovec tests`
 - **Format**: `uv run --extra dev black holovec tests`
 - **Type check**: `uv run --extra dev mypy holovec`
+- **Docs build**: `uv sync --extra docs && uv run --extra docs mkdocs build --strict`
 
 ## Code Style
 
@@ -28,6 +29,7 @@ This file provides guidance for AI coding agents working on the HoloVec codebase
 - Extend existing parametrized suites; use pytest fixtures for temp artifacts
 - Target ≥90% coverage; mark backend-specific skips explicitly
 - Engine CI matches the local gate: `pytest`, `ruff check holovec tests`, and `mypy holovec`
+- Docs CI uses the locked docs environment: `uv sync --extra docs && uv run --extra docs mkdocs build --strict`
 
 ## Commit Convention
 

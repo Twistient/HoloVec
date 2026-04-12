@@ -10,6 +10,7 @@ theme:
   icon: assets/icon.svg
   show_title: true
   show_stargazers: true
+  katex_options: {}
   pygments_style:
     light: shadcn-light
     dark: github-dark

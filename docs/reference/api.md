@@ -11,7 +11,12 @@ The main entry point for creating VSA models.
       show_root_heading: true
       members:
         - create
-        - backend_info
+
+### Backend Discovery
+
+::: holovec.backend_info
+    options:
+      show_root_heading: true
 
 ---
 
@@ -114,6 +119,10 @@ All VSA model implementations.
     options:
       show_root_heading: true
 
+::: holovec.encoders.residue.ResidueEncoder
+    options:
+      show_root_heading: true
+
 ### Spatial Encoders
 
 ::: holovec.encoders.spatial.ImageEncoder
@@ -155,6 +164,10 @@ All VSA model implementations.
       show_root_heading: true
 
 ::: holovec.utils.cleanup.ResonatorCleanup
+    options:
+      show_root_heading: true
+
+::: holovec.utils.cleanup.AttentionResonatorCleanup
     options:
       show_root_heading: true
 

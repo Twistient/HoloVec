@@ -4,18 +4,17 @@ Tests the utility functions for Context-Preserving SDR Encoding (CPSE)
 and Context-Preserving SDR Decoding (CPSD).
 """
 
-import pytest
-import tempfile
 import os
-import json
+import tempfile
 
+import pytest
+
+from holovec import VSA
 from holovec.utils.cpse import (
     CPSEMetadata,
     generate_permutation_patterns,
     validate_cpse_convergence,
 )
-from holovec import VSA
-
 
 # ============================================================================
 # CPSEMetadata Tests

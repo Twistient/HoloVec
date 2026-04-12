@@ -5,9 +5,9 @@ introducing heavy memory systems. Advanced learned/dynamic memories live in
 the HoloMem package.
 """
 
+from .assocstore import AssocStore
 from .codebook import Codebook
 from .itemstore import ItemStore
-from .assocstore import AssocStore
 
 __all__ = [
     "Codebook",

@@ -155,7 +155,7 @@ class CPSEMetadata:
             base_seed=data["base_seed"],
         )
 
-    def to_json(self, path: str):
+    def to_json(self, path: str) -> None:
         """Save metadata to JSON file.
 
         Args:
@@ -340,7 +340,7 @@ def validate_cpse_convergence(
     # Compute similarities for each component pair
     similarities = [
         float(model.similarity(orig, dec))
-        for orig, dec in zip(original_components, decoded_components)
+        for orig, dec in zip(original_components, decoded_components, strict=True)
     ]
 
     # Check if all similarities meet threshold

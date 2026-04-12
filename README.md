@@ -5,7 +5,7 @@
 <div align="center">
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 **Vector Symbolic Architectures for compositional, high-dimensional computing.**
@@ -29,9 +29,10 @@ This approach enables one-shot learning, noise-tolerant representations, and tra
 ```bash
 git clone https://github.com/Twistient/HoloVec.git
 cd HoloVec
-pip install -e .
+uv sync --extra dev
 ```
 
+For an editable install outside the project workflow, use `uv pip install -e .[dev]`.
 For GPU support add `.[torch]`, for JIT compilation add `.[jax]`, or use `.[all]` for everything.
 
 ---
@@ -117,6 +118,10 @@ model = VSA.create('FHRR', dim=2048, backend='torch', device='cuda')
 # JAX with JIT compilation
 model = VSA.create('FHRR', dim=2048, backend='jax')
 ```
+
+NumPy is the release-blocking backend. PyTorch and JAX remain optional backends and should be
+treated as conditional support paths unless their backend-specific tests are enabled in your
+environment.
 
 ### Encoders
 
@@ -217,12 +222,13 @@ holovec/
 ## Testing
 
 ```bash
-pytest                                    # Run all tests
-pytest --cov=holovec --cov-report=html   # With coverage
-pytest -k torch                           # Specific backend
+uv run --extra dev pytest
+uv run --extra dev pytest --cov=holovec --cov-report=html
+uv run --extra dev ruff check holovec tests
+uv run --extra dev mypy holovec
 ```
 
-720+ tests, 78% coverage, property-based testing with Hypothesis.
+The engine CI enforces tests, Ruff, and source-only mypy on every push and pull request.
 
 ---
 
@@ -247,7 +253,7 @@ HoloVec implements ideas from:
   author       = {Brodie Schroeder},
   title        = {HoloVec: Vector Symbolic Architectures for Python},
   year         = {2025},
-  version      = {0.1.1},
+  version      = {0.3.0},
   url          = {https://github.com/Twistient/HoloVec},
   license      = {Apache-2.0}
 }

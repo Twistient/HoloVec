@@ -2,9 +2,9 @@ from collections.abc import Iterable
 
 import numpy
 
+from holovec.backends.base import Array
 from holovec.encoders.base import Encoder
 from holovec.models.base import VSAModel
-from holovec.backends.base import Array
 
 
 class VectorFPE(Encoder):
@@ -112,8 +112,9 @@ class VectorFPE(Encoder):
         - Sutherland & Schneider (2015): "On the Error of Random Fourier Features"
         """
         # Use local NumPy import to avoid module-level backend dependency
-        import numpy as _np
         import math
+
+        import numpy as _np
 
         rng = _np.random.default_rng(seed)
 
@@ -192,14 +193,16 @@ class VectorFPE(Encoder):
         else:
             return be.real(be.exp(1j * angle))
 
-    def decode(self, hv: Array, candidates: dict[str, Array] | None = None, k: int = 1):
+    def decode(
+        self, hv: Array, candidates: dict[str, Array] | None = None, k: int = 1
+    ) -> list[tuple[str, float]]:
         """No closed-form inverse; use nearest in a codebook if provided."""
         if candidates is None:
             raise NotImplementedError("VectorFPE.decode requires a codebook for nearest lookup.")
         from holovec.utils.search import nearest_neighbors
 
         labels, sims = nearest_neighbors(hv, candidates, self.model, k=k, return_similarities=True)
-        return list(zip(labels, sims or []))
+        return list(zip(labels, sims or [], strict=True))
 
     @property
     def is_reversible(self) -> bool:

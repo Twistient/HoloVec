@@ -38,14 +38,11 @@ References:
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING
 
 import numpy as np
 
 from holovec.backends.base import Array
-
-if TYPE_CHECKING:
-    from holovec.models.fhrr import FHRRModel
+from holovec.models.fhrr import FHRRModel
 
 
 class ResidueEncoder:
@@ -111,9 +108,7 @@ class ResidueEncoder:
 
         # Create FHRR model if not provided
         if model is None:
-            from holovec import VSA
-
-            model = VSA.create("FHRR", dim=dim, seed=seed)
+            model = FHRRModel(dimension=dim, seed=seed)
         self.model = model
         self.backend = model.backend
         self._seed = seed
@@ -376,12 +371,12 @@ class ResidueEncoder:
 
         # Try different starting points for the first (smallest) modulus
         first_m = self.moduli[0]
-        best_remainders = {m: 0 for m in self.moduli}
+        best_remainders = dict.fromkeys(self.moduli, 0)
         best_reconstruction_sim = -float("inf")
 
         for start_i in range(first_m):
             # Initialize with this starting point
-            remainders = {m: 0 for m in self.moduli}
+            remainders = dict.fromkeys(self.moduli, 0)
             remainders[first_m] = start_i
 
             # Iterative refinement

@@ -1,6 +1,6 @@
 ## Requirements
 
-- Python 3.9 or higher
+- Python 3.11 or higher
 - NumPy (installed automatically)
 
 ## Basic Installation
@@ -16,7 +16,7 @@ pip install holovec
 ```bash
 git clone https://github.com/Twistient/HoloVec.git
 cd HoloVec
-pip install -e .
+uv pip install -e .
 ```
 
 ## Optional Backends
@@ -56,7 +56,7 @@ For contributing or running tests:
 ```bash
 git clone https://github.com/Twistient/HoloVec.git
 cd HoloVec
-pip install -e .[dev]
+uv sync --extra dev
 ```
 
 This includes:
@@ -69,10 +69,10 @@ This includes:
 ## Verifying Installation
 
 ```python
-from holovec import VSA
+from holovec import VSA, backend_info
 
 # Check available backends
-print(VSA.backend_info())
+print(backend_info())
 
 # Create a model and test basic operation
 model = VSA.create('FHRR', dim=1024)

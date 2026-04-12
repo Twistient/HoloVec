@@ -12,8 +12,8 @@ from .spaces import (
     ComplexSpace,
     MatrixSpace,
     RealSpace,
-    SparseSpace,
     SparseSegmentSpace,
+    SparseSpace,
     create_space,
 )
 

@@ -4,13 +4,22 @@ Tests for sequence encoders.
 Tests the PositionBindingEncoder and future sequence encoders.
 """
 
+import json
+import subprocess
+import sys
+
 import pytest
-import numpy as np
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from holovec import VSA
-from holovec.encoders import PositionBindingEncoder, NGramEncoder, TrajectoryEncoder
-from holovec.encoders import FractionalPowerEncoder, ThermometerEncoder
+from holovec.encoders import (
+    FractionalPowerEncoder,
+    NGramEncoder,
+    PositionBindingEncoder,
+    ThermometerEncoder,
+    TrajectoryEncoder,
+)
 
 
 class TestPositionBindingEncoderInitialization:
@@ -134,6 +143,38 @@ class TestPositionBindingEncoderEncoding:
 
         assert hv.shape == (encoder.dimension,)
         assert encoder.get_codebook_size() == 4
+
+    def test_symbol_vectors_do_not_depend_on_insertion_order(self, model):
+        """Test symbol generation is keyed by symbol value, not insertion order."""
+        encoder_a = PositionBindingEncoder(model, seed=123)
+        encoder_b = PositionBindingEncoder(model, seed=123)
+
+        encoder_a.add_symbol("alpha")
+        encoder_a.add_symbol("beta")
+
+        encoder_b.add_symbol("beta")
+        encoder_b.add_symbol("alpha")
+
+        similarity = float(model.similarity(encoder_a.codebook["alpha"], encoder_b.codebook["alpha"]))
+        assert similarity > 0.99
+
+    def test_symbol_vectors_are_stable_across_processes(self):
+        """Test auto-generated codebook entries are stable across interpreter runs."""
+        script = """
+import json
+from holovec import VSA
+from holovec.encoders import PositionBindingEncoder
+
+model = VSA.create("MAP", dim=64, seed=42)
+encoder = PositionBindingEncoder(model, seed=123)
+encoder.add_symbol("stable-symbol")
+print(json.dumps(encoder.codebook["stable-symbol"].tolist()))
+"""
+
+        output_1 = subprocess.check_output([sys.executable, "-c", script], text=True).strip()
+        output_2 = subprocess.check_output([sys.executable, "-c", script], text=True).strip()
+
+        assert json.loads(output_1) == json.loads(output_2)
 
 
 class TestPositionBindingEncoderOrderSensitivity:
@@ -587,7 +628,7 @@ class TestNGramEncoderNGramExtraction:
         encoder = NGramEncoder(model, n=2, stride=1, seed=42)
         sequence = ['A', 'B', 'C', 'D']
         # N-grams: AB, BC, CD (3 total)
-        hv = encoder.encode(sequence)
+        encoder.encode(sequence)
         assert encoder.get_codebook_size() == 4
 
     def test_extract_bigrams_non_overlapping(self, model):

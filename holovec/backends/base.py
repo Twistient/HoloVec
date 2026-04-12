@@ -6,8 +6,8 @@ different computation frameworks (NumPy, PyTorch, JAX, etc.).
 """
 
 from abc import ABC, abstractmethod
-from typing import Any
 from collections.abc import Sequence
+from typing import Any
 
 # Type alias for arrays (backend-specific)
 Array = Any

@@ -1,8 +1,9 @@
 import numpy as np
+import pytest
 
+from holovec.backends import get_backend
 from holovec.models.fhrr import FHRRModel
 from holovec.models.ghrr import GHRRModel
-from holovec.backends import get_backend
 
 
 def _avg_noncommutativity(model, trials=5, seed=0):
@@ -281,7 +282,7 @@ def test_ghrr_test_non_commutativity_method():
     b = model_lo.random(seed=2)
     sim_lo = model_lo.test_non_commutativity(a, b)
     # Low diagonality → lower similarity
-    assert sim_lo < sim_hi, f"Low diagonality should be less commutative than high"
+    assert sim_lo < sim_hi, "Low diagonality should be less commutative than high"
 
 
 def test_ghrr_compute_diagonality():
@@ -332,8 +333,5 @@ def test_ghrr_bundle_empty_sequence():
     backend = get_backend("numpy")
     model = GHRRModel(dimension=32, matrix_size=2, backend=backend, seed=42)
 
-    try:
+    with pytest.raises(ValueError, match="empty"):
         model.bundle([])
-        assert False, "Should have raised ValueError"
-    except ValueError as e:
-        assert "empty" in str(e).lower()

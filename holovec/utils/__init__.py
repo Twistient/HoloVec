@@ -13,29 +13,26 @@ Sub-modules:
     operations: General utility operations
 """
 
+from .cleanup import (
+    AttentionResonatorCleanup,
+    BruteForceCleanup,
+    CleanupStrategy,
+    ResonatorCleanup,
+)
 from .cpse import (
     CPSEMetadata,
     generate_permutation_patterns,
     validate_cpse_convergence,
 )
-
-from .cleanup import (
-    CleanupStrategy,
-    BruteForceCleanup,
-    ResonatorCleanup,
-    AttentionResonatorCleanup,
+from .operations import (
+    add_noise,
+    select_top_k,
+    similarity_matrix,
 )
-
 from .search import (
+    batch_similarity,
     nearest_neighbors,
     threshold_search,
-    batch_similarity,
-)
-
-from .operations import (
-    select_top_k,
-    add_noise,
-    similarity_matrix,
 )
 
 __all__ = [

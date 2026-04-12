@@ -7,13 +7,13 @@ from .search import nearest_neighbors, threshold_search
 def decode_nearest(hv: Array, codebook: dict[str, Array], model: VSAModel, k: int = 1) -> list[tuple[str, float]]:
     labels, sims = nearest_neighbors(hv, codebook, model, k=k, return_similarities=True)
     sims = sims or []
-    return list(zip(labels, sims))
+    return list(zip(labels, sims, strict=True))
 
 
 def decode_threshold(hv: Array, codebook: dict[str, Array], model: VSAModel, threshold: float = 0.8) -> list[tuple[str, float]]:
     labels, sims = threshold_search(hv, codebook, model, threshold=threshold, return_similarities=True)
     sims = sims or []
-    return list(zip(labels, sims))
+    return list(zip(labels, sims, strict=True))
 
 
 def decode_multilabel(
@@ -32,4 +32,3 @@ def decode_multilabel(
         return decode_nearest(hv, codebook, model, k=k)
     else:
         raise ValueError("method must be one of {'threshold','topk'}")
-

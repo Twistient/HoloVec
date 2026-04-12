@@ -5,9 +5,9 @@ This module implements various methods for encoding scalar values,
 preserving locality: similar scalars map to similar hypervectors.
 """
 
+from holovec.backends.base import Array
 from holovec.encoders.base import ScalarEncoder
 from holovec.models.base import VSAModel
-from holovec.backends.base import Array
 
 
 class FractionalPowerEncoder(ScalarEncoder):
@@ -494,7 +494,7 @@ class FractionalPowerEncoder(ScalarEncoder):
             alphas = [1.0]
 
         parts = []
-        for alpha, beta in zip(alphas, betas):
+        for alpha, beta in zip(alphas, betas, strict=True):
             exponent = beta * normalized
             if self.is_complex:
                 # Complex: encode as exp(i * theta * exponent)
@@ -773,8 +773,6 @@ class FractionalPowerEncoder(ScalarEncoder):
 
         classes = sorted(set(labels))
         K = len(self.mixture_bandwidths)
-        d = self.dimension
-
         # Build current encodings to compute class prototypes (using current mixture weights)
         encodings = [self.encode(v) for v in values]
         # Convert to numpy arrays for prototype computation
@@ -789,6 +787,7 @@ class FractionalPowerEncoder(ScalarEncoder):
 
         # Helper to compute per-band encodings matrix E_i (d×K) for a value
         def _per_band_matrix(val: float) -> _np.ndarray:
+            assert self.mixture_bandwidths is not None
             norm = self.normalize(val)
             cols = []
             for beta in self.mixture_bandwidths:
@@ -807,7 +806,7 @@ class FractionalPowerEncoder(ScalarEncoder):
         # Accumulate normal equations
         A = _np.zeros((K, K), dtype=_np.float64)
         b = _np.zeros((K,), dtype=_np.float64)
-        for v, y in zip(values, labels):
+        for v, y in zip(values, labels, strict=True):
             E = _per_band_matrix(v)   # d×K
             p = prototypes[y]         # d
             # E^T E and E^T p

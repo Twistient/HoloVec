@@ -12,32 +12,32 @@ from holovec.encoders.base import (
     SequenceEncoder,
     StructuredEncoder,
 )
-from holovec.encoders.scalar import (
-    FractionalPowerEncoder,
-    ThermometerEncoder,
-    LevelEncoder,
-)
-from holovec.encoders.vector import (
-    VectorFPE,
-)
 from holovec.encoders.periodic import (
     PeriodicAngleEncoder,
     encode_day_of_week,
     encode_time_of_day,
 )
-from holovec.encoders.sequence import (
-    PositionBindingEncoder,
-    NGramEncoder,
-    TrajectoryEncoder,
+from holovec.encoders.residue import (
+    ResidueEncoder,
 )
-from holovec.encoders.structured import (
-    VectorEncoder,
+from holovec.encoders.scalar import (
+    FractionalPowerEncoder,
+    LevelEncoder,
+    ThermometerEncoder,
+)
+from holovec.encoders.sequence import (
+    NGramEncoder,
+    PositionBindingEncoder,
+    TrajectoryEncoder,
 )
 from holovec.encoders.spatial import (
     ImageEncoder,
 )
-from holovec.encoders.residue import (
-    ResidueEncoder,
+from holovec.encoders.structured import (
+    VectorEncoder,
+)
+from holovec.encoders.vector import (
+    VectorFPE,
 )
 
 __all__ = [

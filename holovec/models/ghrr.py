@@ -251,7 +251,6 @@ class GHRRModel(VSAModel):
         vec_np = self.backend.to_numpy(vec)
 
         D = vec_np.shape[0]
-        m = vec_np.shape[1]
 
         total_diag = 0.0
         total_all = 0.0
@@ -276,7 +275,7 @@ class GHRRModel(VSAModel):
 
 
 # Helper function to verify GHRR reduces to FHRR when m=1
-def verify_ghrr_fhrr_equivalence():
+def verify_ghrr_fhrr_equivalence() -> bool:
     """Verify that GHRR with m=1 is equivalent to FHRR.
 
     This is a validation function, not part of the model API.
@@ -304,8 +303,8 @@ def verify_ghrr_fhrr_equivalence():
     b_fhrr = fhrr.random(seed=2)
 
     # Bind
-    c_ghrr = ghrr.bind(a_ghrr, b_ghrr)
-    c_fhrr = fhrr.bind(a_fhrr, b_fhrr)
+    ghrr.bind(a_ghrr, b_ghrr)
+    fhrr.bind(a_fhrr, b_fhrr)
 
     # Check similarity (should be approximately same structure)
     # Note: won't be identical due to space generation differences

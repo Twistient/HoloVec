@@ -17,17 +17,10 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) to keep our com
    cd HoloVec
    ```
 
-2. **Create a virtual environment**
+2. **Install development dependencies**
 
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install development dependencies**
-
-   ```bash
-   pip install -e ".[dev,torch,jax]"
+   uv sync --extra dev
    ```
 
 4. **Install pre-commit hooks** (optional but recommended)
@@ -40,16 +33,16 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) to keep our com
 
 ```bash
 # Run all tests
-pytest
+uv run --extra dev pytest
 
 # Run with coverage
-pytest --cov=holovec --cov-report=html
+uv run --extra dev pytest --cov=holovec --cov-report=html
 
 # Run specific test file
-pytest tests/test_models.py
+uv run --extra dev pytest tests/test_models.py
 
 # Run tests for specific backend
-pytest tests/test_models.py -k numpy
+uv run --extra dev pytest tests/test_models.py -k numpy
 ```
 
 ### Code Style
@@ -64,13 +57,13 @@ Run these tools before committing:
 
 ```bash
 # Format code
-black holovec tests examples
+uv run --extra dev black holovec tests examples
 
 # Lint code
-ruff check holovec tests examples
+uv run --extra dev ruff check holovec tests examples
 
 # Type check
-mypy holovec
+uv run --extra dev mypy holovec
 ```
 
 Or use the pre-commit hooks to run automatically:
@@ -121,17 +114,17 @@ Enhancement suggestions are welcome! Please include:
 
    ```bash
    # Run tests
-   pytest
+   uv run --extra dev pytest
 
    # Check coverage
-   pytest --cov=holovec --cov-report=term-missing
+   uv run --extra dev pytest --cov=holovec --cov-report=term-missing
 
    # Run type checker
-   mypy holovec
+   uv run --extra dev mypy holovec
 
    # Format and lint
-   black holovec tests examples
-   ruff check holovec tests examples
+   uv run --extra dev black holovec tests examples
+   uv run --extra dev ruff check holovec tests examples
    ```
 
 4. **Update CHANGELOG.md**

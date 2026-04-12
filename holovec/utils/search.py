@@ -280,7 +280,7 @@ def find_by_segment_pattern(
     if len(pattern) != S:
         raise ValueError(f"pattern length ({len(pattern)}) must equal segments ({S})")
     # Normalize pattern: -1/None = wildcard
-    pat = []
+    pat: list[int | None] = []
     for p in pattern:
         if p is None or (isinstance(p, int) and p < 0):
             pat.append(None)

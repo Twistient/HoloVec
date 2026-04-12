@@ -120,7 +120,6 @@ class TestBSDCModel:
         bundle = model.bundle(vectors, maintain_sparsity=False)
 
         # Sparsity may be different from target
-        sparsity = model.measure_sparsity(bundle)
         # Just check it's a valid binary vector
         assert np.all(np.isin(model.backend.to_numpy(bundle), [0, 1]))
 
@@ -169,8 +168,6 @@ class TestBSDCModel:
         a_modified = model.backend.from_numpy(a_np.astype(np.int32))
 
         # Measure increased sparsity
-        sparsity_before = model.measure_sparsity(a_modified)
-
         # Rehash to restore optimal sparsity
         a_rehashed = model.rehash(a_modified)
 
@@ -239,8 +236,6 @@ class TestBSDCModel:
         a = large_model.random(seed=1)
 
         sparsity = large_model.measure_sparsity(a)
-        expected = 1.0 / np.sqrt(10000)  # 0.01
-
         # Should have about 100 ones in 10,000 dimensions
         ones = int(sparsity * 10000)
         expected_ones_val = expected_ones(10000)
@@ -360,14 +355,14 @@ class TestBSDCCapacity:
 
         # Try PyTorch if available
         try:
-            import torch
+            __import__("torch")
             backends.append('torch')
         except ImportError:
             pass
 
         # Try JAX if available
         try:
-            import jax
+            __import__("jax")
             backends.append('jax')
         except ImportError:
             pass

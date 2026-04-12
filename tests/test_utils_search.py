@@ -6,13 +6,12 @@ k-nearest neighbors, threshold search, and batch similarity.
 
 import pytest
 
+from holovec import VSA
 from holovec.utils.search import (
+    batch_similarity,
     nearest_neighbors,
     threshold_search,
-    batch_similarity,
 )
-from holovec import VSA
-
 
 # ============================================================================
 # nearest_neighbors Tests

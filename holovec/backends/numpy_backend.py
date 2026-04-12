@@ -4,6 +4,7 @@ This is the default backend and requires only NumPy as a dependency.
 """
 
 from collections.abc import Sequence
+from typing import Literal, cast
 
 import numpy as np
 
@@ -141,7 +142,7 @@ class NumPyBackend(Backend):
         angles = rng.uniform(0, 2 * np.pi, shape)
         return np.exp(1j * angles).astype(dtype)
 
-    def array(self, data, dtype: str | None = None) -> Array:
+    def array(self, data: object, dtype: str | None = None) -> Array:
         return np.array(data, dtype=dtype)
 
     # ===== Element-wise Operations =====
@@ -173,7 +174,15 @@ class NumPyBackend(Backend):
         return np.mean(a, axis=axis, keepdims=keepdims)
 
     def norm(self, a: Array, ord: int | str = 2, axis: int | None = None) -> Array:
-        return np.linalg.norm(a, ord=ord, axis=axis)
+        if isinstance(ord, str):
+            if ord not in ("fro", "nuc"):
+                raise ValueError(f"Unsupported norm order '{ord}' for NumPy backend")
+            matrix_ord = cast(Literal["fro", "nuc"], ord)
+            return np.linalg.norm(a, ord=matrix_ord)
+        numeric_ord = float(ord)
+        if axis is None:
+            return np.linalg.norm(a, ord=numeric_ord)
+        return np.linalg.norm(a, ord=numeric_ord, axis=axis)
 
     def dot(self, a: Array, b: Array) -> Array:
         return np.dot(a, b)
@@ -193,7 +202,15 @@ class NumPyBackend(Backend):
     # ===== Normalization =====
 
     def normalize(self, a: Array, ord: int | str = 2, axis: int | None = None, eps: float = 1e-12) -> Array:
-        norm = np.linalg.norm(a, ord=ord, axis=axis, keepdims=True)
+        if isinstance(ord, str):
+            if ord not in ("fro", "nuc"):
+                raise ValueError(f"Unsupported norm order '{ord}' for NumPy backend")
+            matrix_ord = cast(Literal["fro", "nuc"], ord)
+            norm = np.linalg.norm(a, ord=matrix_ord)
+        elif axis is None:
+            norm = np.linalg.norm(a, ord=float(ord))
+        else:
+            norm = np.linalg.norm(a, ord=float(ord), axis=axis, keepdims=True)
         return a / (norm + eps)
 
     def softmax(self, a: Array, axis: int = -1) -> Array:
@@ -267,13 +284,13 @@ class NumPyBackend(Backend):
     # ===== Utilities =====
 
     def shape(self, a: Array) -> tuple[int, ...]:
-        return a.shape
+        return tuple(int(dim) for dim in a.shape)
 
     def dtype(self, a: Array) -> str:
         return str(a.dtype)
 
     def to_numpy(self, a: Array) -> np.ndarray:
-        return a  # Already NumPy
+        return np.asarray(a)
 
     def from_numpy(self, a: np.ndarray) -> Array:
         return a  # Already NumPy

@@ -105,7 +105,7 @@ class JAXBackend(Backend):
 
         return False
 
-    def _get_key(self, seed: int | None = None):
+    def _get_key(self, seed: int | None = None) -> Array:
         """Get a PRNG key, optionally splitting the internal key."""
         if seed is not None:
             return jax_random.PRNGKey(seed)
@@ -198,7 +198,7 @@ class JAXBackend(Backend):
         angles = jax_random.uniform(key, shape, minval=0.0, maxval=2 * np.pi)
         return jnp.exp(1j * angles).astype(jax_dtype)
 
-    def array(self, data, dtype: str | None = None) -> Array:
+    def array(self, data: object, dtype: str | None = None) -> Array:
         jax_dtype = self._to_jax_dtype(dtype) if dtype else None
         return jnp.array(data, dtype=jax_dtype)
 
@@ -415,7 +415,7 @@ class JAXBackend(Backend):
     # ===== Helper Methods =====
 
     @staticmethod
-    def _to_jax_dtype(dtype: str):
+    def _to_jax_dtype(dtype: str) -> object:
         """Convert string dtype to JAX dtype."""
         dtype_map = {
             'float16': jnp.float16,

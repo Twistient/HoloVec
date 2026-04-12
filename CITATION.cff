@@ -6,7 +6,7 @@ authors:
     given-names: Brodie
     orcid: https://orcid.org/0000-0000-0000-0000
     affiliation: Twistient Corp.
-repository-code: https://github.com/Twistient/holovec
+repository-code: https://github.com/Twistient/HoloVec
 license: Apache-2.0
-version: 0.2.0
-date-released: 2025-12-23
+version: 0.3.0
+date-released: 2026-04-11

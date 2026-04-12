@@ -9,8 +9,8 @@ for different VSA models, based on the mathematical foundations from:
 
 import numpy as np
 import pytest
-from hypothesis import given, settings, strategies as st
-from hypothesis import HealthCheck
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from holovec import VSA
 
@@ -46,8 +46,8 @@ class TestMAPProperties:
     @pytest.fixture
     def map_real(self):
         """MAP model with real space (approximate inverse)."""
-        from holovec.spaces import RealSpace
         from holovec.backends import get_backend
+        from holovec.spaces import RealSpace
         backend = get_backend()
         space = RealSpace(dimension=1000, backend=backend, seed=42)
         return VSA.create('MAP', dim=1000, space=space, seed=42)

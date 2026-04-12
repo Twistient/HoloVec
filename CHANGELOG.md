@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- No unreleased changes yet.
+
+## [0.3.0] - 2026-04-11
+
 ### Added
 
 - **ResidueEncoder**: Residue Hyperdimensional Computing encoder (Kymn et al. 2024)
@@ -34,8 +38,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enable with `VSA.create('BSDC', binding_mode='cdt')`
   - Multi-component binding via `model.context_dependent_thinning([a, b, c])`
 
+### Changed
+
+- Split cleanup strategies into `holovec.utils.cleanup` package modules while preserving public imports
+- Added dedicated engine CI for tests, Ruff, and source-only mypy
+- Updated developer commands and README examples to use `uv run` / `uv sync`
+- Clarified backend support policy: NumPy is release-blocking, PyTorch and JAX are optional paths
+
+### Fixed
+
+- `holovec.__version__` now resolves from installed package metadata instead of a stale hardcoded value
+- Sequence symbol auto-generation is now deterministic across Python processes and insertion order
+- Periodic encoder helper functions no longer raise `NameError` on `np.pi`
+- Source typing now passes `mypy holovec`
+
+### Documentation
+
+- Updated installation, testing, and contribution guidance to reflect the enforced engine workflow
+
 ### Testing
 
+- Added regression tests for runtime/package version alignment
+- Added regression tests for periodic helper APIs
+- Added regression tests for deterministic sequence symbol generation across processes and insertion order
 - Added 48 tests for ResidueEncoder (encoding, addition, subtraction, decoding, CRT)
 - Added 27 tests for AttentionResonatorCleanup (initialization, factorization, edge cases)
 - Added 24 tests for capacity analysis module
@@ -327,7 +352,8 @@ Based on comprehensive academic research:
 - Kymn et al. (2024) - Resonator cleanup networks
 - Malits & Mendelson (2025) - CPSE/CPSD algorithms
 
-[Unreleased]: https://github.com/Twistient/HoloVec/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Twistient/HoloVec/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Twistient/HoloVec/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Twistient/HoloVec/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/Twistient/HoloVec/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Twistient/HoloVec/releases/tag/v0.1.0

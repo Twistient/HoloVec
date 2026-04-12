@@ -6,13 +6,11 @@ brute-force search and resonator networks.
 
 import pytest
 
+from holovec import VSA
 from holovec.utils.cleanup import (
-    CleanupStrategy,
     BruteForceCleanup,
     ResonatorCleanup,
 )
-from holovec import VSA
-
 
 # ============================================================================
 # BruteForceCleanup Tests

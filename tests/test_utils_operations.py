@@ -4,16 +4,15 @@ Tests the general-purpose operations for hypervector manipulation,
 including top-k selection, noise injection, and similarity matrices.
 """
 
-import pytest
 import numpy as np
+import pytest
 
+from holovec import VSA
 from holovec.utils.operations import (
-    select_top_k,
     add_noise,
+    select_top_k,
     similarity_matrix,
 )
-from holovec import VSA
-
 
 # ============================================================================
 # select_top_k Tests

@@ -107,9 +107,9 @@ Approximate performance for dim=10,000, 1000 operations:
 Check what's available:
 
 ```python
-from holovec import VSA
+from holovec import backend_info
 
-info = VSA.backend_info()
+info = backend_info()
 print(info)
 # {'numpy': True, 'torch': True, 'jax': False}
 ```

@@ -37,7 +37,7 @@ class AssocStore:
         labels, sims = nearest_neighbors(
             key_vec, self.keys._items, self.model, k=k, return_similarities=True
         )
-        return list(zip(labels, sims or []))
+        return list(zip(labels, sims or [], strict=True))
 
     def query_value(self, key_vec: Array, top: int = 1) -> tuple[str, Array]:
         lbls = self.query_label(key_vec, k=1)

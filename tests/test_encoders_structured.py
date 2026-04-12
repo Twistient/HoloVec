@@ -4,16 +4,17 @@ Tests for structured data encoders.
 Tests the VectorEncoder and future structured encoders.
 """
 
-import pytest
 import numpy as np
-from hypothesis import given, strategies as st, assume, settings
+import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 from holovec import VSA
 from holovec.encoders import (
-    VectorEncoder,
     FractionalPowerEncoder,
-    ThermometerEncoder,
     LevelEncoder,
+    ThermometerEncoder,
+    VectorEncoder,
 )
 
 

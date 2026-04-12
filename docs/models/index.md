@@ -1,190 +1,155 @@
-HoloVec implements 8 VSA models, each with different algebraic properties suited to different use cases.
+HoloVec ships multiple VSA models because there is no single best algebra for every task. The
+important distinctions are:
 
-## Model Comparison
+- exact inverse vs approximate inverse
+- commutative vs order-sensitive binding
+- dense vs sparse representations
+- vector vs matrix-valued spaces
 
-| Model | Binding | Inverse | Commutative | Space | Best For |
-|-------|---------|---------|-------------|-------|----------|
-| [FHRR](../models/fhrr.md) | Complex multiply | Exact | Yes | Complex | General use, best capacity |
-| [GHRR](../models/ghrr.md) | Matrix product | Exact | No | Matrix | Order-sensitive relations |
-| [MAP](../models/map.md) | Element multiply | Self | Yes | Bipolar | Hardware, neuromorphic |
-| [HRR](../models/hrr.md) | Circular convolution | Approx | Yes | Bipolar | Classic baseline |
-| [VTB](../models/vtb.md) | Matrix transform | Approx | No | Matrix | Directional binding |
-| [BSC](../models/bsc.md) | XOR | Self | Yes | Binary | FPGA, low power |
-| [BSDC](../models/bsdc.md) | Sparse XOR | Approx | Yes | Sparse | Memory efficient |
-| [BSDC-SEG](../models/bsdc-seg.md) | Segment XOR | Self | Yes | Sparse Segment | Fast sparse search |
+Use this page to narrow the model family first, then move to the individual model page.
 
-## Choosing a Model
+## Comparison at a Glance
 
-```mermaid
-graph TD
-    START[What's your priority?] --> CAPACITY
-    START --> HARDWARE
-    START --> ORDER
-    START --> MEMORY
+| Model | Space | Inverse Style | Order Sensitive | Main Strength | Main Tradeoff |
+|-------|-------|---------------|-----------------|---------------|---------------|
+| [FHRR](../models/fhrr.md) | Complex | Exact | No | Strong default for compositional retrieval and continuous encoders | Dense complex vectors |
+| [GHRR](../models/ghrr.md) | Matrix | Exact | Yes | Non-commutative exact binding for nested or directional structures | Matrix operations are heavier |
+| [MAP](../models/map.md) | Bipolar | Self-inverse | No | Simple fast algebra and strong cleanup behavior | Lower expressive structure than matrix models |
+| [HRR](../models/hrr.md) | Real/Bipolar | Approximate | No | Classic baseline used in literature | Approximate inverse and cleanup dependence |
+| [VTB](../models/vtb.md) | Matrix/Real | Approximate | Yes | Directional and asymmetric relations | Approximate recovery |
+| [BSC](../models/bsc.md) | Binary | Self-inverse | No | Binary-friendly and exact XOR-style recovery | Discrete/binary representation only |
+| [BSDC](../models/bsdc.md) | Sparse | Approximate | No | Sparse memory-efficient storage | Approximate inverse, retrieval quality depends on sparsity |
+| [BSDC-SEG](../models/bsdc-seg.md) | Sparse segment | Self-inverse | No | Segment-sparse pattern matching and fast structured search | Model-specific segment assumptions |
 
-    CAPACITY[Best capacity] --> FHRR[Use FHRR]
-    HARDWARE[Hardware deployment] --> HW_TYPE{Hardware type?}
-    ORDER[Order matters] --> NON_COMM{Need exact inverse?}
-    MEMORY[Memory constraints] --> BSDC[Use BSDC or BSDC-SEG]
+## Recommended Defaults
 
-    HW_TYPE -->|Neuromorphic| MAP[Use MAP]
-    HW_TYPE -->|FPGA/Binary| BSC[Use BSC]
-    HW_TYPE -->|General| MAP
+| If you need... | Start with... | Why |
+|----------------|---------------|-----|
+| a general-purpose model | `FHRR` | exact inverse, strong cleanup, good encoder support |
+| order-sensitive or directional structure | `GHRR` or `VTB` | non-commutative binding |
+| simple exact discrete algebra | `MAP` or `BSC` | self-inverse recovery |
+| sparse storage | `BSDC` or `BSDC-SEG` | memory efficiency and segment-aware retrieval |
+| literature reproduction baseline | `HRR` | classic holographic reduced representations |
 
-    NON_COMM -->|Yes| GHRR[Use GHRR]
-    NON_COMM -->|No| VTB[Use VTB]
-```
+## Model Families
 
-### Quick Decision Guide
+### Exact-Inverse Models
 
-| Scenario | Recommended |
-|----------|-------------|
-| Default choice / don't know | **FHRR** |
-| Neuromorphic hardware | **MAP** |
-| FPGA or binary operations | **BSC** |
-| Memory-constrained | **BSDC** |
-| Order-sensitive relationships | **GHRR** |
-| Academic comparison baseline | **HRR** |
-| Directional associations | **VTB** |
-| Fast sparse retrieval | **BSDC-SEG** |
-
-## Inverse Types
-
-### Exact Inverse
-
-The original vector is perfectly recovered:
-
-```python
-model = VSA.create('FHRR', dim=2048)
-a, b = model.random(), model.random()
-c = model.bind(a, b)
-a_recovered = model.unbind(c, b)
-print(model.similarity(a, a_recovered))  # 1.0
-```
-
-**Models:** FHRR, GHRR
-
-### Self-Inverse
-
-Binding a vector with itself returns the identity:
-
-```python
-model = VSA.create('MAP', dim=2048)
-a, b = model.random(), model.random()
-c = model.bind(a, b)
-# Unbind by binding again with b
-a_recovered = model.bind(c, b)
-print(model.similarity(a, a_recovered))  # 1.0
-```
-
-**Models:** MAP, BSC, BSDC-SEG
-
-### Approximate Inverse
-
-Recovery is imperfect but sufficient for cleanup:
-
-```python
-model = VSA.create('HRR', dim=2048)
-a, b = model.random(), model.random()
-c = model.bind(a, b)
-a_recovered = model.unbind(c, b)
-print(model.similarity(a, a_recovered))  # ~0.65-0.75
-```
-
-**Models:** HRR, VTB, BSDC
-
-## Commutativity
-
-### Commutative
-
-Order doesn't matter: `bind(a, b) = bind(b, a)`
-
-```python
-model = VSA.create('FHRR', dim=2048)
-a, b = model.random(), model.random()
-c1 = model.bind(a, b)
-c2 = model.bind(b, a)
-print(model.similarity(c1, c2))  # 1.0
-```
-
-**Models:** FHRR, MAP, HRR, BSC, BSDC, BSDC-SEG
-
-### Non-Commutative
-
-Order matters: `bind(a, b) ≠ bind(b, a)`
-
-```python
-model = VSA.create('GHRR', dim=64)  # GHRR uses smaller dims
-a, b = model.random(), model.random()
-c1 = model.bind(a, b)
-c2 = model.bind(b, a)
-print(model.similarity(c1, c2))  # ~0.0
-```
-
-**Models:** GHRR, VTB
-
-**Use case:** When "A relates to B" differs from "B relates to A" (e.g., parent-child, cause-effect).
-
-## Capacity Comparison
-
-Bundle capacity (empirically measured, 80% detection threshold):
-
-| Model | Items/dim | At dim=2048 | At dim=10000 |
-|-------|-----------|-------------|--------------|
-| FHRR | ~0.06 | ~120 | ~600 |
-| GHRR | ~0.06 | ~100* | ~500* |
-| HRR | ~0.04 | ~80 | ~400 |
-| VTB | ~0.04 | ~80 | ~400 |
-| MAP | ~0.03 | ~60 | ~300 |
-| BSC | ~0.03 | ~50 | ~250 |
-| BSDC | ~0.01 | ~20 | ~100 |
-
-*GHRR uses effective dimensions = dim × m² (e.g., dim=100, m=3 → 900 effective)
-
-**How to read**: Multiply "items/dim" by your dimension to estimate capacity.
-Example: FHRR at dim=4096 → 0.06 × 4096 ≈ 250 items.
-
-!!! note
-    **What is "capacity"?** The maximum number of items that can be bundled together while still being distinguishable from random noise. Measured as: can the weakest bundled item be detected above the strongest random distractor?
->
-> Capacity varies with task, error tolerance, and cleanup strategy. Use these as guidelines, not guarantees.
-
-## Model Details
-
-Each model has a dedicated page with full theory:
-
-- **[FHRR](../models/fhrr.md)** — Fourier Holographic Reduced Representations
-- **[GHRR](../models/ghrr.md)** — Generalized HRR matrix extension
-- **[MAP](../models/map.md)** — Multiply-Add-Permute
-- **[HRR](../models/hrr.md)** — Holographic Reduced Representations
-- **[VTB](../models/vtb.md)** — Vector-derived Transformation Binding
-- **[BSC](../models/bsc.md)** — Binary Spatter Codes
-- **[BSDC](../models/bsdc.md)** — Binary Sparse Distributed Codes
-- **[BSDC-SEG](../models/bsdc-seg.md)** — Segmented BSDC
-
-## Common Operations
-
-All models support the same interface:
+`FHRR` and `GHRR` recover bound factors exactly in the noiseless case.
 
 ```python
 from holovec import VSA
 
-# Create any model
-model = VSA.create('MODEL_NAME', dim=2048)
+model = VSA.create("FHRR", dim=4096)
+a = model.random(seed=1)
+b = model.random(seed=2)
 
-# Core operations
-a = model.random()           # Generate random vector
-b = model.random(seed=42)    # Seeded for reproducibility
-c = model.bind(a, b)         # Binding
-d = model.unbind(c, b)       # Unbinding
-e = model.bundle([a, b])     # Bundling
-f = model.permute(a, k=1)    # Permutation
-g = model.unpermute(f, k=1)  # Reverse permutation
-sim = model.similarity(a, d) # Similarity measure
+recovered = model.unbind(model.bind(a, b), b)
+print(float(model.similarity(a, recovered)))
 ```
+
+Choose these when recovery quality matters more than raw simplicity.
+
+### Self-Inverse Models
+
+`MAP`, `BSC`, and `BSDC-SEG` are attractive when you want exact discrete-style recovery without a
+separate inverse operation.
+
+```python
+model = VSA.create("MAP", dim=4096)
+a = model.random(seed=1)
+b = model.random(seed=2)
+
+recovered = model.unbind(model.bind(a, b), b)
+print(float(model.similarity(a, recovered)))
+```
+
+These are good cleanup and factorization workhorses.
+
+### Approximate-Inverse Models
+
+`HRR`, `VTB`, and `BSDC` usually rely more heavily on cleanup memories or task-specific thresholds.
+
+```python
+model = VSA.create("HRR", dim=4096)
+a = model.random(seed=1)
+b = model.random(seed=2)
+
+recovered = model.unbind(model.bind(a, b), b)
+print(float(model.similarity(a, recovered)))
+```
+
+Approximate recovery is not a defect on its own, but it changes how you should benchmark and
+evaluate the model.
+
+## Order Sensitivity
+
+If `bind(a, b)` and `bind(b, a)` should mean different things, use a non-commutative model.
+
+```python
+ghrr = VSA.create("GHRR", dim=96, matrix_size=3, diagonality=0.4)
+a = ghrr.random(seed=1)
+b = ghrr.random(seed=2)
+
+ab = ghrr.bind(a, b)
+ba = ghrr.bind(b, a)
+print(float(ghrr.similarity(ab, ba)))
+```
+
+Use `GHRR` when you also want exact inverse behavior. Use `VTB` when directional structure matters
+but approximate recovery is acceptable.
+
+## Sparse and Segment-Sparse Models
+
+The sparse models are not just "small dense models." They have different retrieval behavior and
+should be measured differently:
+
+- `BSDC`: sparse overlap-based similarities and approximate inverse behavior
+- `BSDC-SEG`: one active bit per segment, segment-pattern search, self-inverse recovery
+
+Typical valid factory calls:
+
+```python
+VSA.create("BSDC", dim=20000, sparsity=0.01, binding_mode="cdt")
+VSA.create("BSDC-SEG", dim=400, segments=20)
+```
+
+## Configuration Through the Factory
+
+`VSA.create()` now validates supported kwargs instead of ignoring them. Model-specific examples:
+
+```python
+VSA.create("GHRR", dim=96, matrix_size=3, diagonality=0.4)
+VSA.create("VTB", dim=512, n_bases=4, temperature=50.0)
+VSA.create("BSDC", dim=20000, sparsity=0.01, binding_mode="cdt")
+VSA.create("BSDC-SEG", dim=400, segments=20)
+```
+
+If you need unsupported backend precision or array options, handle them in application-specific
+backend code rather than assuming they pass through the factory.
+
+## Quantitative Comparisons
+
+This page intentionally avoids hard-coded benchmark tables. Operation speed, cleanup quality, and
+capacity all depend on:
+
+- dimension
+- cleanup strategy
+- backend
+- sparsity or matrix parameters
+- the exact workload being measured
+
+Use [Performance Guidance](../guides/performance.md) for measurement advice, and use the upcoming
+benchmark suite for release-facing quantitative comparisons rather than copying a generic table.
+
+## Canonical Example
+
+See [examples/02_models_comparison.py](https://github.com/Twistient/HoloVec/blob/master/examples/02_models_comparison.py)
+for the maintained runnable comparison script.
 
 ## See Also
 
-- [Core Concepts](../getting-started/core-concepts.md) — Operation definitions
-- [Spaces](../architecture/spaces.md) — Vector types for each model
-- [Performance](../guides/performance.md) — Speed comparisons
+- [Core Concepts](../getting-started/core-concepts.md)
+- [Spaces](../architecture/spaces.md)
+- [Performance Guidance](../guides/performance.md)
+- [Migration Notes](../guides/migration.md)

@@ -1,7 +1,6 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/Twistient/HoloVec/master/docs/assets/logo.svg" alt="HoloVec Logo" width="400">
 </div>
-
 <div align="center">
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
@@ -10,17 +9,28 @@
 
 **Vector Symbolic Architectures for compositional, high-dimensional computing.**
 
-[Documentation](https://twistient.github.io/HoloVec/) • [Installation](https://twistient.github.io/HoloVec/getting-started/installation/) • [Quick Start](https://twistient.github.io/HoloVec/getting-started/quick-start/) • [Examples](https://github.com/Twistient/HoloVec/tree/master/examples)
+[Documentation](https://twistient.github.io/HoloVec/) |
+[Installation](https://twistient.github.io/HoloVec/getting-started/installation/) |
+[Quick Start](https://twistient.github.io/HoloVec/getting-started/quick-start/) |
+[Examples](https://github.com/Twistient/HoloVec/tree/master/examples)
 
 </div>
 
 ---
 
-## What is HoloVec?
+## What HoloVec Is
 
-HoloVec is a Python library for hyperdimensional computing (HDC) and Vector Symbolic Architectures (VSA). It represents data as high-dimensional vectors (~1,000-10,000 dimensions) that can be composed using algebraic operations—binding creates associations, bundling creates sets, and permutation encodes order.
+HoloVec is a Python library for hyperdimensional computing (HDC) and vector symbolic
+architectures (VSA). It gives you a consistent API for:
 
-This approach enables one-shot learning, noise-tolerant representations, and transparent symbolic reasoning without gradient descent.
+- binding and unbinding structured representations
+- bundling sets, prototypes, and memories
+- permutation-based order encoding
+- scalar, sequence, spatial, and structured encoders
+- associative retrieval and cleanup memories
+
+The library currently treats NumPy as the release-blocking backend. PyTorch and JAX are
+supported as optional backends when their environment-specific tests are enabled.
 
 ---
 
@@ -33,12 +43,12 @@ pip install holovec
 Optional extras:
 
 ```bash
-pip install "holovec[torch]"   # PyTorch backend
-pip install "holovec[jax]"     # JAX backend
-pip install "holovec[all]"     # all optional extras
+pip install "holovec[torch]"  # PyTorch backend
+pip install "holovec[jax]"    # JAX backend
+pip install "holovec[all]"    # torch + jax + dev + docs extras
 ```
 
-For source and development work:
+For source work:
 
 ```bash
 git clone https://github.com/Twistient/HoloVec.git
@@ -46,8 +56,8 @@ cd HoloVec
 uv sync --extra dev
 ```
 
-For an editable install outside the project workflow, use `uv pip install -e .[dev]`.
-For GPU support add `.[torch]`, for JIT compilation add `.[jax]`, or use `.[all]` for everything.
+Use `uv pip install -e .[dev]` only when you explicitly want an editable install outside the
+normal `uv sync` workflow.
 
 ---
 
@@ -55,208 +65,126 @@ For GPU support add `.[torch]`, for JIT compilation add `.[jax]`, or use `.[all]
 
 ```python
 from holovec import VSA
-
-# Create a model
-model = VSA.create('FHRR', dim=2048)
-
-# Generate random hypervectors
-a = model.random()
-b = model.random()
-
-# Bind them together (creates an association)
-c = model.bind(a, b)
-
-# Unbind to recover the original
-a_recovered = model.unbind(c, b)
-print(model.similarity(a, a_recovered))  # 1.0 (exact recovery)
-```
-
----
-
-## Concepts
-
-HoloVec has four layers: **Backends** provide numerical primitives, **Spaces** define vector types and similarity measures, **Models** implement algebraic operations, and **Encoders** transform data into hypervectors.
-
-### Operations
-
-Every VSA model supports three core operations:
-
-| Operation | What it does | Use case |
-|-----------|--------------|----------|
-| **Bind** | Associates two vectors → result dissimilar to both | Key-value pairs, role-filler structures |
-| **Bundle** | Superposes vectors → result similar to all inputs | Sets, prototypes, averaging |
-| **Permute** | Shifts coordinates → preserves similarity | Sequences, positions, temporal order |
-
-### Models
-
-Different models have different algebraic properties:
-
-| Model | Binding method | Inverse | Notes |
-|-------|---------------|---------|-------|
-| **FHRR** | Complex multiply | Exact | Best capacity, continuous data |
-| **GHRR** | Matrix product | Exact | Non-commutative, matrix-based extension |
-| **MAP** | Element multiply | Self | Hardware-friendly, neuromorphic |
-| **HRR** | Circular convolution | Approximate | Classic baseline |
-| **VTB** | Matrix transform | Approximate | Non-commutative, directional |
-| **BSC** | XOR | Self | Binary, FPGA-friendly |
-| **BSDC** | Sparse XOR | Approximate | Memory efficient |
-| **BSDC-SEG** | Segment XOR | Self | Segment-sparse, fast search |
-
-Choose FHRR for general use, GHRR when order matters, MAP for hardware-oriented use, or BSDC variants for memory constraints.
-
-### Spaces
-
-Each model operates on a specific vector space that determines how random vectors are generated and how similarity is measured:
-
-| Space | Values | Similarity | Used by |
-|-------|--------|------------|---------|
-| **Complex** | Unit phasors (e^iθ) | Cosine | FHRR |
-| **Bipolar** | {-1, +1} | Cosine | MAP, HRR |
-| **Binary** | {0, 1} | Hamming | BSC |
-| **Sparse** | Sparse binary | Overlap | BSDC |
-| **Matrix** | Unitary matrices | Trace | GHRR, VTB |
-
-You typically don't interact with spaces directly—`VSA.create()` selects the appropriate space for each model.
-
-### Backends
-
-HoloVec runs on NumPy (default), PyTorch (GPU), or JAX (JIT). The API is identical:
-
-```python
-# NumPy (default)
-model = VSA.create('FHRR', dim=2048)
-
-# PyTorch with GPU
-model = VSA.create('FHRR', dim=2048, backend='torch', device='cuda')
-
-# JAX with JIT compilation
-model = VSA.create('FHRR', dim=2048, backend='jax')
-```
-
-NumPy is the release-blocking backend. PyTorch and JAX remain optional backends and should be
-treated as conditional support paths unless their backend-specific tests are enabled in your
-environment.
-
-### Encoders
-
-Encoders transform data into hypervectors:
-
-| Encoder | Input | Preserves |
-|---------|-------|-----------|
-| **FractionalPowerEncoder** | Scalars | Locality (similar values → similar vectors) |
-| **ThermometerEncoder** | Ordinals | Order relationships |
-| **PositionBindingEncoder** | Sequences | Position information |
-| **NGramEncoder** | Text | Local context |
-| **ImageEncoder** | 2D grids | Spatial relationships |
-| **VectorEncoder** | Feature vectors | Per-dimension encoding |
-
----
-
-## Examples
-
-### Role-Filler Binding
-
-Represent structured knowledge like "the ball is red":
-
-```python
-model = VSA.create('FHRR', dim=2048)
-
-# Create role and filler vectors
-color = model.random(seed=1)
-red = model.random(seed=2)
-ball = model.random(seed=3)
-
-# Bind role to filler, bundle into a structure
-ball_repr = model.bundle([
-    model.bind(color, red),
-    model.bind(model.random(seed=4), ball)  # object role
-])
-
-# Query: what color?
-query = model.unbind(ball_repr, color)
-print(model.similarity(query, red))  # High similarity
-```
-
-### Encoding Continuous Values
-
-```python
 from holovec.encoders import FractionalPowerEncoder
-
-model = VSA.create('FHRR', dim=2048)
-encoder = FractionalPowerEncoder(model, min_val=0, max_val=100)
-
-# Similar values produce similar vectors
-v50 = encoder.encode(50)
-v51 = encoder.encode(51)
-v90 = encoder.encode(90)
-
-print(model.similarity(v50, v51))  # ~0.99
-print(model.similarity(v50, v90))  # ~0.70
-```
-
-### Cleanup and Retrieval
-
-```python
 from holovec.retrieval import Codebook, ItemStore
 
-model = VSA.create('FHRR', dim=2048)
+model = VSA.create("FHRR", dim=4096, seed=7)
 
-# Create a codebook of known items
-cb = Codebook({
-    "apple": model.random(seed=1),
-    "banana": model.random(seed=2),
-    "cherry": model.random(seed=3)
-}, backend=model.backend)
+role_color = model.random(seed=1)
+role_temp = model.random(seed=2)
+red = model.random(seed=10)
+apple = model.random(seed=11)
 
-# Query with a noisy vector
-store = ItemStore(model).fit(cb)
-noisy_apple = cb["apple"] + model.random() * 0.1
-result = store.query(noisy_apple, k=1)
-print(result)  # [('apple', ~0.99)]
+temp_encoder = FractionalPowerEncoder(
+    model,
+    min_val=0.0,
+    max_val=100.0,
+    bandwidth=1.5,
+    seed=3,
+)
+
+record = model.bundle(
+    [
+        model.bind(role_color, red),
+        model.bind(role_temp, temp_encoder.encode(24.0)),
+    ]
+)
+
+recovered_color = model.unbind(record, role_color)
+store = ItemStore(model).fit(
+    Codebook({"red": red, "apple": apple}, backend=model.backend)
+)
+
+print(store.query(recovered_color, k=1))
 ```
 
-See [examples/](examples/) for more.
+If you want a runnable version of that workflow, start with
+[examples/00_quickstart.py](examples/00_quickstart.py).
 
 ---
 
-## Project Structure
+## Choosing a Model
 
+| Model | Space | Inverse Style | Order Sensitivity | Typical Use |
+|-------|-------|---------------|-------------------|-------------|
+| `FHRR` | Complex | Exact | No | General-purpose default, continuous encoders |
+| `GHRR` | Matrix | Exact | Yes | Order-sensitive and nested structures |
+| `MAP` | Bipolar | Self-inverse | No | Fast algebra, hardware-friendly workflows |
+| `HRR` | Real/Bipolar | Approximate | No | Classic baseline and literature reproduction |
+| `VTB` | Matrix/Real | Approximate | Yes | Directional bindings and asymmetric relations |
+| `BSC` | Binary | Self-inverse | No | Binary and FPGA-style workflows |
+| `BSDC` | Sparse | Approximate | No | Sparse memory-efficient representations |
+| `BSDC-SEG` | Sparse segment | Self-inverse | No | Segment-sparse retrieval and fast pattern search |
+
+Start with `FHRR` unless you have a clear reason to prefer order-sensitive matrix models,
+self-inverse discrete models, or sparse segment-based storage.
+
+The factory now validates model-specific kwargs instead of ignoring them. Supported examples:
+
+```python
+VSA.create("BSDC", dim=20000, sparsity=0.01, binding_mode="cdt")
+VSA.create("BSDC-SEG", dim=400, segments=20)
+VSA.create("GHRR", dim=96, matrix_size=3, diagonality=0.4)
+VSA.create("VTB", dim=512, n_bases=4, temperature=50.0)
+VSA.create("FHRR", dim=4096, backend="torch", device="cuda")
 ```
-holovec/
-├── backends/     NumPy, PyTorch, JAX implementations
-├── spaces/       Vector spaces (Bipolar, Complex, Sparse, etc.)
-├── models/       VSA models (MAP, FHRR, HRR, BSC, GHRR, VTB, etc.)
-├── encoders/     Scalar, sequence, spatial, structured encoders
-├── retrieval/    Codebook, ItemStore, cleanup strategies
-└── utils/        Search, similarity, helper functions
-```
+
+See the full comparison in
+[docs/models/index.md](https://twistient.github.io/HoloVec/models/index/).
+
+---
+
+## Release-Facing Examples
+
+These examples are the audited path through the library and are smoke-tested in pytest:
+
+- [examples/00_quickstart.py](examples/00_quickstart.py): create a model, encode data, bind,
+  retrieve
+- [examples/02_models_comparison.py](examples/02_models_comparison.py): compare model families
+- [examples/10_encoders_scalar.py](examples/10_encoders_scalar.py): scalar encoders and decoding
+- [examples/13_encoders_position_binding.py](examples/13_encoders_position_binding.py): sequence
+  encoding and decoding
+- [examples/26_retrieval_basics.py](examples/26_retrieval_basics.py): codebooks, item stores,
+  threshold retrieval, persistence
+- [examples/27_cleanup_strategies.py](examples/27_cleanup_strategies.py): brute-force vs
+  resonator cleanup
+- [examples/41_model_ghrr_diagonality.py](examples/41_model_ghrr_diagonality.py): GHRR order
+  sensitivity
+- [examples/42_model_bsdc_seg.py](examples/42_model_bsdc_seg.py): BSDC-SEG segment patterns
+
+Additional examples remain in the repository, but the list above is the maintained `v1` learning
+path.
+
+---
+
+## Documentation Highlights
+
+- [Quick Start](https://twistient.github.io/HoloVec/getting-started/quick-start/)
+- [Model Comparison](https://twistient.github.io/HoloVec/models/index/)
+- [Design Patterns](https://twistient.github.io/HoloVec/guides/patterns/)
+- [Performance Guidance](https://twistient.github.io/HoloVec/guides/performance/)
+- [Migration Notes](https://twistient.github.io/HoloVec/guides/migration/)
 
 ---
 
 ## Testing
 
 ```bash
-uv run --extra dev pytest
-uv run --extra dev pytest --cov=holovec --cov-report=html
+uv run --extra dev pytest --no-cov
 uv run --extra dev ruff check holovec tests
 uv run --extra dev mypy holovec
+uv sync --extra docs && uv run --extra docs mkdocs build --strict
 ```
 
-The engine CI enforces tests, Ruff, and source-only mypy on every push and pull request.
+The release gate also includes smoke execution of the canonical example scripts.
 
 ---
 
 ## References
 
-HoloVec implements ideas from:
-
-- Kanerva (1988) — Sparse Distributed Memory
-- Plate (2003) — Holographic Reduced Representations
-- Gayler (2003) — Vector Symbolic Architectures
-- Frady et al. (2021) — Fractional power encoding
-- Schlegel et al. (2022) — VSA model comparison
-- Kleyko et al. (2023) — HDC/VSA survey
-- Kymn et al. (2024) — Resonator networks
+HoloVec draws on the core HDC/VSA literature, including Kanerva (1988), Plate (2003), Gayler
+(2003), Frady et al. (2021), Schlegel et al. (2022), Kleyko et al. (2023), and Kymn et al.
+(2024).
 
 ---
 

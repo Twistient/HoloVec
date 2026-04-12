@@ -29,11 +29,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added regression coverage for factory kwarg forwarding/rejection, negative thresholds on continuous models, and legacy persistence migration paths
 - Added backend coverage for integer RNG, dtype casting, identity-matrix creation, backend-native segmented sparse helpers, BSDC CDT binding, and matrix-space random generation
+- Added smoke execution of the canonical release-facing example scripts to the pytest suite
 
 ### Documentation
 
 - Updated retrieval and performance docs to match the supported factory surface and new persistence/migration behavior
 - Added agent/contributor workflow guidance for changelog maintenance, release-note discipline, and PR protocol
+- Rewrote the README, quick start, model comparison, patterns, and examples index around the
+  smoke-tested canonical example set
+- Added migration guidance for the tightened factory, retrieval, and persistence behavior
 
 ## [0.3.2] - 2026-04-11
 

@@ -2,62 +2,64 @@
 HoloVec Examples
 ================
 
-**Demonstrations and tutorials for hyperdimensional computing with HoloVec**
+This directory contains two kinds of material:
 
-This directory contains comprehensive, well-documented examples covering everything from 5-minute quickstarts to advanced theoretical validation. All examples are designed to be intuitive, executable, and suitable for integration into tutorials and documentation.
+1. **Canonical examples**: the maintained, smoke-tested learning path for the public API.
+2. **Exploratory examples**: useful scripts that are not currently treated as release-gated docs
+   artifacts.
 
-----
+Canonical Examples
+==================
 
-Quick Start
-===========
+These are the scripts to read first and the ones the test suite executes with ``--smoke``:
 
-**New to HoloVec?** Start here with these foundational examples:
+- ``00_quickstart.py`` - first end-to-end workflow
+- ``02_models_comparison.py`` - choose a model family
+- ``10_encoders_scalar.py`` - scalar encoding patterns
+- ``13_encoders_position_binding.py`` - order-sensitive sequence encoding
+- ``26_retrieval_basics.py`` - codebooks, item stores, retrieval, persistence
+- ``27_cleanup_strategies.py`` - cleanup and factorization
+- ``41_model_ghrr_diagonality.py`` - GHRR structure controls
+- ``42_model_bsdc_seg.py`` - BSDC-SEG segment-pattern workflows
 
-- ``00_quickstart.py`` - Get started in 5 minutes
-- ``01_basic_operations.py`` - Understand core VSA operations
-- ``02_models_comparison.py`` - Learn when to use each model
-
-Learning Paths
+Suggested Path
 ==============
 
-Path 1: Absolute Beginner
---------------------------
+For most users:
 
-**Time: ~30 minutes**
+1. ``00_quickstart.py``
+2. ``02_models_comparison.py``
+3. ``10_encoders_scalar.py``
+4. ``13_encoders_position_binding.py``
+5. ``26_retrieval_basics.py``
+6. ``27_cleanup_strategies.py``
 
-1. ``00_quickstart.py`` - Get started in 5 minutes
-2. ``01_basic_operations.py`` - Understand core VSA operations
-3. ``02_models_comparison.py`` - Learn when to use each model
-4. ``10_encoders_scalar.py`` - Encode continuous values
-5. ``13_encoders_position_binding.py`` - Encode sequences
+Then pick the advanced model example that matches your workload:
 
-Path 2: Application Developer
-------------------------------
+- ``41_model_ghrr_diagonality.py`` for order-sensitive matrix binding
+- ``42_model_bsdc_seg.py`` for segment-sparse retrieval
 
-**Time: ~1-2 hours**
-
-1. Start with Path 1 basics
-2. Choose your domain:
-
-   - **Text/NLP**: ``14_encoders_ngram.py`` → ``20_app_text_classification.py``
-   - **Images**: ``17_encoders_image.py`` → ``21_app_image_recognition.py``
-   - **Sequences**: ``15_encoders_trajectory.py`` → ``22_app_gesture_recognition.py``
-
-Path 3: Researcher / Advanced User
------------------------------------
-
-**Time: ~2-3 hours**
-
-1. Complete Path 1 and 2
-2. Explore advanced topics:
-
-   - **Theory**: ``30_theory_fpe_validation.py``, ``32_distributed_representations.py``
-   - **Performance**: ``31_performance_benchmarks.py``
-   - **Memory**: ``27_cleanup_strategies.py``, ``28_factorization_methods.py``
-
-----
-
-Browse All Examples
+Exploratory Scripts
 ===================
 
-Below you'll find all available examples organized by category.
+The rest of the directory remains valuable, but those scripts are better thought of as extended
+notes, application sketches, or research probes than as release-facing tutorials.
+
+Examples include:
+
+- encoder and modality deep dives: ``11_*`` through ``18_*``
+- application sketches: ``20_*`` through ``25_*``
+- research and analysis scripts: ``28_*`` through ``33_*`` and ``40_*``
+
+Notebooks
+=========
+
+Interactive notebooks live in ``examples/notebooks/``. They are convenient for exploration, but
+the canonical ``.py`` scripts are the authoritative source for the maintained example workflows.
+
+Documentation
+=============
+
+- Documentation: https://twistient.github.io/HoloVec/
+- Quick start: https://twistient.github.io/HoloVec/getting-started/quick-start/
+- Migration notes: https://twistient.github.io/HoloVec/guides/migration/

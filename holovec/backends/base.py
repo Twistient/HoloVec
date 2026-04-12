@@ -142,6 +142,18 @@ class Backend(ABC):
         pass
 
     @abstractmethod
+    def randint(
+        self,
+        shape: int | tuple[int, ...],
+        low: int,
+        high: int,
+        dtype: str = 'int32',
+        seed: int | None = None,
+    ) -> Array:
+        """Create an integer array with values sampled from [low, high)."""
+        pass
+
+    @abstractmethod
     def random_bipolar(
         self,
         shape: int | tuple[int, ...],
@@ -451,6 +463,11 @@ class Backend(ABC):
         pass
 
     @abstractmethod
+    def astype(self, a: Array, dtype: str) -> Array:
+        """Convert an array to the requested dtype."""
+        pass
+
+    @abstractmethod
     def threshold(self, a: Array, threshold: float, above: float = 1.0, below: float = 0.0) -> Array:
         """Threshold array values."""
         pass
@@ -552,6 +569,11 @@ class Backend(ABC):
         Returns:
             Reshaped array
         """
+        pass
+
+    @abstractmethod
+    def eye(self, n: int, dtype: str = 'float32') -> Array:
+        """Create an identity matrix with shape (n, n)."""
         pass
 
 

@@ -93,7 +93,8 @@ class BinarySpace(DiscreteSpace):
 
         For BSC, normalization means majority vote: values >= threshold → 1, else 0.
         """
-        return self.backend.threshold(vec, threshold=0.5, above=1.0, below=0.0).astype(self.dtype)
+        binary = self.backend.threshold(vec, threshold=0.5, above=1, below=0)
+        return self.backend.astype(binary, self.dtype)
 
 
 class RealSpace(ContinuousSpace):
@@ -269,8 +270,8 @@ class SparseSpace(DiscreteSpace):
         enforce sparsity constraint.
         """
         # Simple threshold to binary
-        binary = self.backend.threshold(vec, threshold=0.5, above=1.0, below=0.0)
-        return binary.astype(self.dtype)
+        binary = self.backend.threshold(vec, threshold=0.5, above=1, below=0)
+        return self.backend.astype(binary, self.dtype)
 
     def similarity(self, a: Array, b: Array) -> float:
         """Overlap-based similarity for sparse vectors.
@@ -338,14 +339,21 @@ class SparseSegmentSpace(DiscreteSpace):
             end = start + L
             yield s, start, end
 
+    def _segment_one_hot(self, indices: Array) -> Array:
+        positions = self.backend.array(list(range(self.segment_length)), dtype='int32')
+        one_hot = indices[:, None] == positions[None, :]
+        return self.backend.astype(one_hot, self.dtype)
+
     def random(self, seed: int | None = None) -> Array:
-        import numpy as _np
-        rng = _np.random.default_rng(seed)
-        vec = _np.zeros((self.dimension,), dtype=_np.int32)
-        for _, start, _end in self._segment_ranges():
-            idx = rng.integers(low=0, high=self.segment_length)
-            vec[start + int(idx)] = 1
-        return self.backend.from_numpy(vec)
+        indices = self.backend.randint(
+            (self.segments,),
+            low=0,
+            high=self.segment_length,
+            dtype='int32',
+            seed=seed,
+        )
+        one_hot = self._segment_one_hot(indices)
+        return self.backend.reshape(one_hot, (self.dimension,))
 
     def normalize(self, vec: Array) -> Array:
         """Project to nearest valid pattern: 1-hot per segment.
@@ -353,18 +361,12 @@ class SparseSegmentSpace(DiscreteSpace):
         For each segment, pick argmax index; set it to 1 and others to 0.
         Works for binary or real-valued inputs.
         """
-        import numpy as _np
-        arr = _np.array(self.backend.to_numpy(vec))
-        # Convert to float for argmax if needed
-        if arr.ndim != 1 or arr.shape[0] != self.dimension:
+        if self.backend.shape(vec) != (self.dimension,):
             raise ValueError("Expected 1D vector of length D for normalize()")
-        out = _np.zeros_like(arr, dtype=_np.int32)
-        for _s, start, end in self._segment_ranges():
-            seg = arr[start:end]
-            # If all zeros, argmax returns 0 (deterministic tie-break)
-            local = int(_np.argmax(seg))
-            out[start + local] = 1
-        return self.backend.from_numpy(out)
+        segments = self.backend.reshape(vec, (self.segments, self.segment_length))
+        indices = self.backend.argmax(segments, axis=1)
+        normalized = self._segment_one_hot(indices)
+        return self.backend.reshape(normalized, (self.dimension,))
 
     def similarity(self, a: Array, b: Array) -> float:
         """Segment-wise match fraction in [0,1].
@@ -372,85 +374,63 @@ class SparseSegmentSpace(DiscreteSpace):
         Converts inputs to nearest valid 1-hot per segment, then compares
         the active index per segment.
         """
-        import numpy as _np
-        a_np = _np.array(self.backend.to_numpy(self.normalize(a)))
-        b_np = _np.array(self.backend.to_numpy(self.normalize(b)))
-        matches = 0
-        for _s, start, end in self._segment_ranges():
-            # active index in segment
-            ia = int(_np.argmax(a_np[start:end]))
-            ib = int(_np.argmax(b_np[start:end]))
-            if ia == ib:
-                matches += 1
-        return matches / self.segments
+        a_segments = self.backend.reshape(self.normalize(a), (self.segments, self.segment_length))
+        b_segments = self.backend.reshape(self.normalize(b), (self.segments, self.segment_length))
+        a_idx = self.backend.argmax(a_segments, axis=1)
+        b_idx = self.backend.argmax(b_segments, axis=1)
+        matches = self.backend.astype(a_idx == b_idx, 'float32')
+        return float(self.backend.to_numpy(self.backend.mean(matches)))
 
     # ===== Segment-aware helpers =====
     def segment_argmax(self, vec: Array) -> np.ndarray:
         """Return indices (length S) of active positions per segment after normalize()."""
-        import numpy as _np
-        v = _np.array(self.backend.to_numpy(self.normalize(vec)))
-        idx = _np.zeros((self.segments,), dtype=_np.int32)
-        for s, start, end in self._segment_ranges():
-            idx[s] = int(_np.argmax(v[start:end]))
-        return idx
+        segments = self.backend.reshape(self.normalize(vec), (self.segments, self.segment_length))
+        indices = self.backend.argmax(segments, axis=1)
+        return np.asarray(self.backend.to_numpy(indices), dtype=np.int32)
 
     def mask_segments(self, vec: Array, keep: np.ndarray | list[int]) -> Array:
         """Zero out all segments not in keep.
 
         keep: iterable of segment indices to retain (0..S-1).
         """
-        import numpy as _np
-        v = _np.array(self.backend.to_numpy(vec)).copy()
         keep_set = {int(x) for x in keep}
-        L = self.segment_length
+        segments = self.backend.reshape(vec, (self.segments, self.segment_length))
+        masked_segments = []
         for s in range(self.segments):
-            if s not in keep_set:
-                start = s * L
-                end = start + L
-                v[start:end] = 0
-        return self.backend.from_numpy(v.astype(_np.int32))
+            if s in keep_set:
+                masked_segments.append(segments[s])
+            else:
+                masked_segments.append(self.backend.zeros(self.segment_length, dtype=self.dtype))
+        return self.backend.concatenate(masked_segments, axis=0)
 
     def select_segments(self, vec: Array, select: np.ndarray | list[int]) -> Array:
         """Return a compacted vector consisting of concatenated selected segments.
 
         This is often useful for analysis; not a fixed-length holovec vector.
         """
-        import numpy as _np
-        v = _np.array(self.backend.to_numpy(vec))
         sel = [int(x) for x in select]
-        L = self.segment_length
-        parts = []
-        for s in sel:
-            start = s * L
-            end = start + L
-            parts.append(v[start:end])
-        return self.backend.from_numpy(_np.concatenate(parts, axis=0))
+        segments = self.backend.reshape(vec, (self.segments, self.segment_length))
+        parts = [segments[s] for s in sel]
+        return self.backend.concatenate(parts, axis=0)
 
     def block_rotate(self, vec: Array, k: int = 1) -> Array:
         """Rotate indices within each segment by k positions (cyclic)."""
-        import numpy as _np
-        v = _np.array(self.backend.to_numpy(vec))
-        out = _np.zeros_like(v)
-        L = self.segment_length
-        kk = int(k) % L
-        for _s, start, end in self._segment_ranges():
-            seg = v[start:end]
-            out[start:end] = _np.roll(seg, kk)
-        return self.backend.from_numpy(out.astype(_np.int32))
+        segments = self.backend.reshape(vec, (self.segments, self.segment_length))
+        kk = int(k) % self.segment_length
+        rotated = [self.backend.roll(segments[s], shift=kk, axis=0) for s in range(self.segments)]
+        return self.backend.concatenate(rotated, axis=0)
 
     def block_permute(self, vec: Array, perm: np.ndarray | list[int]) -> Array:
         """Apply a fixed within-segment permutation (length L) to every segment."""
-        import numpy as _np
-        v = _np.array(self.backend.to_numpy(vec))
-        out = _np.zeros_like(v)
-        L = self.segment_length
-        p = _np.array(perm, dtype=_np.int64)
-        if p.shape[0] != L:
-            raise ValueError(f"perm length must equal segment_length ({L})")
-        for _s, start, end in self._segment_ranges():
-            seg = v[start:end]
-            out[start:end] = seg[p]
-        return self.backend.from_numpy(out.astype(_np.int32))
+        p = np.asarray(perm, dtype=np.int64)
+        if p.shape[0] != self.segment_length:
+            raise ValueError(
+                f"perm length must equal segment_length ({self.segment_length})"
+            )
+        perm_indices = self.backend.array(p.tolist(), dtype='int64')
+        segments = self.backend.reshape(vec, (self.segments, self.segment_length))
+        permuted = [self.backend.permute(segments[s], perm_indices) for s in range(self.segments)]
+        return self.backend.concatenate(permuted, axis=0)
 
 class MatrixSpace(ContinuousSpace):
     """Matrix-valued vector space for GHRR.
@@ -508,39 +488,33 @@ class MatrixSpace(ContinuousSpace):
         """
         m = self.matrix_size
         D = self.dimension
+        real_seed = seed
+        imag_seed = None if seed is None else seed + 1
+        phase_seed = None if seed is None else seed + 2
 
-        rng = np.random.default_rng(seed)
-        mats = []
+        real = self.backend.random_normal((D, m, m), dtype='float32', seed=real_seed)
+        imag = self.backend.random_normal((D, m, m), dtype='float32', seed=imag_seed)
+        ginibre = self.backend.astype(real + 1j * imag, self.dtype)
 
-        for _ in range(D):
-            # Haar-like random unitary via QR of complex Ginibre matrix
-            A = rng.standard_normal((m, m)) + 1j * rng.standard_normal((m, m))
-            Q, R = np.linalg.qr(A)
-            d = np.diag(R)
-            ph = d / np.where(np.abs(d) == 0, 1.0, np.abs(d))
-            Q = Q @ np.diag(ph)
+        # U @ Vh projects the random complex batch onto the unitary group.
+        U, _S, Vh = self.backend.svd(ginibre, full_matrices=True)
+        Q = self.backend.astype(self.backend.matmul(U, Vh), self.dtype)
 
-            # Blend toward identity based on diagonality
-            alpha = self.diagonality if self.diagonality is not None else 0.0
-            if alpha >= 1.0:
-                Q_eff = np.eye(m, dtype=np.complex64)
-            elif alpha <= 0.0:
-                Q_eff = Q.astype(np.complex64)
-            else:
-                M = (1.0 - alpha) * Q + alpha * np.eye(m, dtype=Q.dtype)
-                Q_eff, R2 = np.linalg.qr(M)
-                d2 = np.diag(R2)
-                ph2 = d2 / np.where(np.abs(d2) == 0, 1.0, np.abs(d2))
-                Q_eff = (Q_eff @ np.diag(ph2)).astype(np.complex64)
+        alpha = self.diagonality if self.diagonality is not None else 0.0
+        identity = self.backend.eye(m, dtype=self.dtype)
+        identity_batch = self.backend.stack([identity for _ in range(D)], axis=0)
 
-            # Diagonal phasors Λ
-            theta = rng.uniform(0.0, 2.0 * np.pi, size=(m,))
-            Lambda = np.diag(np.exp(1j * theta)).astype(np.complex64)
+        if alpha >= 1.0:
+            Q_eff = identity_batch
+        elif alpha <= 0.0:
+            Q_eff = Q
+        else:
+            blended = (1.0 - alpha) * Q + alpha * identity_batch
+            U2, _S2, Vh2 = self.backend.svd(blended, full_matrices=True)
+            Q_eff = self.backend.astype(self.backend.matmul(U2, Vh2), self.dtype)
 
-            mats.append(Q_eff @ Lambda)
-
-        result_np = np.stack(mats, axis=0)
-        return self.backend.from_numpy(result_np)
+        Lambda = self.backend.random_phasor((D, m, m), dtype=self.dtype, seed=phase_seed)
+        return self.backend.matmul(Q_eff, Lambda)
 
     def similarity(self, a: Array, b: Array) -> float:
         """GHRR similarity: δ(H₁, H₂) = (1/mD) Re(tr(Σⱼ aⱼbⱼ†)).

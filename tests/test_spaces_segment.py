@@ -1,12 +1,19 @@
 import numpy as np
+import pytest
 
-from holovec.backends import get_backend
+from holovec.backends import get_available_backends, get_backend
 from holovec.models.bsdc_seg import BSDCSEGModel
 from holovec.spaces.spaces import SparseSegmentSpace
 
+AVAILABLE_BACKENDS = get_available_backends()
 
-def test_sparse_segment_space_random_and_normalize():
-    backend = get_backend('numpy')
+
+@pytest.fixture(params=AVAILABLE_BACKENDS)
+def backend(request):
+    return get_backend(request.param)
+
+
+def test_sparse_segment_space_random_and_normalize(backend):
     D, S = 100, 10
     space = SparseSegmentSpace(dimension=D, segments=S, backend=backend)
 
@@ -30,8 +37,7 @@ def test_sparse_segment_space_random_and_normalize():
         assert norm_np[start:end].sum() == 1
 
 
-def test_sparse_segment_similarity():
-    backend = get_backend('numpy')
+def test_sparse_segment_similarity(backend):
     D, S = 60, 6
     space = SparseSegmentSpace(dimension=D, segments=S, backend=backend)
 
@@ -57,8 +63,7 @@ def test_sparse_segment_similarity():
     assert abs(sim - 0.5) < 1e-6
 
 
-def test_bsdc_seg_bundling_majority():
-    backend = get_backend('numpy')
+def test_bsdc_seg_bundling_majority(backend):
     D, S = 80, 8
     model = BSDCSEGModel(dimension=D, segments=S, backend=backend, seed=0)
     space = model.space
@@ -78,3 +83,25 @@ def test_bsdc_seg_bundling_majority():
         end = start + L
         assert b_np[start:end].sum() == 1
 
+
+def test_sparse_segment_block_helpers(backend):
+    D, S = 40, 4
+    space = SparseSegmentSpace(dimension=D, segments=S, backend=backend)
+    vec = space.random(seed=7)
+    L = D // S
+
+    rotated = space.block_rotate(vec, k=1)
+    rotated_np = backend.to_numpy(rotated)
+    vec_np = backend.to_numpy(vec)
+    for s in range(S):
+        start = s * L
+        end = start + L
+        assert np.array_equal(rotated_np[start:end], np.roll(vec_np[start:end], 1))
+
+    perm = np.array(list(reversed(range(L))), dtype=np.int64)
+    permuted = space.block_permute(vec, perm)
+    permuted_np = backend.to_numpy(permuted)
+    for s in range(S):
+        start = s * L
+        end = start + L
+        assert np.array_equal(permuted_np[start:end], vec_np[start:end][perm])

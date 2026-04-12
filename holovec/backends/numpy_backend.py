@@ -106,6 +106,18 @@ class NumPyBackend(Backend):
         rng = np.random.default_rng(seed) if seed is not None else self._rng
         return rng.binomial(1, p, shape).astype(dtype)
 
+    def randint(
+        self,
+        shape: int | tuple[int, ...],
+        low: int,
+        high: int,
+        dtype: str = 'int32',
+        seed: int | None = None,
+    ) -> Array:
+        shape = (shape,) if isinstance(shape, int) else shape
+        rng = np.random.default_rng(seed) if seed is not None else self._rng
+        return rng.integers(low, high, shape, dtype=np.dtype(dtype))
+
     def random_bipolar(
         self,
         shape: int | tuple[int, ...],
@@ -304,6 +316,9 @@ class NumPyBackend(Backend):
     def sign(self, a: Array) -> Array:
         return np.sign(a)
 
+    def astype(self, a: Array, dtype: str) -> Array:
+        return a.astype(dtype)
+
     def threshold(self, a: Array, threshold: float, above: float = 1.0, below: float = 0.0) -> Array:
         return np.where(a >= threshold, above, below)
 
@@ -388,6 +403,9 @@ class NumPyBackend(Backend):
     def reshape(self, a: Array, shape: tuple[int, ...]) -> Array:
         """Reshape array."""
         return np.reshape(a, shape)
+
+    def eye(self, n: int, dtype: str = 'float32') -> Array:
+        return np.eye(n, dtype=dtype)
 
     # ===== Additional Operations for Encoders =====
 

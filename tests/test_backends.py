@@ -94,6 +94,15 @@ class TestBasicOperations:
         # Check approximately half are 1
         assert abs(np.mean(arr_np) - 0.5) < 0.1
 
+    def test_randint(self, backend):
+        """Test integer random generation."""
+        arr = backend.randint(1000, low=3, high=7, seed=42)
+        arr_np = backend.to_numpy(arr)
+
+        assert np.all(arr_np >= 3)
+        assert np.all(arr_np < 7)
+        assert np.issubdtype(arr_np.dtype, np.integer)
+
     def test_random_bipolar(self, backend):
         """Test bipolar random generation."""
         arr = backend.random_bipolar(1000, p=0.5, seed=42)
@@ -149,6 +158,16 @@ class TestElementWiseOperations:
         result = backend.xor(a, b)
         expected = np.array([0, 1, 1, 0])
         assert np.array_equal(backend.to_numpy(result), expected)
+
+    def test_astype(self, backend):
+        """Test dtype conversion."""
+        arr = backend.array([0, 1, 2], dtype="int32")
+        result = backend.astype(arr, "float32")
+        assert backend.dtype(result) == "float32"
+        assert np.allclose(
+            backend.to_numpy(result),
+            np.array([0.0, 1.0, 2.0], dtype=np.float32),
+        )
 
 
 class TestReductions:

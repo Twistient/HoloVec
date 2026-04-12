@@ -118,6 +118,7 @@ Enhancement suggestions are welcome! Please include:
    - Write clear, documented code
    - Add tests for new functionality
    - Update documentation as needed
+   - Update `CHANGELOG.md` under `[Unreleased]` for any user-visible change
    - Follow existing code style
 
 3. **Test thoroughly**
@@ -139,22 +140,24 @@ Enhancement suggestions are welcome! Please include:
 
 4. **Update CHANGELOG.md**
    - Add entry under `[Unreleased]` section
-   - Use appropriate category: Added, Changed, Deprecated, Removed, Fixed, Security
+   - Use appropriate category: Added, Changed, Deprecated, Removed, Fixed, Security, Testing, Documentation
+   - Prefix breaking entries with `BREAKING:` and include a short migration note when needed
+   - Do not bump package versions in feature PRs; version/date updates are release-only work
 
-5. **Commit your changes with sign-off (DCO)**
+5. **Commit your changes**
 
    ```bash
    git add .
-   git commit -s -m "Add feature: brief description"
+   git commit -m "fix: brief description"
    ```
 
-   Use clear, descriptive commit messages:
-   - `Add feature: ...` for new features
-   - `Fix: ...` for bug fixes
-   - `Update: ...` for enhancements
-   - `Refactor: ...` for code improvements
-   - `Docs: ...` for documentation changes
-   - `Test: ...` for test additions/changes
+   Follow Conventional Commits:
+   - `feat: ...` for new features
+   - `fix: ...` for bug fixes
+   - `refactor: ...` for code improvements
+   - `docs: ...` for documentation changes
+   - `test: ...` for test additions/changes
+   - `chore: ...` for maintenance
 
 6. **Push and create pull request**
 
@@ -165,8 +168,12 @@ Enhancement suggestions are welcome! Please include:
    Then create a pull request on GitHub with:
    - Clear title summarizing the change
    - Description of what changed and why
+   - Verification commands/results (`pytest`, `ruff`, `mypy`, and docs build if docs/examples changed)
+   - Changelog/migration summary for any public behavior or persistence change
    - Reference to related issues (e.g., "Fixes #123")
    - Screenshots/examples if applicable
+
+   For breaking or wide-ranging changes, open the PR as a **draft** first.
 
 ## Development Guidelines
 

@@ -56,6 +56,27 @@ Examples:
 - chore: Bump minimum Python version to 3.11
 ```
 
+## Change Management
+
+For any non-trivial change, keep implementation, tests, docs, and changelog notes together in the same branch.
+
+- **Always update `CHANGELOG.md` under `[Unreleased]`** when a change affects public behavior, documented examples, persistence formats, supported parameters, package metadata, CI/release flow, or user-visible docs.
+- **Use the right changelog categories**: Added, Changed, Deprecated, Removed, Fixed, Security, Testing, Documentation.
+- **Mark breaking behavior explicitly** with `BREAKING:` in the `Changed` section and include a short migration note in the changelog entry or linked docs.
+- **Do not bump package versions during feature work**. `pyproject.toml`, `CITATION.cff`, release dates, tags, and GitHub Releases are updated only as part of an explicit release task.
+- **If public API or persistence behavior changes**, update the relevant docs/examples in the same branch and make sure the strict docs build still passes.
+- **If a new persistence format is introduced**, either preserve read compatibility or provide an explicit migration path and document it in both the changelog and docs.
+
+### Before Hand-off
+
+Before considering a task complete, ensure the branch contains:
+
+1. Runtime/code changes
+2. Regression tests for the changed behavior
+3. Docs/example updates if any user-facing behavior changed
+4. A `CHANGELOG.md` entry under `[Unreleased]`
+5. Verification results for the relevant gates (`pytest`, `ruff`, `mypy`, and docs build when docs/examples changed)
+
 ## Release Process
 
 ### When to Release
@@ -113,6 +134,12 @@ Release a new version when:
    git push origin master
    ```
    Then create the release on GitHub via Releases → "Draft a new release", which creates the tag automatically.
+
+### Release Notes Discipline
+
+- Treat `CHANGELOG.md` as the source of truth for release notes.
+- Before cutting a release, review every `[Unreleased]` entry for accuracy, migration guidance, and category placement.
+- Release PRs should contain only release bookkeeping (changelog finalization, version bumps, citation date/version updates, and tagging/release metadata) unless the task is explicitly a combined fix-and-release request.
 
 ### Semantic Versioning
 
@@ -198,6 +225,8 @@ Update AGENTS.md when:
 
 - **Default branch**: `master` (not `main`)
 - **Remote**: `origin` points to `github.com:Twistient/HoloVec`
+- **Preferred workflow**: make non-trivial changes on a feature branch, push that branch, and open a PR; avoid publishing directly from local `master` unless the task is explicitly “release now” or “hotfix directly”
+- **PR expectation**: if work changes public behavior, persistence, or docs, open a draft PR first so the changelog, migration notes, and verification can be reviewed together
 
 ### Dependency Management
 

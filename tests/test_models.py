@@ -53,6 +53,34 @@ class TestModelCreation:
         assert hasattr(model_underscore, "segments")
         assert hasattr(model_hyphen, "segments")
 
+    def test_factory_forwards_bsdc_configuration(self):
+        """Test BSDC-specific kwargs are forwarded through the factory."""
+        model = VSA.create("BSDC", dim=10_000, sparsity=0.005, binding_mode="cdt", seed=42)
+
+        assert model.binding_mode == "cdt"
+        assert model.sparsity == pytest.approx(0.005)
+
+    def test_factory_forwards_ghrr_configuration(self):
+        """Test GHRR-specific kwargs are forwarded through the factory."""
+        model = VSA.create("GHRR", dim=64, matrix_size=5, diagonality=1.0, seed=42)
+
+        assert model.matrix_size == 5
+        assert model._diagonality == pytest.approx(1.0)
+        assert model.space.matrix_size == 5
+        assert model.space.diagonality == pytest.approx(1.0)
+
+    def test_factory_forwards_vtb_configuration(self):
+        """Test VTB-specific kwargs are forwarded through the factory."""
+        model = VSA.create("VTB", dim=256, n_bases=8, temperature=50.0, seed=42)
+
+        assert model.n_bases == 8
+        assert model.temperature == pytest.approx(50.0)
+
+    def test_factory_rejects_unsupported_kwargs(self):
+        """Test unsupported kwargs fail instead of being ignored."""
+        with pytest.raises(TypeError, match="Unsupported keyword argument"):
+            VSA.create("FHRR", dim=512, dtype="float16")
+
     @pytest.mark.parametrize("dim", DIMENSIONS)
     def test_model_dimension(self, dim):
         """Test models work with different dimensions."""

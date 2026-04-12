@@ -542,43 +542,6 @@ class MatrixSpace(ContinuousSpace):
         result_np = np.stack(mats, axis=0)
         return self.backend.from_numpy(result_np)
 
-    def _generate_unitary_matrices(self, D: int, m: int, seed: int | None) -> Array:
-        """Generate D random m×m unitary matrices.
-
-        Uses Ginibre ensemble (random complex Gaussian) + Gram-Schmidt/normalization.
-
-        Args:
-            D: Number of matrices
-            m: Matrix size
-            seed: Random seed
-
-        Returns:
-            Array of shape (D, m, m)
-        """
-        # Generate random complex matrices
-        np_random = np.random.default_rng(seed)
-
-        result_list = []
-        for _ in range(D):
-            # Random complex matrix
-            real = np_random.standard_normal((m, m))
-            imag = np_random.standard_normal((m, m))
-            A = real + 1j * imag
-
-            # QR decomposition to get unitary matrix
-            Q, R = np.linalg.qr(A)
-
-            # Ensure Q is proper unitary (adjust phase)
-            # Multiply by phase to make diagonal of R positive
-            d = np.diag(R)
-            ph = d / np.abs(d)
-            Q = Q @ np.diag(ph)
-
-            result_list.append(Q)
-
-        result_np = np.array(result_list, dtype=np.complex64)
-        return self.backend.from_numpy(result_np)
-
     def similarity(self, a: Array, b: Array) -> float:
         """GHRR similarity: δ(H₁, H₂) = (1/mD) Re(tr(Σⱼ aⱼbⱼ†)).
 

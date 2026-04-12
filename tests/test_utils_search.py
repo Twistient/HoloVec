@@ -237,7 +237,7 @@ class TestThresholdSearchErrors:
             threshold_search(query, {}, model)
 
     def test_threshold_search_fails_invalid_threshold(self):
-        """Test that invalid threshold fails."""
+        """Test that invalid threshold fails for discrete similarities."""
         model = VSA.create('MAP', dim=1000, seed=42)
         codebook = {'a': model.random()}
         query = model.random()
@@ -247,6 +247,17 @@ class TestThresholdSearchErrors:
 
         with pytest.raises(ValueError, match="threshold must be in"):
             threshold_search(query, codebook, model, threshold=-0.1)
+
+    def test_threshold_search_allows_negative_threshold_for_continuous_similarity(self):
+        """Test continuous models accept negative similarity thresholds."""
+        model = VSA.create('FHRR', dim=1000, seed=42)
+        codebook = {'a': model.random(seed=1), 'b': model.random(seed=2)}
+        query = model.random(seed=3)
+
+        labels, sims = threshold_search(query, codebook, model, threshold=-0.2)
+
+        assert isinstance(labels, list)
+        assert isinstance(sims, list)
 
     def test_threshold_search_fails_wrong_type(self):
         """Test that wrong types fail."""

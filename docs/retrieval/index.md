@@ -1,16 +1,16 @@
-HoloVec provides retrieval mechanisms for storing, querying, and cleaning up hypervectors.
+HoloVec provides lightweight retrieval primitives for storing labeled hypervectors, running nearest-neighbor lookup, and working with simple associative memories.
 
 ## Components
 
 | Component | Purpose | Use Case |
 |-----------|---------|----------|
-| **Codebook** | Label → vector mapping | Vocabulary, symbol tables |
-| **ItemStore** | High-level retrieval | K-NN, batch queries |
-| **AssocStore** | Key-value associations | Associative memory |
+| **Codebook** | Label → vector mapping | Vocabulary, symbol tables, persistence |
+| **ItemStore** | Top-k retrieval and factorization | Cleanup, nearest-neighbor lookup |
+| **AssocStore** | Key-value associations | Heteroassociative memory |
 
 ## Codebook
 
-A `Codebook` maps string labels to hypervectors.
+A `Codebook` maps string labels to hypervectors while preserving insertion order.
 
 ### Basic Usage
 
@@ -18,20 +18,16 @@ A `Codebook` maps string labels to hypervectors.
 from holovec import VSA
 from holovec.retrieval import Codebook
 
-model = VSA.create('FHRR', dim=2048)
+model = VSA.create("FHRR", dim=2048)
 
-# Create from dictionary
 items = {
     "apple": model.random(seed=1),
     "banana": model.random(seed=2),
-    "cherry": model.random(seed=3)
+    "cherry": model.random(seed=3),
 }
 codebook = Codebook(items, backend=model.backend)
 
-# Access vectors
 apple_vec = codebook["apple"]
-
-# Check membership
 print("apple" in codebook)  # True
 print(len(codebook))        # 3
 ```
@@ -39,72 +35,96 @@ print(len(codebook))        # 3
 ### Adding Items
 
 ```python
-# Add single item
 codebook.add("date", model.random(seed=4))
 
-# Add multiple items
-codebook.update({
+codebook.extend({
     "elderberry": model.random(seed=5),
-    "fig": model.random(seed=6)
+    "fig": model.random(seed=6),
 })
 ```
 
 ### Persistence
 
 ```python
-# Save to JSON
-codebook.save("fruit_codebook.json")
+codebook.save("fruit_codebook.npz")
+loaded = Codebook.load("fruit_codebook.npz", backend=model.backend)
+```
 
-# Load from JSON
-loaded = Codebook.load("fruit_codebook.json", backend=model.backend)
+Legacy `.npz` files created by older HoloVec releases used pickle-backed label arrays. They now fail closed by default. To migrate one of those files, load it once with `allow_unsafe_legacy=True`, then re-save it:
+
+```python
+legacy = Codebook.load(
+    "old_codebook.npz",
+    backend=model.backend,
+    allow_unsafe_legacy=True,
+)
+legacy.save("migrated_codebook.npz")
 ```
 
 ---
 
 ## ItemStore
 
-`ItemStore` provides high-level retrieval with cleanup strategies.
+`ItemStore` wraps a `Codebook` and a cleanup strategy.
 
 ### Basic Usage
 
 ```python
 from holovec.retrieval import ItemStore
 
-# Create and fit
-store = ItemStore(model)
-store.fit(codebook)
+store = ItemStore(model).fit(codebook)
 
-# Query for nearest neighbors
-query = codebook["apple"] + model.random() * 0.1  # Noisy apple
+query = codebook["apple"]
 results = store.query(query, k=3)
 
 for label, similarity in results:
     print(f"{label}: {similarity:.3f}")
-# apple: 0.95
-# banana: 0.02
-# cherry: 0.01
 ```
 
-### Threshold Query
+### Search Utilities
+
+For thresholded or batched search, use the public search helpers:
 
 ```python
-# Find all items above threshold
-results = store.query_threshold(query, threshold=0.5)
+from holovec.search import batch_similarity, threshold_search
+
+codebook_dict = dict(codebook.items())
+labels, sims = threshold_search(query, codebook_dict, model, threshold=0.8)
+all_sims = batch_similarity([query], codebook_dict, model)
 ```
 
-### Batch Queries
+### Factorization
 
 ```python
-# Query multiple vectors at once
-queries = [noisy_apple, noisy_banana, noisy_cherry]
-batch_results = store.batch_query(queries, k=1)
+from holovec.utils.cleanup import ResonatorCleanup
+
+roles = Codebook(
+    {
+        "shape": model.random(seed=10),
+        "color": model.random(seed=11),
+    },
+    backend=model.backend,
+)
+
+composition = model.bind(roles["shape"], roles["color"])
+store = ItemStore(model, cleanup=ResonatorCleanup()).fit(roles)
+labels, similarities = store.factorize(composition, n_factors=2)
 ```
+
+### Persistence
+
+```python
+store.save("items.npz")
+restored = ItemStore.load(model, "items.npz")
+```
+
+If you need to migrate a legacy pickle-backed archive, pass `allow_unsafe_legacy=True` to `ItemStore.load(...)` once, then re-save the store.
 
 ---
 
 ## AssocStore
 
-`AssocStore` implements key-value associative memory using binding.
+`AssocStore` keeps aligned key and value codebooks.
 
 ### Basic Usage
 
@@ -112,125 +132,89 @@ batch_results = store.batch_query(queries, k=1)
 from holovec.retrieval import AssocStore
 
 store = AssocStore(model)
+store.add("ball", model.random(seed=1), model.random(seed=101))
+store.add("cube", model.random(seed=2), model.random(seed=102))
 
-# Store associations
-key1 = model.random(seed=1)
-value1 = model.random(seed=2)
-store.store(key1, value1)
-
-# Retrieve by key
-retrieved = store.retrieve(key1)
-print(model.similarity(value1, retrieved))  # High
+label, value_vec = store.query_value(store.keys["ball"])
+print(label)  # ball
 ```
 
-### Multiple Associations
+### Bulk Fit
 
 ```python
-# Store multiple key-value pairs
-keys = [model.random(seed=i) for i in range(10)]
-values = [model.random(seed=i+100) for i in range(10)]
+keys = {
+    "red": model.random(seed=1),
+    "blue": model.random(seed=2),
+}
+values = {
+    "red": model.random(seed=101),
+    "blue": model.random(seed=102),
+}
 
-for k, v in zip(keys, values):
-    store.store(k, v)
-
-# Retrieve
-for i, k in enumerate(keys[:3]):
-    retrieved = store.retrieve(k)
-    sim = model.similarity(values[i], retrieved)
-    print(f"Key {i}: similarity = {sim:.3f}")
+store = AssocStore(model).fit(keys, values)
+ranked = store.query_label(keys["blue"], k=2)
 ```
 
-### Cleanup Integration
+### Persistence
 
 ```python
-# Use cleanup for better retrieval
-from holovec.utils.cleanup import BruteForceCleanup
-
-cleanup = BruteForceCleanup(model)
-value_codebook = Codebook({f"v{i}": v for i, v in enumerate(values)}, backend=model.backend)
-
-retrieved_raw = store.retrieve(keys[0])
-cleaned = cleanup.cleanup(retrieved_raw, value_codebook)
+store.save("keys.npz", "values.npz")
+restored = AssocStore.load(model, "keys.npz", "values.npz")
 ```
+
+As with `Codebook` and `ItemStore`, legacy pickle-backed archives can be migrated via `allow_unsafe_legacy=True`.
 
 ---
 
 ## Workflow Example
-
-Complete workflow for a semantic memory system:
 
 ```python
 from holovec import VSA
 from holovec.retrieval import Codebook, ItemStore
 from holovec.encoders import FractionalPowerEncoder
 
-# Setup
-model = VSA.create('FHRR', dim=4096)
+model = VSA.create("FHRR", dim=4096)
 
-# Define roles
 OBJECT = model.random(seed=1)
 COLOR = model.random(seed=2)
 SIZE = model.random(seed=3)
 
-# Define fillers
-objects = Codebook({
-    "ball": model.random(seed=10),
-    "cube": model.random(seed=11),
-    "cone": model.random(seed=12)
-}, backend=model.backend)
-
-colors = Codebook({
-    "red": model.random(seed=20),
-    "blue": model.random(seed=21),
-    "green": model.random(seed=22)
-}, backend=model.backend)
+objects = Codebook(
+    {
+        "ball": model.random(seed=10),
+        "cube": model.random(seed=11),
+        "cone": model.random(seed=12),
+    },
+    backend=model.backend,
+)
+colors = Codebook(
+    {
+        "red": model.random(seed=20),
+        "blue": model.random(seed=21),
+        "green": model.random(seed=22),
+    },
+    backend=model.backend,
+)
 
 size_encoder = FractionalPowerEncoder(model, min_val=0, max_val=100)
 
-# Create structured representation: "big red ball"
-big_red_ball = model.bundle([
-    model.bind(OBJECT, objects["ball"]),
-    model.bind(COLOR, colors["red"]),
-    model.bind(SIZE, size_encoder.encode(80))
-])
+big_red_ball = model.bundle(
+    [
+        model.bind(OBJECT, objects["ball"]),
+        model.bind(COLOR, colors["red"]),
+        model.bind(SIZE, size_encoder.encode(80)),
+    ]
+)
 
-# Query: what object is this?
-query_result = model.unbind(big_red_ball, OBJECT)
-store = ItemStore(model).fit(objects)
-results = store.query(query_result, k=1)
-print(f"Object: {results[0][0]}")  # ball
-
-# Query: what color?
-query_result = model.unbind(big_red_ball, COLOR)
-store = ItemStore(model).fit(colors)
-results = store.query(query_result, k=1)
-print(f"Color: {results[0][0]}")  # red
+object_query = model.unbind(big_red_ball, OBJECT)
+object_store = ItemStore(model).fit(objects)
+print(object_store.query(object_query, k=1)[0][0])  # ball
 ```
-
----
-
-## Cleanup Strategies
-
-For models with approximate inverse (HRR, VTB), cleanup improves retrieval:
-
-```python
-from holovec.utils.cleanup import BruteForceCleanup, ResonatorCleanup
-
-# Brute force: check all items
-bf_cleanup = BruteForceCleanup(model)
-cleaned = bf_cleanup.cleanup(noisy_vector, codebook)
-
-# Resonator: iterative refinement (faster for large codebooks)
-res_cleanup = ResonatorCleanup(model, iterations=10)
-cleaned = res_cleanup.cleanup(noisy_vector, codebook)
-```
-
-See [Cleanup Strategies](../retrieval/cleanup.md) for details.
 
 ---
 
 ## See Also
 
-- [Cleanup Strategies](../retrieval/cleanup.md) — Cleanup methods
-- [Patterns](../guides/patterns.md) — Common usage patterns
-- [Model-HRR](../models/hrr.md) — When cleanup is essential
+- [Cleanup Strategies](./cleanup.md) — cleanup and factorization methods
+- [Patterns](../guides/patterns.md) — common usage patterns
+- [Model-HRR](../models/hrr.md) — when cleanup is especially useful

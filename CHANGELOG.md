@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- No unreleased changes yet.
+### Changed
+
+- BREAKING: `VSA.create()` now validates model/backend kwargs and raises on unsupported arguments instead of silently ignoring them
+- BREAKING: `AssocStore.query_value()` is now intentionally top-1 only and no longer accepts the ignored `top` parameter
+- Threshold-based retrieval now validates against the active model's similarity range, allowing negative thresholds for continuous models
+
+### Fixed
+
+- Restored correct factory forwarding for BSDC (`sparsity`, `binding_mode`), GHRR (`matrix_size`, `diagonality`), and VTB (`n_bases`, `shifts`, `temperature`) configuration
+- Tightened retrieval fallback behavior so fast-path query failures only fall back on expected capability/shape issues
+
+### Security
+
+- `Codebook` persistence now uses a safe versioned `.npz` format by default and refuses legacy pickle-backed archives unless `allow_unsafe_legacy=True` is passed explicitly for migration
+
+### Testing
+
+- Added regression coverage for factory kwarg forwarding/rejection, negative thresholds on continuous models, and legacy persistence migration paths
+
+### Documentation
+
+- Updated retrieval and performance docs to match the supported factory surface and new persistence/migration behavior
+- Added agent/contributor workflow guidance for changelog maintenance, release-note discipline, and PR protocol
 
 ## [0.3.2] - 2026-04-11
 

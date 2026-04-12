@@ -112,8 +112,8 @@ vectors = encoder.batch_encode(values)
 ### Reducing Memory
 
 ```python
-# Use smaller dtype (GPU)
-model = VSA.create('FHRR', dim=2048, backend='torch', dtype='float16')
+# Reduce dimension when capacity allows
+model = VSA.create('FHRR', dim=1024)
 
 # Use sparse model
 model = VSA.create('BSDC', dim=50000, sparsity=0.01)  # Only 500 active bits
@@ -122,6 +122,9 @@ model = VSA.create('BSDC', dim=50000, sparsity=0.01)  # Only 500 active bits
 del old_vectors
 torch.cuda.empty_cache()  # For PyTorch GPU
 ```
+
+`VSA.create()` only accepts documented backend/model kwargs. Precision changes such as `float16`
+must be handled in application-specific backend code, not through the factory.
 
 ---
 

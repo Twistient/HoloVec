@@ -120,25 +120,6 @@ class TestVTBModel:
         a_full = model.permute(a, k=model.dimension)
         assert np.allclose(a, a_full, rtol=1e-5)
 
-    def test_circulant_matrix(self, model):
-        """Test circulant matrix construction."""
-        # Create simple test vector
-        vec = model.backend.array([1.0, 2.0, 3.0, 4.0])
-        matrix = model._vector_to_circulant(vec)
-        matrix_np = model.backend.to_numpy(matrix)
-
-        # Check shape
-        assert matrix_np.shape == (4, 4)
-
-        # Check circulant structure
-        expected = np.array([
-            [1.0, 2.0, 3.0, 4.0],
-            [4.0, 1.0, 2.0, 3.0],
-            [3.0, 4.0, 1.0, 2.0],
-            [2.0, 3.0, 4.0, 1.0]
-        ])
-        assert np.allclose(matrix_np, expected)
-
     def test_bind_sequence_with_permutation(self, model):
         """Test sequence binding with permutation strategy."""
         items = [model.random(seed=i) for i in range(3)]

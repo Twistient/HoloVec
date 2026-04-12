@@ -134,34 +134,6 @@ class VTBModel(VSAModel):
         scaled = self.backend.multiply_scalar(scores, self.temperature)
         return self.backend.softmax(scaled, axis=0)
 
-    def _vector_to_circulant(self, vec: Array) -> Array:
-        """Convert vector to circulant matrix.
-
-        A circulant matrix is a special matrix where each row is a circular
-        shift of the previous row. For vector [a, b, c]:
-            [[a, b, c],
-             [c, a, b],
-             [b, c, a]]
-
-        This construction enables efficient matrix-vector multiplication
-        via circular convolution in the frequency domain.
-
-        Args:
-            vec: Vector of shape (D,)
-
-        Returns:
-            Circulant matrix of shape (D, D)
-        """
-        vec_np = self.backend.to_numpy(vec)
-        D = len(vec_np)
-
-        # Build circulant matrix: each row is a circular shift
-        matrix = np.zeros((D, D), dtype=vec_np.dtype)
-        for i in range(D):
-            matrix[i] = np.roll(vec_np, i)
-
-        return self.backend.from_numpy(matrix)
-
     def bind(self, a: Array, b: Array) -> Array:
         """Bind using MBAT-style weighted basis transforms.
 

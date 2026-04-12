@@ -117,6 +117,24 @@ class VSA:
         "vtb": "real",
     }
 
+    _FACTORY_SPACE_KWARGS: dict[str, frozenset[str]] = {
+        "bsdc": frozenset({"sparsity"}),
+        "bsdc_seg": frozenset({"segments"}),
+        "bsdc-seg": frozenset({"segments"}),
+        "ghrr": frozenset({"matrix_size", "diagonality"}),
+    }
+
+    _FACTORY_MODEL_KWARGS: dict[str, frozenset[str]] = {
+        "bsdc": frozenset({"binding_mode"}),
+        "ghrr": frozenset({"matrix_size", "diagonality"}),
+        "vtb": frozenset({"n_bases", "shifts", "temperature"}),
+    }
+
+    _FACTORY_BACKEND_KWARGS: dict[str, frozenset[str]] = {
+        "torch": frozenset({"device"}),
+        "pytorch": frozenset({"device"}),
+    }
+
     @classmethod
     def create(
         cls,
@@ -159,6 +177,19 @@ class VSA:
         # Get model class
         model_class = cls._MODELS[model_type_lower]
 
+        allowed_kwargs = set(cls._FACTORY_SPACE_KWARGS.get(model_type_lower, frozenset()))
+        allowed_kwargs.update(cls._FACTORY_MODEL_KWARGS.get(model_type_lower, frozenset()))
+        if isinstance(backend, str):
+            allowed_kwargs.update(cls._FACTORY_BACKEND_KWARGS.get(backend.lower(), frozenset()))
+
+        unsupported = sorted(set(kwargs) - allowed_kwargs)
+        if unsupported:
+            accepted = sorted(allowed_kwargs)
+            raise TypeError(
+                f"Unsupported keyword argument(s) for model '{model_type}': {unsupported}. "
+                f"Accepted keyword argument(s): {accepted}"
+            )
+
         # Create backend
         backend_kwargs = {k: v for k, v in kwargs.items() if k in ["device"]}
         if isinstance(backend, Backend):
@@ -175,10 +206,17 @@ class VSA:
             space = cls._DEFAULT_SPACES.get(model_type_lower)
 
         # Collect space-specific kwargs
-        space_kwargs = {}
-        if space == "sparse_segment":
+        space_kwargs = dict.fromkeys(cls._FACTORY_SPACE_KWARGS.get(model_type_lower, frozenset()))
+        space_kwargs = {key: kwargs[key] for key in space_kwargs if key in kwargs}
+        if model_type_lower in {"bsdc_seg", "bsdc-seg"} and "segments" not in space_kwargs:
             # For BSDC-SEG: default to dim/10 segments (segment_length=10)
-            space_kwargs["segments"] = kwargs.get("segments", max(1, dim // 10))
+            space_kwargs["segments"] = max(1, dim // 10)
+
+        if space is not None and not isinstance(space, str) and space_kwargs:
+            raise TypeError(
+                f"Explicit space instances cannot be combined with space construction "
+                f"kwargs: {sorted(space_kwargs)}"
+            )
 
         # Create space if string provided
         if isinstance(space, str):
@@ -191,11 +229,11 @@ class VSA:
             raise ValueError("space could not be resolved to a valid vector space")
 
         # Collect model-specific kwargs
-        model_kwargs = {}
-        if model_type_lower == 'bsdc':
-            # BSDC supports binding_mode parameter
-            if 'binding_mode' in kwargs:
-                model_kwargs['binding_mode'] = kwargs['binding_mode']
+        model_kwargs = {
+            key: kwargs[key]
+            for key in cls._FACTORY_MODEL_KWARGS.get(model_type_lower, frozenset())
+            if key in kwargs
+        }
 
         # Create model
         model = model_class(

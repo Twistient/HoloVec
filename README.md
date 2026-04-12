@@ -119,7 +119,7 @@ If you want a runnable version of that workflow, start with
 Start with `FHRR` unless you have a clear reason to prefer order-sensitive matrix models,
 self-inverse discrete models, or sparse segment-based storage.
 
-The factory now validates model-specific kwargs instead of ignoring them. Supported examples:
+Examples of model-specific factory configuration:
 
 ```python
 VSA.create("BSDC", dim=20000, sparsity=0.01, binding_mode="cdt")
@@ -134,9 +134,9 @@ See the full comparison in
 
 ---
 
-## Release-Facing Examples
+## Maintained Examples
 
-These examples are the audited path through the library and are smoke-tested in pytest:
+These examples are maintained alongside the core API and exercised in automated smoke tests:
 
 - [examples/00_quickstart.py](examples/00_quickstart.py): create a model, encode data, bind,
   retrieve
@@ -152,8 +152,8 @@ These examples are the audited path through the library and are smoke-tested in 
   sensitivity
 - [examples/42_model_bsdc_seg.py](examples/42_model_bsdc_seg.py): BSDC-SEG segment patterns
 
-Additional examples remain in the repository, but the list above is the maintained `v1` learning
-path.
+Additional examples remain in the repository, but the list above is the maintained starting path
+through the library.
 
 ---
 
@@ -177,28 +177,39 @@ uv run --extra dev mypy holovec
 uv sync --extra docs && uv run --extra docs mkdocs build --strict
 ```
 
-The release gate also includes smoke execution of the canonical example scripts.
+The maintained example scripts are also exercised in automated smoke tests.
 
 ---
 
 ## References
 
-HoloVec draws on the core HDC/VSA literature, including Kanerva (1988), Plate (2003), Gayler
-(2003), Frady et al. (2021), Schlegel et al. (2022), Kleyko et al. (2023), and Kymn et al.
-(2024).
+HoloVec implements models and encoders drawn from the HDC/VSA literature. For a fuller
+bibliography, see the
+[documentation references](https://twistient.github.io/HoloVec/reference/bibliography/).
+
+Good starting points:
+
+- Pentti Kanerva, *Hyperdimensional Computing: An Introduction to Computing in Distributed
+  Representation with High-Dimensional Random Vectors* (2009)
+- Tony Plate, *Holographic Reduced Representation* (2003)
+- Schlegel, Neubert, and Protzel, *A Comparison of Vector Symbolic Architectures* (2022)
+- Kleyko et al., *A Survey on Hyperdimensional Computing / Vector Symbolic Architectures* Parts I
+  and II (2022, 2023)
 
 ---
 
 ## Citation
 
+For machine-readable citation metadata, see [CITATION.cff](CITATION.cff).
+
 ```bibtex
-@software{HoloVec2025,
-  author       = {Brodie Schroeder},
-  title        = {HoloVec: Vector Symbolic Architectures for Python},
-  year         = {2025},
-  version      = {0.3.2},
-  url          = {https://github.com/Twistient/HoloVec},
-  license      = {Apache-2.0}
+@software{holovec_2026,
+  author  = {Schroeder, Brodie},
+  title   = {HoloVec: Vector Symbolic Architectures for Python},
+  year    = {2026},
+  version = {1.0.0},
+  url     = {https://github.com/Twistient/HoloVec},
+  license = {Apache-2.0}
 }
 ```
 

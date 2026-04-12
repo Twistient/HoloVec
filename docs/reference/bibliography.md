@@ -126,7 +126,7 @@ If you use HoloVec in your research:
   author       = {Brodie Schroeder},
   title        = {HoloVec: Vector Symbolic Architectures for Python},
   year         = {2025},
-  version      = {0.2.0},
+  version      = {0.3.0},
   url          = {https://github.com/Twistient/HoloVec},
   license      = {Apache-2.0}
 }

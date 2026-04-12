@@ -69,7 +69,7 @@ from .spaces import VectorSpace, create_space
 try:
     __version__ = version("holovec")
 except PackageNotFoundError:  # pragma: no cover - fallback for source-only usage
-    __version__ = "0.2.0"
+    __version__ = "0.3.0"
 
 
 class VSA:

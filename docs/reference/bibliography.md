@@ -122,13 +122,13 @@ Academic papers and resources foundational to HoloVec.
 If you use HoloVec in your research:
 
 ```bibtex
-@software{HoloVec2025,
-  author       = {Brodie Schroeder},
-  title        = {HoloVec: Vector Symbolic Architectures for Python},
-  year         = {2025},
-  version      = {0.3.2},
-  url          = {https://github.com/Twistient/HoloVec},
-  license      = {Apache-2.0}
+@software{holovec_2026,
+  author  = {Schroeder, Brodie},
+  title   = {HoloVec: Vector Symbolic Architectures for Python},
+  year    = {2026},
+  version = {1.0.2},
+  url     = {https://github.com/Twistient/HoloVec},
+  license = {Apache-2.0}
 }
 ```
 

@@ -207,7 +207,7 @@ For machine-readable citation metadata, see [CITATION.cff](CITATION.cff).
   author  = {Schroeder, Brodie},
   title   = {HoloVec: Vector Symbolic Architectures for Python},
   year    = {2026},
-  version = {1.0.0},
+  version = {1.0.2},
   url     = {https://github.com/Twistient/HoloVec},
   license = {Apache-2.0}
 }

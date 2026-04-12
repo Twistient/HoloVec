@@ -45,6 +45,16 @@ uv run --extra dev pytest tests/test_models.py
 uv run --extra dev pytest tests/test_models.py -k numpy
 ```
 
+### Building Docs
+
+```bash
+# Sync the locked docs toolchain
+uv sync --extra docs
+
+# Build the documentation site locally
+uv run --extra docs mkdocs build --strict
+```
+
 ### Code Style
 
 We use several tools to maintain code quality:

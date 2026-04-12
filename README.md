@@ -10,7 +10,7 @@
 
 **Vector Symbolic Architectures for compositional, high-dimensional computing.**
 
-[Documentation](https://twistient.github.io/HoloVec/) • [Installation](#installation) • [Quick Start](#quick-start) • [Examples](https://github.com/Twistient/HoloVec/tree/master/examples)
+[Documentation](https://twistient.github.io/HoloVec/) • [Installation](https://twistient.github.io/HoloVec/getting-started/installation/) • [Quick Start](https://twistient.github.io/HoloVec/getting-started/quick-start/) • [Examples](https://github.com/Twistient/HoloVec/tree/master/examples)
 
 </div>
 
@@ -267,7 +267,7 @@ HoloVec implements ideas from:
   author       = {Brodie Schroeder},
   title        = {HoloVec: Vector Symbolic Architectures for Python},
   year         = {2025},
-  version      = {0.3.0},
+  version      = {0.3.2},
   url          = {https://github.com/Twistient/HoloVec},
   license      = {Apache-2.0}
 }

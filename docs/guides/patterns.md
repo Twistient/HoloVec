@@ -1,263 +1,161 @@
 Common VSA patterns and design recipes.
 
-## Role-Filler Binding
+These are the patterns worth stabilizing before `v1` because they map directly to the maintained
+example set and public API:
 
-The most common pattern: bind roles to values.
+- role-filler records
+- sequence encoding
+- prototype retrieval
+- cleanup and factorization
+- order-sensitive composition
+
+## Role-Filler Records
+
+Use role vectors to bind typed fields into one record.
+
+```python
+from holovec import VSA
+from holovec.encoders import FractionalPowerEncoder
+from holovec.retrieval import Codebook, ItemStore
+
+model = VSA.create("FHRR", dim=4096, seed=7)
+temperature = FractionalPowerEncoder(model, 0.0, 100.0, bandwidth=1.5, seed=3)
+
+ROLE_NAME = model.random(seed=1)
+ROLE_TEMP = model.random(seed=2)
+
+alice = model.random(seed=10)
+twenty_four = temperature.encode(24.0)
+
+record = model.bundle(
+    [
+        model.bind(ROLE_NAME, alice),
+        model.bind(ROLE_TEMP, twenty_four),
+    ]
+)
+
+name_store = ItemStore(model).fit(Codebook({"alice": alice}, backend=model.backend))
+print(name_store.query(model.unbind(record, ROLE_NAME), k=1))
+```
+
+Use this pattern for records, frames, entity state, and compact knowledge storage.
+
+## Sequence Encoding
+
+`PositionBindingEncoder` gives you an order-sensitive representation without inventing a separate
+position bookkeeping scheme yourself.
+
+```python
+from holovec import VSA
+from holovec.encoders import PositionBindingEncoder
+
+model = VSA.create("MAP", dim=4096, seed=7)
+encoder = PositionBindingEncoder(model, seed=42)
+
+reference = ["alice", "likes", "tea"]
+reordered = ["tea", "likes", "alice"]
+
+hv_reference = encoder.encode(reference)
+hv_reordered = encoder.encode(reordered)
+
+print(float(model.similarity(hv_reference, hv_reference)))
+print(float(model.similarity(hv_reference, hv_reordered)))
+print(encoder.decode(hv_reference, max_positions=3, threshold=0.2))
+```
+
+Use this when order matters and you want approximate sequence matching or sequence cleanup.
+
+## Prototype Retrieval
+
+Bundles work well as class prototypes or memory slots.
+
+```python
+from holovec import VSA
+from holovec.retrieval import Codebook, ItemStore
+
+model = VSA.create("MAP", dim=4096, seed=7)
+
+cat_prototype = model.bundle([model.random(seed=10), model.random(seed=11)])
+dog_prototype = model.bundle([model.random(seed=20), model.random(seed=21)])
+
+store = ItemStore(model).fit(
+    Codebook(
+        {
+            "cat": cat_prototype,
+            "dog": dog_prototype,
+        },
+        backend=model.backend,
+    )
+)
+
+query = model.bundle([model.random(seed=10), model.random(seed=11)])
+print(store.query(query, k=1))
+```
+
+Use this for one-shot or few-shot classification when you already have encoded exemplars.
+
+## Cleanup and Factorization
+
+Keep a codebook of known factors, then clean or factorize against it.
+
+```python
+from holovec import VSA
+from holovec.utils.cleanup import BruteForceCleanup, ResonatorCleanup
+
+model = VSA.create("MAP", dim=4096, seed=7)
+codebook = {f"item_{i}": model.random(seed=100 + i) for i in range(6)}
+
+composite = model.bind_multiple(
+    [
+        codebook["item_0"],
+        codebook["item_1"],
+        codebook["item_2"],
+    ]
+)
+
+brute_force = BruteForceCleanup()
+resonator = ResonatorCleanup()
+
+print(brute_force.factorize(composite, codebook, model, n_factors=3, threshold=0.6))
+print(resonator.factorize(composite, codebook, model, n_factors=3, threshold=0.6))
+```
+
+For exact or self-inverse models, this is the standard route to recovering structured factors from
+bound compositions.
+
+## Order-Sensitive Composition
+
+If `bind(a, b)` should differ from `bind(b, a)`, use a non-commutative model.
 
 ```python
 from holovec import VSA
 
-model = VSA.create('FHRR', dim=2048)
+model = VSA.create("GHRR", dim=96, matrix_size=3, diagonality=0.4, seed=7)
+a = model.random(seed=1)
+b = model.random(seed=2)
 
-# Define roles
-ROLE_name = model.random(seed=1)
-ROLE_age = model.random(seed=2)
-ROLE_city = model.random(seed=3)
-
-# Define fillers
-name_alice = model.random(seed=10)
-age_30 = encoder.encode(30)
-city_boston = model.random(seed=20)
-
-# Create record
-person = model.bundle([
-    model.bind(ROLE_name, name_alice),
-    model.bind(ROLE_age, age_30),
-    model.bind(ROLE_city, city_boston)
-])
-
-# Query: what is the name?
-result = model.unbind(person, ROLE_name)
-# result ≈ name_alice
+ab = model.bind(a, b)
+ba = model.bind(b, a)
+print(float(model.similarity(ab, ba)))
 ```
 
-**Use for**: Records, frames, semantic structures
-
----
-
-## Sequence Encoding
-
-### Position Binding
-
-Bind each item with its position:
-
-```python
-def encode_sequence(items, model):
-    pos_base = model.random(seed=42)
-    parts = []
-    for i, item in enumerate(items):
-        pos_vec = model.permute(pos_base, k=i)
-        parts.append(model.bind(item, pos_vec))
-    return model.bundle(parts)
-```
-
-### Query by Position
-
-```python
-def query_position(sequence, position, model):
-    pos_base = model.random(seed=42)
-    pos_vec = model.permute(pos_base, k=position)
-    return model.unbind(sequence, pos_vec)
-```
-
-**Use for**: Lists, arrays, time series
-
----
-
-## Set Operations
-
-Bundles naturally represent sets:
-
-```python
-# Set union (bundling)
-set_ab = model.bundle([a, b])
-
-# Membership test
-def is_member(item, set_vec, threshold=0.4):
-    return model.similarity(item, set_vec) > threshold
-
-# Set intersection (approximate)
-def intersect(set1, set2, codebook, store):
-    # Find items that are similar to both
-    results = []
-    for label in codebook:
-        vec = codebook[label]
-        sim1 = model.similarity(vec, set1)
-        sim2 = model.similarity(vec, set2)
-        if sim1 > 0.4 and sim2 > 0.4:
-            results.append(label)
-    return results
-```
-
-**Use for**: Categories, tags, feature sets
-
----
-
-## Hierarchical Structures
-
-Use nested binding for trees:
-
-```python
-# Tree: parent -> child
-#        root
-#       /    \
-#     left   right
-
-CHILD_LEFT = model.random(seed=1)
-CHILD_RIGHT = model.random(seed=2)
-
-root = model.random(seed=10)
-left = model.random(seed=11)
-right = model.random(seed=12)
-
-# Encode tree
-tree = model.bundle([
-    root,
-    model.bind(CHILD_LEFT, left),
-    model.bind(CHILD_RIGHT, right)
-])
-
-# Navigate: get left child from tree
-left_result = model.unbind(tree, CHILD_LEFT)
-```
-
-**Use for**: Parse trees, organizational hierarchies
-
----
-
-## Analogical Reasoning
-
-Classic pattern: A is to B as C is to ?
-
-```python
-# king - man + woman = queen
-king = word_vectors["king"]
-man = word_vectors["man"]
-woman = word_vectors["woman"]
-
-# Compute analogy
-query = model.bundle([king, model.unbind(woman, man)])
-# or more precisely for some models:
-# query = model.bind(model.unbind(king, man), woman)
-
-# Find nearest word
-result = store.query(query, k=1)
-print(result)  # hopefully "queen"
-```
-
-**Use for**: Semantic relationships, knowledge completion
-
----
-
-## Prototype Learning
-
-One-shot classification via prototypes:
-
-```python
-from holovec.retrieval import Codebook, ItemStore
-
-def create_prototype(examples, model):
-    """Bundle examples into class prototype."""
-    return model.bundle([encode(ex) for ex in examples])
-
-# Create prototypes from few examples
-prototypes = {
-    "cat": create_prototype(cat_images, model),
-    "dog": create_prototype(dog_images, model)
-}
-proto_codebook = Codebook(prototypes, backend=model.backend)
-store = ItemStore(model).fit(proto_codebook)
-
-# Classify new instance
-def classify(instance):
-    vec = encode(instance)
-    results = store.query(vec, k=1)
-    return results[0][0]
-```
-
-**Use for**: Few-shot learning, classification
-
----
-
-## Temporal Patterns
-
-Encode time-varying signals:
-
-```python
-# State at each timestep
-def encode_temporal(states, model):
-    TIME_ROLE = model.random(seed=99)
-    parts = []
-    for t, state in enumerate(states):
-        time_vec = model.permute(TIME_ROLE, k=t)
-        parts.append(model.bind(state, time_vec))
-    return model.bundle(parts)
-
-# Query: what was state at time t?
-def query_time(trajectory, t, model):
-    TIME_ROLE = model.random(seed=99)
-    time_vec = model.permute(TIME_ROLE, k=t)
-    return model.unbind(trajectory, time_vec)
-```
-
-**Use for**: Trajectories, event sequences, logs
-
----
-
-## Multi-Modal Fusion
-
-Combine different data types:
-
-```python
-# Define modality roles
-MODALITY_text = model.random(seed=1)
-MODALITY_image = model.random(seed=2)
-MODALITY_audio = model.random(seed=3)
-
-def encode_multimodal(text_vec, image_vec, audio_vec):
-    return model.bundle([
-        model.bind(MODALITY_text, text_vec),
-        model.bind(MODALITY_image, image_vec),
-        model.bind(MODALITY_audio, audio_vec)
-    ])
-
-# Query by modality
-def get_text_component(multimodal_vec):
-    return model.unbind(multimodal_vec, MODALITY_text)
-```
-
-**Use for**: Multi-sensor systems, multimedia retrieval
-
----
-
-## Context-Dependent Binding
-
-Bind with context for disambiguation:
-
-```python
-# "bank" in different contexts
-CONTEXT_finance = model.random(seed=1)
-CONTEXT_river = model.random(seed=2)
-
-word_bank = model.random(seed=10)
-
-# Same word, different meanings
-bank_finance = model.bind(word_bank, CONTEXT_finance)
-bank_river = model.bind(word_bank, CONTEXT_river)
-
-# These are dissimilar despite same base word
-print(model.similarity(bank_finance, bank_river))  # Low
-```
-
-**Use for**: Word sense disambiguation, context-aware AI
-
----
-
-## Error Correction
-
-Add redundancy for noise tolerance:
-
-```python
+This is the right pattern for directional relations, nested symbolic structures, and role-sensitive
+composition.
+
+## Pattern Selection Checklist
+
+- Use `FHRR` when you want a strong default with exact inverse behavior.
+- Use `MAP` or `BSC` when self-inverse algebra simplifies cleanup or deployment.
+- Use `GHRR` or `VTB` when order and asymmetry are first-class constraints.
+- Use `BSDC` or `BSDC-SEG` when sparse retrieval or memory footprint dominates the design.
+- Always benchmark the full workload, not just `bind()` in isolation.
+
+## Canonical Examples
+
+- [examples/00_quickstart.py](https://github.com/Twistient/HoloVec/blob/master/examples/00_quickstart.py)
+- [examples/13_encoders_position_binding.py](https://github.com/Twistient/HoloVec/blob/master/examples/13_encoders_position_binding.py)
+- [examples/26_retrieval_basics.py](https://github.com/Twistient/HoloVec/blob/master/examples/26_retrieval_basics.py)
+- [examples/27_cleanup_strategies.py](https://github.com/Twistient/HoloVec/blob/master/examples/27_cleanup_strategies.py)
 # Encode with repetition
 def encode_robust(item, model, copies=3):
     parts = [model.permute(item, k=i) for i in range(copies)]

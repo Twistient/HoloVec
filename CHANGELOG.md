@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - `Codebook` persistence now uses a safe versioned `.npz` format by default and refuses legacy pickle-backed archives unless `allow_unsafe_legacy=True` is passed explicitly for migration
+- Raised lockfile and extra dependency floors to patched releases for `black`, `Pygments`, `requests`, `urllib3`, and `filelock` to clear the current GitHub dependency alerts
 
 ### Testing
 

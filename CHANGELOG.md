@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- No unreleased changes yet.
+
+## [1.0.0] - 2026-04-12
+
 ### Changed
 
 - BREAKING: `VSA.create()` now validates model/backend kwargs and raises on unsupported arguments instead of silently ignoring them
@@ -399,7 +403,8 @@ Based on comprehensive academic research:
 - Kymn et al. (2024) - Resonator cleanup networks
 - Malits & Mendelson (2025) - CPSE/CPSD algorithms
 
-[Unreleased]: https://github.com/Twistient/HoloVec/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/Twistient/HoloVec/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Twistient/HoloVec/compare/v0.3.2...v1.0.0
 [0.3.2]: https://github.com/Twistient/HoloVec/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/Twistient/HoloVec/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Twistient/HoloVec/compare/v0.2.0...v0.3.0

@@ -123,8 +123,8 @@ assuming a generic factory passthrough.
 This page intentionally avoids fixed timing tables. Release-facing benchmark numbers should come
 from the benchmark suite and methodology docs, not from hand-maintained prose.
 
-Until the benchmark suite lands, use local measurement, the maintained example scripts, and the
-model-family guidance above rather than copying an old table into design docs or release notes.
+Use [Benchmark Methodology](./benchmarks.md) and `python -m benchmarks.run ...` for reproducible
+measurements rather than copying an old table into design docs or release notes.
 
 ## Canonical Examples
 

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added a model-aware benchmark runner at `python -m benchmarks.run` with JSON/CSV output and
+  suites for primitives, bundle capacity, approximate unbinding, cleanup factorization, order
+  sensitivity, and sparse retrieval
+- Added benchmark methodology documentation and CLI smoke tests
+
 ### Changed
 
 - BREAKING: `VSA.create()` now validates model/backend kwargs and raises on unsupported arguments instead of silently ignoring them
@@ -38,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rewrote the README, quick start, model comparison, patterns, and examples index around the
   smoke-tested canonical example set
 - Added migration guidance for the tightened factory, retrieval, and persistence behavior
+- Added benchmark methodology guidance tied to the maintained benchmark runner and literature map
 
 ## [0.3.2] - 2026-04-11
 

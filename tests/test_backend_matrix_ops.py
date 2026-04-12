@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 from holovec.backends import get_available_backends, get_backend
+from holovec.spaces.spaces import MatrixSpace
 
 AVAILABLE_BACKENDS = get_available_backends()
 
@@ -123,6 +124,12 @@ class TestMatrixTrace:
         expected = (1+1j) + (4+1j)  # 5+2j
         assert np.allclose(backend.to_numpy(result), expected)
 
+    def test_eye(self, backend):
+        """Test identity matrix creation."""
+        result = backend.eye(3, dtype='complex64')
+        expected = np.eye(3, dtype=np.complex64)
+        assert np.allclose(backend.to_numpy(result), expected)
+
 
 class TestReshape:
     """Test reshape operations."""
@@ -236,6 +243,19 @@ class TestGHRROperations:
 
         # Should have high similarity (unbinding should recover)
         assert similarity > 0.9
+
+    def test_matrix_space_random_is_near_unitary(self, backend):
+        """MatrixSpace.random should stay backend-native and unitary-like."""
+        space = MatrixSpace(dimension=6, matrix_size=2, backend=backend, diagonality=0.4)
+        vec = space.random(seed=42)
+
+        assert backend.shape(vec) == (6, 2, 2)
+
+        vec_np = backend.to_numpy(vec)
+        identity = np.eye(2, dtype=np.complex64)
+        for matrix in vec_np[:3]:
+            should_be_identity = np.conj(matrix.T) @ matrix
+            assert np.allclose(should_be_identity, identity, atol=1e-4)
 
 
 class TestCrossBackendConsistency:

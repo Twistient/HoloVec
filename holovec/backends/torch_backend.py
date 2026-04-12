@@ -166,6 +166,31 @@ class TorchBackend(Backend):
         result = torch.rand(shape, generator=generator, device=self._device)
         return (result < p).to(torch_dtype)
 
+    def randint(
+        self,
+        shape: int | tuple[int, ...],
+        low: int,
+        high: int,
+        dtype: str = 'int32',
+        seed: int | None = None,
+    ) -> Array:
+        shape = (shape,) if isinstance(shape, int) else shape
+        torch_dtype = self._to_torch_dtype(dtype)
+
+        if seed is not None:
+            generator = torch.Generator(device=self._device).manual_seed(seed)
+        else:
+            generator = None
+
+        return torch.randint(
+            low,
+            high,
+            shape,
+            generator=generator,
+            dtype=torch_dtype,
+            device=self._device,
+        )
+
     def random_bipolar(
         self,
         shape: int | tuple[int, ...],
@@ -381,6 +406,9 @@ class TorchBackend(Backend):
     def sign(self, a: Array) -> Array:
         return torch.sign(a)
 
+    def astype(self, a: Array, dtype: str) -> Array:
+        return a.to(self._to_torch_dtype(dtype))
+
     def threshold(self, a: Array, threshold: float, above: float = 1.0, below: float = 0.0) -> Array:
         return torch.where(a >= threshold, torch.tensor(above, device=self._device),
                           torch.tensor(below, device=self._device))
@@ -435,6 +463,9 @@ class TorchBackend(Backend):
     def reshape(self, a: Array, shape: tuple[int, ...]) -> Array:
         """Reshape array."""
         return a.reshape(shape)
+
+    def eye(self, n: int, dtype: str = 'float32') -> Array:
+        return torch.eye(n, dtype=self._to_torch_dtype(dtype), device=self._device)
 
     # ===== Helper Methods =====
 

@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Restored correct factory forwarding for BSDC (`sparsity`, `binding_mode`), GHRR (`matrix_size`, `diagonality`), and VTB (`n_bases`, `shifts`, `temperature`) configuration
 - Tightened retrieval fallback behavior so fast-path query failures only fall back on expected capability/shape issues
+- Reworked `SparseSegmentSpace`, `BSDC-SEG` bundling, BSDC CDT binding, and GHRR diagonality checks to avoid unnecessary full-vector NumPy round-trips on optional backends
+- `MatrixSpace.random()` now generates unitary batches through backend-native SVD paths instead of constructing the entire hypervector in NumPy first
 
 ### Security
 
@@ -25,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Testing
 
 - Added regression coverage for factory kwarg forwarding/rejection, negative thresholds on continuous models, and legacy persistence migration paths
+- Added backend coverage for integer RNG, dtype casting, identity-matrix creation, backend-native segmented sparse helpers, BSDC CDT binding, and matrix-space random generation
 
 ### Documentation
 

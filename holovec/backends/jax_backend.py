@@ -162,6 +162,19 @@ class JAXBackend(Backend):
         key = self._get_key(seed)
         return jax_random.bernoulli(key, p, shape).astype(jax_dtype)
 
+    def randint(
+        self,
+        shape: int | tuple[int, ...],
+        low: int,
+        high: int,
+        dtype: str = 'int32',
+        seed: int | None = None,
+    ) -> Array:
+        shape = (shape,) if isinstance(shape, int) else shape
+        jax_dtype = self._to_jax_dtype(dtype)
+        key = self._get_key(seed)
+        return jax_random.randint(key, shape, minval=low, maxval=high, dtype=jax_dtype)
+
     def random_bipolar(
         self,
         shape: int | tuple[int, ...],
@@ -343,6 +356,9 @@ class JAXBackend(Backend):
     def sign(self, a: Array) -> Array:
         return jnp.sign(a)
 
+    def astype(self, a: Array, dtype: str) -> Array:
+        return a.astype(self._to_jax_dtype(dtype))
+
     def threshold(self, a: Array, threshold: float, above: float = 1.0, below: float = 0.0) -> Array:
         return jnp.where(a >= threshold, above, below)
 
@@ -388,6 +404,9 @@ class JAXBackend(Backend):
     def reshape(self, a: Array, shape: tuple[int, ...]) -> Array:
         """Reshape array."""
         return jnp.reshape(a, shape)
+
+    def eye(self, n: int, dtype: str = 'float32') -> Array:
+        return jnp.eye(n, dtype=self._to_jax_dtype(dtype))
 
     # ===== Additional Element-wise Utilities =====
 

@@ -137,7 +137,10 @@ class BSDCModel(VSAModel):
             List of permutation index arrays
         """
         rng = np.random.default_rng(self._seed if self._seed is not None else 42)
-        return [rng.permutation(self.dimension) for _ in range(n_permutations)]
+        return [
+            self.backend.array(rng.permutation(self.dimension).tolist(), dtype='int64')
+            for _ in range(n_permutations)
+        ]
 
     def _compute_thinning_iterations(
         self,
@@ -208,33 +211,37 @@ class BSDCModel(VSAModel):
         if len(components) == 1:
             return components[0].copy() if hasattr(components[0], 'copy') else components[0]
 
-        # Convert to numpy for efficient logical operations
-        components_np = [self.backend.to_numpy(c) for c in components]
-
         # Step 1: Superpose via OR
-        z = components_np[0].astype(bool)
-        for c in components_np[1:]:
-            z = np.logical_or(z, c.astype(bool))
+        superposed = self.backend.sum(self.backend.stack(components, axis=0), axis=0)
+        z = self.backend.astype(
+            self.backend.threshold(superposed, threshold=0.5, above=1, below=0),
+            'int32',
+        )
 
         # Step 2: Compute required thinning iterations
-        current_density = float(np.sum(z)) / self.dimension
+        current_density = float(self.backend.to_numpy(self.backend.sum(z))) / self.dimension
         K = self._compute_thinning_iterations(len(components), current_density)
 
         if K == 0:
             # Already at or below target sparsity
-            result = z.astype(np.int32)
-            return self.backend.from_numpy(result)
+            return z
 
         # Step 3: Thin via permuted self-conjunction
         # ⟨Z⟩ = Z ∧ (Z^~(1) ∨ Z^~(2) ∨ ... ∨ Z^~(K))
-        permuted_or = np.zeros(self.dimension, dtype=bool)
-        for k in range(K):
-            perm_idx = k % len(self._cdt_permutations)
-            z_permuted = z[self._cdt_permutations[perm_idx]]
-            permuted_or = np.logical_or(permuted_or, z_permuted)
-
-        result = np.logical_and(z, permuted_or).astype(np.int32)
-        return self.backend.from_numpy(result)
+        permuted = [
+            self.backend.permute(z, self._cdt_permutations[k % len(self._cdt_permutations)])
+            for k in range(K)
+        ]
+        permuted_sum = self.backend.sum(self.backend.stack(permuted, axis=0), axis=0)
+        permuted_or = self.backend.astype(
+            self.backend.threshold(permuted_sum, threshold=0.5, above=1, below=0),
+            'int32',
+        )
+        result = self.backend.add(z, permuted_or)
+        return self.backend.astype(
+            self.backend.threshold(result, threshold=1.5, above=1, below=0),
+            'int32',
+        )
 
     def bind(self, a: Array, b: Array) -> Array:
         """Bind two hypervectors.
@@ -339,8 +346,8 @@ class BSDCModel(VSAModel):
         else:
             # Simple majority voting: threshold at N/2
             threshold = len(vectors) / 2.0
-            result = self.backend.threshold(sum_result, threshold=threshold, above=1.0, below=0.0)
-            return result.astype('int32')
+            result = self.backend.threshold(sum_result, threshold=threshold, above=1, below=0)
+            return self.backend.astype(result, 'int32')
 
     def permute(self, vec: Array, k: int = 1) -> Array:
         """Permute using circular shift.

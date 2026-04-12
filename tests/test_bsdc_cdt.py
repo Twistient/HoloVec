@@ -8,7 +8,10 @@ import numpy as np
 import pytest
 
 from holovec import VSA
+from holovec.backends import get_available_backends, get_backend
 from holovec.models.bsdc import BSDCModel
+
+AVAILABLE_BACKENDS = get_available_backends()
 
 
 class TestCDTBasics:
@@ -236,3 +239,18 @@ class TestCDTEdgeCases:
         # And maintain some sparsity
         density = float(np.sum(model.backend.to_numpy(bound))) / model.dimension
         assert density < 0.1, f"10-component CDT too dense: {density}"
+
+
+@pytest.mark.parametrize("backend_name", AVAILABLE_BACKENDS)
+def test_cdt_binding_runs_on_available_backends(backend_name):
+    """CDT binding should remain backend-compatible on installed backends."""
+    backend = get_backend(backend_name)
+    model = BSDCModel(dimension=2048, backend=backend, seed=42, binding_mode='cdt')
+    a = model.random(seed=1)
+    b = model.random(seed=2)
+
+    bound = model.bind(a, b)
+    bound_np = backend.to_numpy(bound)
+
+    assert bound_np.shape == (2048,)
+    assert np.all(np.isin(bound_np, [0, 1]))

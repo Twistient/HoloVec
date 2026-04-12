@@ -26,8 +26,6 @@ References:
 
 from collections.abc import Sequence
 
-import numpy as np
-
 from ..backends import Backend
 from ..backends.base import Array
 from ..spaces import MatrixSpace, VectorSpace
@@ -248,24 +246,13 @@ class GHRRModel(VSAModel):
         Returns:
             Diagonality in [0, 1]
         """
-        vec_np = self.backend.to_numpy(vec)
-
-        D = vec_np.shape[0]
-
-        total_diag = 0.0
-        total_all = 0.0
-
-        for i in range(D):
-            matrix = vec_np[i]
-            # Diagonal sum
-            diag_sum = np.sum(np.abs(np.diag(matrix)))
-            # Total sum
-            all_sum = np.sum(np.abs(matrix))
-
-            total_diag += diag_sum
-            total_all += all_sum
-
-        return total_diag / total_all if total_all > 0 else 0.0
+        abs_vec = self.backend.abs(vec)
+        total_diag = self.backend.sum(self.backend.matrix_trace(abs_vec))
+        total_all = self.backend.sum(abs_vec)
+        total_all_value = float(self.backend.to_numpy(total_all))
+        if total_all_value == 0.0:
+            return 0.0
+        return float(self.backend.to_numpy(total_diag)) / total_all_value
 
     def __repr__(self) -> str:
         return (f"GHRRModel(dimension={self.dimension}, "

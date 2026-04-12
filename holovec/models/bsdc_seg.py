@@ -80,24 +80,11 @@ class BSDCSEGModel(VSAModel):
         """
         if not vectors:
             raise ValueError("Cannot bundle empty sequence")
-        import numpy as _np
 
         # Normalize each to a valid segment pattern first
         seg_norm = [self.space.normalize(v) for v in vectors]
-        arrs = [_np.array(self.backend.to_numpy(v)) for v in seg_norm]
-        # Accumulate counts per segment position
-        counts = _np.zeros((self.dimension,), dtype=_np.int32)
-        for a in arrs:
-            counts += a
-        out = _np.zeros_like(counts, dtype=_np.int32)
-        L = self.segment_length
-        for s in range(self.segments):
-            start = s * L
-            end = start + L
-            seg_counts = counts[start:end]
-            idx = int(_np.argmax(seg_counts))  # deterministic tie-breaker
-            out[start + idx] = 1
-        return self.backend.from_numpy(out)
+        counts = self.backend.sum(self.backend.stack(seg_norm, axis=0), axis=0)
+        return self.space.normalize(counts)
 
     def permute(self, vec: Array, k: int = 1) -> Array:
         return self.backend.roll(vec, shift=k, axis=0)

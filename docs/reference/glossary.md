@@ -69,7 +69,7 @@ Key terms in hyperdimensional computing and HoloVec.
 ## G
 
 **GHRR (Generalized HRR)**
-: Extension of FHRR using matrices instead of scalars. Non-commutative, state-of-the-art (2024).
+: Extension of FHRR using matrices instead of scalars. Non-commutative and matrix-based.
 
 ## H
 

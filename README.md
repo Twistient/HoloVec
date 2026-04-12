@@ -94,7 +94,7 @@ Different models have different algebraic properties:
 | Model | Binding method | Inverse | Notes |
 |-------|---------------|---------|-------|
 | **FHRR** | Complex multiply | Exact | Best capacity, continuous data |
-| **GHRR** | Matrix product | Exact | Non-commutative, 2024 state-of-the-art |
+| **GHRR** | Matrix product | Exact | Non-commutative, matrix-based extension |
 | **MAP** | Element multiply | Self | Hardware-friendly, neuromorphic |
 | **HRR** | Circular convolution | Approximate | Classic baseline |
 | **VTB** | Matrix transform | Approximate | Non-commutative, directional |
@@ -102,7 +102,7 @@ Different models have different algebraic properties:
 | **BSDC** | Sparse XOR | Approximate | Memory efficient |
 | **BSDC-SEG** | Segment XOR | Self | Segment-sparse, fast search |
 
-Choose FHRR for general use, GHRR when order matters, MAP for hardware deployment, or BSDC variants for memory constraints.
+Choose FHRR for general use, GHRR when order matters, MAP for hardware-oriented use, or BSDC variants for memory constraints.
 
 ### Spaces
 

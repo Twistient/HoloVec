@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - No unreleased changes yet.
 
+## [0.3.1] - 2026-04-11
+
+### Changed
+
+- Added tag-driven PyPI publishing via GitHub Actions trusted publishing
+- Improved PyPI-facing package metadata, including SPDX license metadata and absolute README asset URLs
+- Simplified the repository security policy and reduced over-specific claims in project copy
+
+### Fixed
+
+- Stabilized docs CI by building documentation with the locked `uv` docs environment
+- Updated GitHub Actions workflow dependencies to current supported releases
+
+### Documentation
+
+- Simplified security reporting guidance to rely on GitHub private vulnerability reporting
+- Cleaned up README installation guidance and adjusted model/backend wording to be less aspirational
+
 ## [0.3.0] - 2026-04-11
 
 ### Added
@@ -352,7 +370,8 @@ Based on comprehensive academic research:
 - Kymn et al. (2024) - Resonator cleanup networks
 - Malits & Mendelson (2025) - CPSE/CPSD algorithms
 
-[Unreleased]: https://github.com/Twistient/HoloVec/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/Twistient/HoloVec/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/Twistient/HoloVec/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Twistient/HoloVec/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Twistient/HoloVec/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/Twistient/HoloVec/compare/v0.1.0...v0.1.1

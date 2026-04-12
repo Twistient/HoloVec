@@ -1,8 +1,9 @@
+from collections.abc import ItemsView, Iterator, KeysView, ValuesView
 
 import numpy as np
 
+from ..backends import Backend, get_backend
 from ..backends.base import Array
-from ..backends import get_backend, Backend
 
 
 class Codebook:
@@ -46,19 +47,19 @@ class Codebook:
         """Return number of items in codebook."""
         return len(self._items)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         """Iterate over labels."""
         return iter(self._items)
 
-    def items(self):
+    def items(self) -> ItemsView[str, Array]:
         """Return iterator over (label, vector) pairs."""
         return self._items.items()
 
-    def keys(self):
+    def keys(self) -> KeysView[str]:
         """Return iterator over labels."""
         return self._items.keys()
 
-    def values(self):
+    def values(self) -> ValuesView[Array]:
         """Return iterator over vectors."""
         return self._items.values()
 

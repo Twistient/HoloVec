@@ -1,8 +1,8 @@
 import numpy as np
 
 from holovec.backends import get_backend
-from holovec.models.fhrr import FHRRModel
 from holovec.encoders.vector import VectorFPE
+from holovec.models.fhrr import FHRRModel
 
 
 def test_vector_fpe_similarity_monotonic():

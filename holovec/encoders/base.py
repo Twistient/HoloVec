@@ -7,8 +7,9 @@ into hypervectors for processing with VSA models.
 
 from abc import ABC, abstractmethod
 from typing import Any
-from holovec.models.base import VSAModel
+
 from holovec.backends.base import Array
+from holovec.models.base import VSAModel
 
 
 class Encoder(ABC):
@@ -79,7 +80,7 @@ class Encoder(ABC):
         return [self.encode(data) for data in data_list]
 
     @abstractmethod
-    def decode(self, hypervector: Array) -> Any:
+    def decode(self, hypervector: Array, *args: Any, **kwargs: Any) -> Any:
         """
         Decode hypervector back to data (if possible).
 

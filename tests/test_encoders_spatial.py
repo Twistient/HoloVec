@@ -4,14 +4,11 @@ Tests for spatial encoders (images, grids).
 This module tests the ImageEncoder for encoding 2D spatial data like images.
 """
 
-import pytest
 import numpy as np
+import pytest
+
 from holovec import VSA
-from holovec.encoders import (
-    ImageEncoder,
-    ThermometerEncoder,
-    FractionalPowerEncoder
-)
+from holovec.encoders import FractionalPowerEncoder, ImageEncoder, ThermometerEncoder
 
 
 # Fixtures

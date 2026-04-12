@@ -5,10 +5,17 @@ This module provides encoders for spatial data structures like images,
 where both position and value information must be encoded.
 """
 
-from holovec.models.base import VSAModel
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from holovec.backends.base import Array
 from holovec.encoders.base import Encoder
 from holovec.encoders.scalar import ScalarEncoder
-from holovec.backends.base import Array
+from holovec.models.base import VSAModel
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 class ImageEncoder(Encoder):
@@ -106,7 +113,7 @@ class ImageEncoder(Encoder):
         self.n_channels: int | None = None
         self.image_shape: tuple[int, ...] | None = None
 
-    def encode(self, image: "Array | numpy.ndarray") -> Array:
+    def encode(self, image: Array | np.ndarray) -> Array:
         """
         Encode an image into a hypervector.
 
@@ -226,7 +233,7 @@ class ImageEncoder(Encoder):
 
     def decode(
         self, hypervector: Array, height: int, width: int, n_channels: int = 1
-    ) -> "numpy.ndarray":
+    ) -> np.ndarray:
         """
         Decode a hypervector to reconstruct an approximate image.
 
@@ -345,14 +352,13 @@ class ImageEncoder(Encoder):
         str
             Description of input format.
         """
-        if self.n_channels is None:
+        if self.n_channels is None or self.image_shape is None:
             return "2D array (grayscale) or 3D array (color) with shape (H, W) or (H, W, C)"
-        elif self.n_channels == 1:
+        if self.n_channels == 1:
             return f"Grayscale image ({self.image_shape[0]}x{self.image_shape[1]})"
-        elif self.n_channels == 3:
+        if self.n_channels == 3:
             return f"RGB image ({self.image_shape[0]}x{self.image_shape[1]}x3)"
-        else:
-            return f"RGBA image ({self.image_shape[0]}x{self.image_shape[1]}x4)"
+        return f"RGBA image ({self.image_shape[0]}x{self.image_shape[1]}x4)"
 
     def __repr__(self) -> str:
         """Return string representation."""

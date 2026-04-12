@@ -1,8 +1,8 @@
 import numpy as np
 
-from holovec.spaces.spaces import SparseSegmentSpace
-from holovec.models.bsdc_seg import BSDCSEGModel
 from holovec.backends import get_backend
+from holovec.models.bsdc_seg import BSDCSEGModel
+from holovec.spaces.spaces import SparseSegmentSpace
 
 
 def test_sparse_segment_space_random_and_normalize():

@@ -34,6 +34,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enable with `VSA.create('BSDC', binding_mode='cdt')`
   - Multi-component binding via `model.context_dependent_thinning([a, b, c])`
 
+### Changed
+
+- Split cleanup strategies into `holovec.utils.cleanup` package modules while preserving public imports
+- Added dedicated engine CI for tests, Ruff, and source-only mypy
+- Updated developer commands and README examples to use `uv run` / `uv sync`
+- Clarified backend support policy: NumPy is release-blocking, PyTorch and JAX are optional paths
+
+### Fixed
+
+- `holovec.__version__` now resolves from installed package metadata instead of a stale hardcoded value
+- Sequence symbol auto-generation is now deterministic across Python processes and insertion order
+- Periodic encoder helper functions no longer raise `NameError` on `np.pi`
+- Source typing now passes `mypy holovec`
+
+### Testing
+
+- Added regression tests for runtime/package version alignment
+- Added regression tests for periodic helper APIs
+- Added regression tests for deterministic sequence symbol generation across processes and insertion order
+
+### Documentation
+
+- Updated installation, testing, and contribution guidance to reflect the enforced engine workflow
+
 ### Testing
 
 - Added 48 tests for ResidueEncoder (encoding, addition, subtraction, decoding, CRT)

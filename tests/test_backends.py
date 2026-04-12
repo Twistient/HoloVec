@@ -3,16 +3,15 @@
 Ensures all backends provide consistent behavior and results.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from holovec.backends import (
     NumPyBackend,
-    get_backend,
     get_available_backends,
+    get_backend,
     is_backend_available,
 )
-
 
 # Check which backends are available for testing
 AVAILABLE_BACKENDS = get_available_backends()

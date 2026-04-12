@@ -211,14 +211,14 @@ class TestVTBModel:
 
         # Try PyTorch if available
         try:
-            import torch
+            __import__("torch")
             backends.append('torch')
         except ImportError:
             pass
 
         # Try JAX if available
         try:
-            import jax
+            __import__("jax")
             backends.append('jax')
         except ImportError:
             pass

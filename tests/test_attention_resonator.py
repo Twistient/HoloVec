@@ -19,7 +19,6 @@ import pytest
 from holovec import VSA
 from holovec.utils import (
     AttentionResonatorCleanup,
-    BruteForceCleanup,
     ResonatorCleanup,
 )
 
@@ -344,8 +343,6 @@ class TestAttentionVsTraditionalResonator:
 
         # Count correct for each
         attention_correct = len(set(attention_labels) & set(factors))
-        traditional_correct = len(set(traditional_labels) & set(factors))
-
         # Attention should perform at least as well (usually better)
         # Note: This is a probabilistic test, so we just check it doesn't fail catastrophically
         assert attention_correct >= 1, "Attention should recover at least 1 factor"

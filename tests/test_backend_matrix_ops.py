@@ -3,11 +3,10 @@
 Tests matrix operations needed for GHRR and VTB models.
 """
 
-import pytest
 import numpy as np
+import pytest
 
-from holovec.backends import get_backend, get_available_backends
-
+from holovec.backends import get_available_backends, get_backend
 
 AVAILABLE_BACKENDS = get_available_backends()
 

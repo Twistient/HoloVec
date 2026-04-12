@@ -4,15 +4,15 @@ This file provides guidance for AI coding agents working on the HoloVec codebase
 
 ## Commands
 
-- **Install**: `uv pip install -e .[all]` (includes torch, jax, dev, docs extras)
-- **Test all**: `pytest`
-- **Test single file**: `pytest tests/test_models.py -v`
-- **Test single test**: `pytest tests/test_models.py::test_function_name -v`
-- **Test with coverage**: `pytest --cov=holovec --cov-report=term-missing`
-- **Test without coverage**: `pytest --no-cov`
-- **Lint**: `ruff check holovec tests`
-- **Format**: `black holovec tests`
-- **Type check**: `mypy holovec tests`
+- **Install**: `uv sync --extra dev` (use `uv pip install -e .[all]` only when you explicitly need every optional extra)
+- **Test all**: `uv run --extra dev pytest`
+- **Test single file**: `uv run --extra dev pytest tests/test_models.py -v`
+- **Test single test**: `uv run --extra dev pytest tests/test_models.py::test_function_name -v`
+- **Test with coverage**: `uv run --extra dev pytest --cov=holovec --cov-report=term-missing`
+- **Test without coverage**: `uv run --extra dev pytest --no-cov`
+- **Lint**: `uv run --extra dev ruff check holovec tests`
+- **Format**: `uv run --extra dev black holovec tests`
+- **Type check**: `uv run --extra dev mypy holovec`
 
 ## Code Style
 
@@ -27,6 +27,7 @@ This file provides guidance for AI coding agents working on the HoloVec codebase
 - Test files mirror source: `holovec/encoders/vector.py` → `tests/test_encoders_vector.py`
 - Extend existing parametrized suites; use pytest fixtures for temp artifacts
 - Target ≥90% coverage; mark backend-specific skips explicitly
+- Engine CI matches the local gate: `pytest`, `ruff check holovec tests`, and `mypy holovec`
 
 ## Commit Convention
 
@@ -67,7 +68,7 @@ Release a new version when:
 
 1. **Ensure all tests pass**:
    ```bash
-   pytest tests/ -q
+   uv run --extra dev pytest tests/ -q
    ```
 
 2. **Review unreleased changes**:
@@ -221,6 +222,8 @@ HoloVec supports multiple computational backends (NumPy, PyTorch, JAX). When wri
 - Never import a specific backend at module level (except numpy for type stubs)
 - Use `backend.method()` calls, not direct numpy/torch/jax calls
 - Test across all available backends when possible
+- Treat NumPy as the release-blocking backend. PyTorch and JAX are optional support paths unless
+  their backend-specific tests are explicitly exercised.
 
 ### Test Coverage Targets
 

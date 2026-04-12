@@ -1,7 +1,7 @@
 
 from ..backends.base import Array
 from ..models.base import VSAModel
-from ..utils.cleanup import CleanupStrategy, BruteForceCleanup
+from ..utils.cleanup import BruteForceCleanup, CleanupStrategy
 from ..utils.search import nearest_neighbors
 from .codebook import Codebook
 
@@ -93,21 +93,35 @@ class ItemStore:
             vec, self.codebook._items, self.model, k=k, return_similarities=True
         )
         return (
-            list(zip(labels, sims or [])) if return_similarities else [(lbl, 0.0) for lbl in labels]
+            list(zip(labels, sims or [], strict=True))
+            if return_similarities
+            else [(lbl, 0.0) for lbl in labels]
         )
 
     def factorize(
         self,
         vec: Array,
         n_factors: int,
-        **kwargs,
+        max_iterations: int | None = None,
+        threshold: float | None = None,
+        temperature: float = 20.0,
+        top_k: int = 1,
+        patience: int = 3,
+        min_delta: float = 1e-4,
+        mode: str = "hard",
     ) -> tuple[list[str], list[float]]:
         return self.cleanup.factorize(
             vec,
             self.codebook._items,
             self.model,
             n_factors=n_factors,
-            **kwargs,
+            max_iterations=max_iterations,
+            threshold=threshold,
+            temperature=temperature,
+            top_k=top_k,
+            patience=patience,
+            min_delta=min_delta,
+            mode=mode,
         )
 
     # Persistence delegates to Codebook

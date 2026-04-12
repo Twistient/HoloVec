@@ -3,6 +3,8 @@
 This backend enables GPU acceleration and integration with PyTorch models.
 """
 
+from __future__ import annotations
+
 from collections.abc import Sequence
 
 import numpy as np
@@ -12,7 +14,7 @@ from .base import Array, Backend, BackendNotAvailableError
 try:
     import torch
     TORCH_AVAILABLE = True
-except ImportError:
+except ImportError:  # pragma: no cover
     TORCH_AVAILABLE = False
     torch = None
 
@@ -84,7 +86,7 @@ class TorchBackend(Backend):
 
         # Check CUDA
         if device_lower.startswith('cuda'):
-            return torch.cuda.is_available()
+            return bool(torch.cuda.is_available())
 
         # Check Apple Metal (MPS)
         if device_lower.startswith('mps'):
@@ -93,7 +95,7 @@ class TorchBackend(Backend):
         return False
 
     @property
-    def device(self) -> torch.device:
+    def device(self) -> object:
         """Return the current device."""
         return self._device
 
@@ -212,7 +214,7 @@ class TorchBackend(Backend):
         angles = torch.rand(shape, generator=generator, device=self._device) * 2 * np.pi
         return torch.exp(1j * angles).to(torch_dtype)
 
-    def array(self, data, dtype: str | None = None) -> Array:
+    def array(self, data: object, dtype: str | None = None) -> Array:
         torch_dtype = self._to_torch_dtype(dtype) if dtype else None
         return torch.tensor(data, dtype=torch_dtype, device=self._device)
 
@@ -365,7 +367,7 @@ class TorchBackend(Backend):
         return str(a.dtype).replace('torch.', '')
 
     def to_numpy(self, a: Array) -> np.ndarray:
-        return a.detach().cpu().numpy()
+        return np.asarray(a.detach().cpu().numpy())
 
     def from_numpy(self, a: np.ndarray) -> Array:
         return torch.from_numpy(a).to(self._device)
@@ -387,10 +389,10 @@ class TorchBackend(Backend):
         return torch.where(condition, x, y)
 
     def stack(self, arrays: Sequence[Array], axis: int = 0) -> Array:
-        return torch.stack(arrays, dim=axis)
+        return torch.stack(list(arrays), dim=axis)
 
     def concatenate(self, arrays: Sequence[Array], axis: int = 0) -> Array:
-        return torch.cat(arrays, dim=axis)
+        return torch.cat(list(arrays), dim=axis)
 
     # ===== Matrix Operations =====
 
@@ -437,7 +439,7 @@ class TorchBackend(Backend):
     # ===== Helper Methods =====
 
     @staticmethod
-    def _to_torch_dtype(dtype: str) -> torch.dtype:
+    def _to_torch_dtype(dtype: str) -> object:
         """Convert string dtype to torch dtype."""
         dtype_map = {
             'float16': torch.float16,

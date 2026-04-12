@@ -26,17 +26,23 @@ Example:
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING
-
-import numpy as np
+from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
     from ..models.base import VSAModel
 
 
+class CapacityConstants(TypedDict):
+    items_per_binding: float
+    bundle_factor: float
+    recovery_accuracy: float
+    binding_depth: int
+    description: str
+
+
 # Theoretical capacity constants derived from literature
 # See Schlegel et al. (2022) and Kleyko et al. (2023)
-_CAPACITY_CONSTANTS = {
+_CAPACITY_CONSTANTS: dict[str, CapacityConstants] = {
     'FHRR': {
         'items_per_binding': 3.0,  # ~D/3 items per single binding
         'bundle_factor': 0.37,    # ~0.37*sqrt(D) items in bundle
@@ -244,7 +250,7 @@ def compare_models(dim: int = 1000) -> dict[str, dict]:
 
 
 def empirical_capacity_test(
-    model: 'VSAModel',
+    model: VSAModel,
     codebook_sizes: list[int] | None = None,
     n_trials: int = 50,
     accuracy_threshold: float = 0.95,

@@ -7,11 +7,10 @@ Tests algebraic properties and correctness of VSA operations:
 - Self-inverse: bind(a, b) = unbind(a, b)
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from holovec import VSA
-
 
 # Test parameters
 DIMENSIONS = [512, 1024]  # Test with different dimensions
@@ -66,12 +65,12 @@ class TestModelCreation:
     def test_model_properties(self, model, model_name):
         """Test model properties are correctly reported."""
         if model_name == "MAP":
-            assert model.is_self_inverse == True
-            assert model.is_commutative == True
+            assert model.is_self_inverse
+            assert model.is_commutative
         elif model_name == "FHRR":
-            assert model.is_self_inverse == False
-            assert model.is_commutative == True
-            assert model.is_exact_inverse == True
+            assert not model.is_self_inverse
+            assert model.is_commutative
+            assert model.is_exact_inverse
 
 
 class TestRandomVectorGeneration:

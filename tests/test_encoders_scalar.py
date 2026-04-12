@@ -10,17 +10,17 @@ Tests cover:
 - Edge cases
 """
 
-import pytest
 import numpy as np
-from hypothesis import given, settings, strategies as st, HealthCheck
+import pytest
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 from holovec import VSA
 from holovec.encoders import (
     FractionalPowerEncoder,
-    ThermometerEncoder,
     LevelEncoder,
+    ThermometerEncoder,
 )
-
 
 # ============================================================================
 # Fixtures

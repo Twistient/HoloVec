@@ -1,9 +1,10 @@
 import numpy as np
+import pytest
 
 from holovec.backends import get_backend
 from holovec.models.fhrr import FHRRModel
-from holovec.utils.decode import decode_nearest, decode_threshold, decode_multilabel
 from holovec.retrieval import Codebook, ItemStore
+from holovec.utils.decode import decode_multilabel, decode_nearest, decode_threshold
 
 
 def test_decode_helpers_nearest_and_threshold():
@@ -36,7 +37,7 @@ def test_itemstore_batched_query_matches_scalar():
     slow = store.query(q, k=5, fast=False)
 
     # Compare label sets (order may differ on ties, relax to sets)
-    assert {l for l, _ in fast} == {l for l, _ in slow}
+    assert {label for label, _ in fast} == {label for label, _ in slow}
 
 
 class TestAssocStore:
@@ -131,8 +132,9 @@ class TestAssocStore:
 
     def test_query_empty_store_raises(self):
         """Test that querying empty store raises ValueError."""
-        from holovec.retrieval import AssocStore
         import pytest
+
+        from holovec.retrieval import AssocStore
 
         be = get_backend("numpy")
         model = FHRRModel(dimension=256, backend=be, seed=0)
@@ -190,11 +192,8 @@ class TestCodebookDictInterface:
         be = get_backend("numpy")
         cb = Codebook({}, backend=be)
 
-        try:
+        with pytest.raises(KeyError):
             _ = cb["nonexistent"]
-            assert False, "Should raise KeyError"
-        except KeyError:
-            pass
 
     def test_contains(self):
         be = get_backend("numpy")

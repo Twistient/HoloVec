@@ -4,9 +4,7 @@ Tests the implementation of Kymn et al. 2024 "Computing With Residue Numbers
 in High-Dimensional Representation".
 """
 
-import math
 
-import numpy as np
 import pytest
 
 from holovec import VSA

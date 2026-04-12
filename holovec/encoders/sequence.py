@@ -6,9 +6,14 @@ trajectories) into hypervector representations, preserving order and enabling
 partial matching.
 """
 
-from holovec.encoders.base import SequenceEncoder, ScalarEncoder
-from holovec.models.base import VSAModel
+import hashlib
+import json
+
 from holovec.backends.base import Array
+from holovec.encoders.base import ScalarEncoder, SequenceEncoder
+from holovec.models.base import VSAModel
+
+Symbol = str | int
 
 
 class PositionBindingEncoder(SequenceEncoder):
@@ -52,7 +57,7 @@ class PositionBindingEncoder(SequenceEncoder):
     def __init__(
         self,
         model: VSAModel,
-        codebook: dict[str, Array] | None = None,
+        codebook: dict[Symbol, Array] | None = None,
         max_length: int | None = None,
         auto_generate: bool = True,
         seed: int | None = None
@@ -72,10 +77,9 @@ class PositionBindingEncoder(SequenceEncoder):
         """
         super().__init__(model, max_length)
 
-        self.codebook = codebook if codebook is not None else {}
+        self.codebook: dict[Symbol, Array] = dict(codebook) if codebook is not None else {}
         self.auto_generate = auto_generate
         self.seed = seed
-        self._next_symbol_seed = 0  # Counter for symbol generation
 
     def encode(self, sequence: list[str | int]) -> Array:
         """
@@ -139,7 +143,7 @@ class PositionBindingEncoder(SequenceEncoder):
         hypervector: Array,
         max_positions: int = 10,
         threshold: float = 0.3
-    ) -> list[str]:
+    ) -> list[Symbol]:
         """
         Decode sequence hypervector to recover symbols.
 
@@ -173,7 +177,7 @@ class PositionBindingEncoder(SequenceEncoder):
         symbols = list(self.codebook.keys())
         vectors = [self.codebook[s] for s in symbols]
 
-        decoded = []
+        decoded: list[Symbol] = []
 
         for pos in range(max_positions):
             # Unpermute by position to recover symbol at this position
@@ -183,7 +187,7 @@ class PositionBindingEncoder(SequenceEncoder):
             best_similarity = -float('inf')
             best_symbol = None
 
-            for symbol, symbol_vec in zip(symbols, vectors):
+            for symbol, symbol_vec in zip(symbols, vectors, strict=True):
                 sim = float(self.model.similarity(unpermuted, symbol_vec))
                 if sim > best_similarity:
                     best_similarity = sim
@@ -191,6 +195,7 @@ class PositionBindingEncoder(SequenceEncoder):
 
             # Only include if above threshold
             if best_similarity >= threshold:
+                assert best_symbol is not None
                 decoded.append(best_symbol)
             else:
                 # No strong match - likely end of sequence
@@ -210,17 +215,21 @@ class PositionBindingEncoder(SequenceEncoder):
         Returns:
             Random hypervector for this symbol
         """
-        # Create seed from base seed + symbol hash + counter
-        if self.seed is not None:
-            symbol_seed = self.seed + hash(symbol) % 10000 + self._next_symbol_seed
-        else:
-            symbol_seed = hash(symbol) % 100000 + self._next_symbol_seed
-
-        self._next_symbol_seed += 1
-
+        payload = json.dumps(
+            {
+                "base_seed": self.seed,
+                "symbol_type": type(symbol).__name__,
+                "symbol_value": symbol,
+            },
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+        digest = hashlib.blake2b(payload, digest_size=8).digest()
+        symbol_seed = int.from_bytes(digest, byteorder="big") % (2**31 - 1)
         return self.model.random(seed=symbol_seed)
 
-    def add_symbol(self, symbol: str | int, vector: Array | None = None):
+    def add_symbol(self, symbol: Symbol, vector: Array | None = None) -> None:
         """
         Add a symbol to the codebook.
 
@@ -331,7 +340,7 @@ class NGramEncoder(SequenceEncoder):
         n: int = 2,
         stride: int = 1,
         mode: str = 'bundling',
-        codebook: dict[str, Array] | None = None,
+        codebook: dict[Symbol, Array] | None = None,
         auto_generate: bool = True,
         seed: int | None = None
     ):
@@ -500,7 +509,7 @@ class NGramEncoder(SequenceEncoder):
 
         return decoded_ngrams
 
-    def get_codebook(self) -> dict[str, Array]:
+    def get_codebook(self) -> dict[Symbol, Array]:
         """
         Get the internal symbol codebook.
 
@@ -689,6 +698,7 @@ class TrajectoryEncoder(SequenceEncoder):
         point_hvs = []
 
         for i, point in enumerate(trajectory):
+            coords: tuple[float, ...]
             # Normalize point to tuple format
             if self.n_dimensions == 1:
                 # 1D: scalar → (scalar,)
@@ -698,13 +708,17 @@ class TrajectoryEncoder(SequenceEncoder):
                     coords = (float(point[0]),)
             else:
                 # 2D/3D: accept tuple, list, or array-like
-                try:
-                    # Convert to tuple (works for tuple, list, numpy array, etc.)
-                    coords = tuple(float(c) for c in point)
-                except (TypeError, ValueError):
+                if isinstance(point, int | float):
                     raise ValueError(
                         f"Expected iterable for {self.n_dimensions}D point, got {type(point)}"
                     )
+                try:
+                    # Convert to tuple (works for tuple, list, numpy array, etc.)
+                    coords = tuple(float(c) for c in point)
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(
+                        f"Expected iterable for {self.n_dimensions}D point, got {type(point)}"
+                    ) from exc
 
             # Validate dimensionality
             if len(coords) != self.n_dimensions:

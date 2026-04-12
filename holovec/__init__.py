@@ -42,6 +42,8 @@ Vector Spaces:
     - Sparse: Sparse binary for BSDC
 """
 
+from collections.abc import Callable
+from importlib.metadata import PackageNotFoundError, version
 
 from . import analysis, backends, models, spaces
 from .analysis import (
@@ -64,7 +66,10 @@ from .models import (
 )
 from .spaces import VectorSpace, create_space
 
-__version__ = "0.1.1"
+try:
+    __version__ = version("holovec")
+except PackageNotFoundError:  # pragma: no cover - fallback for source-only usage
+    __version__ = "0.2.0"
 
 
 class VSA:
@@ -87,7 +92,7 @@ class VSA:
     """
 
     # Model registry
-    _MODELS = {
+    _MODELS: dict[str, Callable[..., VSAModel]] = {
         "map": MAPModel,
         "fhrr": FHRRModel,
         "hrr": HRRModel,
@@ -100,7 +105,7 @@ class VSA:
     }
 
     # Default vector spaces for each model
-    _DEFAULT_SPACES = {
+    _DEFAULT_SPACES: dict[str, str] = {
         "map": "bipolar",
         "fhrr": "complex",
         "hrr": "real",
@@ -120,7 +125,7 @@ class VSA:
         backend: str | Backend | None = None,
         space: str | None = None,
         seed: int | None = None,
-        **kwargs,
+        **kwargs: object,
     ) -> VSAModel:
         """Create a VSA model with the specified configuration.
 
@@ -177,11 +182,13 @@ class VSA:
 
         # Create space if string provided
         if isinstance(space, str):
-            space_instance = create_space(
+            space_instance: VectorSpace = create_space(
                 space, dimension=dim, backend=backend_instance, seed=seed, **space_kwargs
             )
-        else:
+        elif space is not None:
             space_instance = space
+        else:
+            raise ValueError("space could not be resolved to a valid vector space")
 
         # Collect model-specific kwargs
         model_kwargs = {}
@@ -192,8 +199,11 @@ class VSA:
 
         # Create model
         model = model_class(
-            dimension=dim, space=space_instance, backend=backend_instance, seed=seed,
-            **model_kwargs
+            dimension=dim,
+            space=space_instance,
+            backend=backend_instance,
+            seed=seed,
+            **model_kwargs,
         )
 
         return model
@@ -239,7 +249,14 @@ class VSA:
 
 
 # Convenience functions
-def create_model(model_type: str, **kwargs) -> VSAModel:
+def create_model(
+    model_type: str,
+    dim: int = 10000,
+    backend: str | Backend | None = None,
+    space: str | None = None,
+    seed: int | None = None,
+    **kwargs: object,
+) -> VSAModel:
     """Convenience function to create a VSA model.
 
     This is an alias for VSA.create() for users who prefer functional style.
@@ -254,7 +271,7 @@ def create_model(model_type: str, **kwargs) -> VSAModel:
     Example:
         >>> model = create_model('FHRR', dim=512)
     """
-    return VSA.create(model_type, **kwargs)
+    return VSA.create(model_type, dim=dim, backend=backend, space=space, seed=seed, **kwargs)
 
 
 def backend_info() -> dict:

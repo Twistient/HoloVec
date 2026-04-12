@@ -6,9 +6,9 @@ and structured data into hypervector representations by composing scalar
 encoders with dimension binding.
 """
 
-from holovec.encoders.base import StructuredEncoder, ScalarEncoder
-from holovec.models.base import VSAModel
 from holovec.backends.base import Array
+from holovec.encoders.base import ScalarEncoder, StructuredEncoder
+from holovec.models.base import VSAModel
 
 
 class VectorEncoder(StructuredEncoder):

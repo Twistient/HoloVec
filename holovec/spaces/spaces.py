@@ -9,6 +9,8 @@ This module implements the specific vector spaces used in various VSA models:
 """
 
 
+from collections.abc import Iterator
+
 import numpy as np
 
 from ..backends import Backend
@@ -329,7 +331,7 @@ class SparseSegmentSpace(DiscreteSpace):
     def dtype(self) -> str:
         return "int32"
 
-    def _segment_ranges(self):
+    def _segment_ranges(self) -> Iterator[tuple[int, int, int]]:
         L = self.segment_length
         for s in range(self.segments):
             start = s * L
@@ -340,7 +342,7 @@ class SparseSegmentSpace(DiscreteSpace):
         import numpy as _np
         rng = _np.random.default_rng(seed)
         vec = _np.zeros((self.dimension,), dtype=_np.int32)
-        for _, start, end in self._segment_ranges():
+        for _, start, _end in self._segment_ranges():
             idx = rng.integers(low=0, high=self.segment_length)
             vec[start + int(idx)] = 1
         return self.backend.from_numpy(vec)
@@ -357,8 +359,7 @@ class SparseSegmentSpace(DiscreteSpace):
         if arr.ndim != 1 or arr.shape[0] != self.dimension:
             raise ValueError("Expected 1D vector of length D for normalize()")
         out = _np.zeros_like(arr, dtype=_np.int32)
-        L = self.segment_length
-        for s, start, end in self._segment_ranges():
+        for _s, start, end in self._segment_ranges():
             seg = arr[start:end]
             # If all zeros, argmax returns 0 (deterministic tie-break)
             local = int(_np.argmax(seg))
@@ -374,9 +375,8 @@ class SparseSegmentSpace(DiscreteSpace):
         import numpy as _np
         a_np = _np.array(self.backend.to_numpy(self.normalize(a)))
         b_np = _np.array(self.backend.to_numpy(self.normalize(b)))
-        L = self.segment_length
         matches = 0
-        for s, start, end in self._segment_ranges():
+        for _s, start, end in self._segment_ranges():
             # active index in segment
             ia = int(_np.argmax(a_np[start:end]))
             ib = int(_np.argmax(b_np[start:end]))
@@ -389,7 +389,6 @@ class SparseSegmentSpace(DiscreteSpace):
         """Return indices (length S) of active positions per segment after normalize()."""
         import numpy as _np
         v = _np.array(self.backend.to_numpy(self.normalize(vec)))
-        L = self.segment_length
         idx = _np.zeros((self.segments,), dtype=_np.int32)
         for s, start, end in self._segment_ranges():
             idx[s] = int(_np.argmax(v[start:end]))
@@ -402,7 +401,7 @@ class SparseSegmentSpace(DiscreteSpace):
         """
         import numpy as _np
         v = _np.array(self.backend.to_numpy(vec)).copy()
-        keep_set = set(int(x) for x in keep)
+        keep_set = {int(x) for x in keep}
         L = self.segment_length
         for s in range(self.segments):
             if s not in keep_set:
@@ -434,7 +433,7 @@ class SparseSegmentSpace(DiscreteSpace):
         out = _np.zeros_like(v)
         L = self.segment_length
         kk = int(k) % L
-        for s, start, end in self._segment_ranges():
+        for _s, start, end in self._segment_ranges():
             seg = v[start:end]
             out[start:end] = _np.roll(seg, kk)
         return self.backend.from_numpy(out.astype(_np.int32))
@@ -448,7 +447,7 @@ class SparseSegmentSpace(DiscreteSpace):
         p = _np.array(perm, dtype=_np.int64)
         if p.shape[0] != L:
             raise ValueError(f"perm length must equal segment_length ({L})")
-        for s, start, end in self._segment_ranges():
+        for _s, start, end in self._segment_ranges():
             seg = v[start:end]
             out[start:end] = seg[p]
         return self.backend.from_numpy(out.astype(_np.int32))
@@ -651,7 +650,7 @@ def create_space(
     dimension: int,
     backend: Backend | None = None,
     seed: int | None = None,
-    **kwargs
+    **kwargs: object,
 ) -> DiscreteSpace | ContinuousSpace:
     """Factory function to create vector spaces.
 
@@ -670,7 +669,7 @@ def create_space(
         >>> space = create_space('complex', 512)
         >>> space = create_space('sparse', 10000, sparsity=0.01)
     """
-    space_map = {
+    space_map: dict[str, type[DiscreteSpace] | type[ContinuousSpace]] = {
         'bipolar': BipolarSpace,
         'binary': BinarySpace,
         'real': RealSpace,

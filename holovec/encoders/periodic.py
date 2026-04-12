@@ -1,8 +1,8 @@
 import math
 
+from holovec.backends.base import Array
 from holovec.encoders.base import ScalarEncoder
 from holovec.models.base import VSAModel
-from holovec.backends.base import Array
 
 
 class PeriodicAngleEncoder(ScalarEncoder):
@@ -147,12 +147,12 @@ class PeriodicAngleEncoder(ScalarEncoder):
 def encode_day_of_week(model: VSAModel, day_index: int, harmonics: int = 3, seed: int | None = None) -> Array:
     """Encode day of week as periodic angle on 7-cycle (0..6)."""
     enc = PeriodicAngleEncoder(model, harmonics=harmonics, radians=True, seed=seed)
-    theta = 2 * np.pi * (int(day_index) % 7) / 7.0
+    theta = 2 * math.pi * (int(day_index) % 7) / 7.0
     return enc.encode(theta)
 
 
 def encode_time_of_day(model: VSAModel, hour: float, harmonics: int = 3, seed: int | None = None) -> Array:
     """Encode time of day (0..24) as periodic angle."""
     enc = PeriodicAngleEncoder(model, harmonics=harmonics, radians=True, seed=seed)
-    theta = 2 * np.pi * (float(hour) % 24.0) / 24.0
+    theta = 2 * math.pi * (float(hour) % 24.0) / 24.0
     return enc.encode(theta)

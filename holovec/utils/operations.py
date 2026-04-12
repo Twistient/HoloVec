@@ -81,7 +81,7 @@ def add_noise(
     vector: Array,
     model: VSAModel,
     noise_level: float = 0.1,
-    seed: int = None,
+    seed: int | None = None,
 ) -> Array:
     """Add controlled noise to a hypervector.
 
@@ -156,7 +156,7 @@ def add_noise(
 def similarity_matrix(
     vectors: list[Array],
     model: VSAModel,
-    labels: list[str] = None,
+    labels: list[str] | None = None,
 ) -> np.ndarray:
     """Compute pairwise similarity matrix.
 

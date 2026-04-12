@@ -4,19 +4,28 @@ This module provides automatic backend detection and a unified interface
 for accessing different computational backends (NumPy, PyTorch, JAX).
 """
 
+from __future__ import annotations
 
 from .base import Backend, BackendError, BackendNotAvailableError
 from .numpy_backend import NumPyBackend
 
 # Try to import optional backends
+TorchBackend: type[Backend] | None
 try:
-    from .torch_backend import TorchBackend, TORCH_AVAILABLE
+    from .torch_backend import TORCH_AVAILABLE
+    from .torch_backend import TorchBackend as _TorchBackend
+
+    TorchBackend = _TorchBackend
 except ImportError:
     TorchBackend = None
     TORCH_AVAILABLE = False
 
+JAXBackend: type[Backend] | None
 try:
-    from .jax_backend import JAXBackend, JAX_AVAILABLE
+    from .jax_backend import JAX_AVAILABLE
+    from .jax_backend import JAXBackend as _JAXBackend
+
+    JAXBackend = _JAXBackend
 except ImportError:
     JAXBackend = None
     JAX_AVAILABLE = False
@@ -61,7 +70,7 @@ def is_backend_available(name: str) -> bool:
     return name.lower() in _BACKENDS
 
 
-def get_backend(name: str | Backend | None = None, **kwargs) -> Backend:
+def get_backend(name: str | Backend | None = None, **kwargs: object) -> Backend:
     """Get a backend instance by name.
 
     Args:
@@ -108,10 +117,10 @@ def get_backend(name: str | Backend | None = None, **kwargs) -> Backend:
     try:
         return backend_class(**kwargs)
     except Exception as e:
-        raise BackendError(f"Failed to initialize {name} backend: {e}")
+        raise BackendError(f"Failed to initialize {name} backend: {e}") from e
 
 
-def set_default_backend(name: str, **kwargs) -> None:
+def set_default_backend(name: str, **kwargs: object) -> None:
     """Set the default backend.
 
     Args:

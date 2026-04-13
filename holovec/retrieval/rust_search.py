@@ -1,8 +1,17 @@
-"""Helpers for the isolated Rust retrieval prototype."""
+"""Optional Rust-backed prepared retrieval kernels.
+
+This module provides a narrow runtime bridge to the cargo-based retrieval
+prototype under ``prototypes/rust_search/``. It is intentionally optional:
+
+- the default retrieval path remains exact prepared NumPy
+- callers opt in by requesting ``search_backend="rust"``
+- unsupported modes or missing native artifacts fall back to NumPy
+"""
 
 from __future__ import annotations
 
 import ctypes
+import os
 import subprocess
 import sys
 import weakref
@@ -13,12 +22,22 @@ from typing import Any, cast
 import numpy as np
 from numpy.typing import NDArray
 
-from holovec.backends.base import Array
-from holovec.models.base import VSAModel
-from holovec.utils.search import PreparedSearchIndex, prepare_search_index
+from ..backends.base import Array
+from ..models.base import VSAModel
+from ..spaces.spaces import SparseSegmentSpace
+from ..utils.search import PreparedSearchIndex, prepare_search_index
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-RUST_SEARCH_MANIFEST = REPO_ROOT / "prototypes" / "rust_search" / "Cargo.toml"
+RUST_SEARCH_LIBRARY_ENV = "HOLOVEC_RUST_SEARCH_LIBRARY"
+RUST_SEARCH_MANIFEST_ENV = "HOLOVEC_RUST_SEARCH_MANIFEST"
+PRODUCTION_SUPPORTED_MODES = frozenset({"discrete", "sparse", "sparse_segment"})
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _packaged_library_path() -> Path:
+    return Path(__file__).resolve().with_name("_native") / _library_filename()
 
 
 def _library_filename() -> str:
@@ -29,17 +48,39 @@ def _library_filename() -> str:
     return "libholovec_rust_search.so"
 
 
+def rust_search_manifest_path() -> Path:
+    configured = os.getenv(RUST_SEARCH_MANIFEST_ENV)
+    if configured:
+        return Path(configured).expanduser().resolve()
+    return _repo_root() / "prototypes" / "rust_search" / "Cargo.toml"
+
+
 def rust_search_library_path(*, release: bool = True) -> Path:
+    configured = os.getenv(RUST_SEARCH_LIBRARY_ENV)
+    if configured:
+        return Path(configured).expanduser().resolve()
+    packaged = _packaged_library_path()
+    if packaged.exists():
+        return packaged
     profile = "release" if release else "debug"
-    return REPO_ROOT / "prototypes" / "rust_search" / "target" / profile / _library_filename()
+    return _repo_root() / "prototypes" / "rust_search" / "target" / profile / _library_filename()
 
 
 def build_rust_search_library(*, release: bool = True) -> Path:
-    cmd = ["cargo", "build", "--manifest-path", str(RUST_SEARCH_MANIFEST)]
+    """Build the optional Rust retrieval library and return its path."""
+    manifest_path = rust_search_manifest_path()
+    cmd = ["cargo", "build", "--manifest-path", str(manifest_path)]
     if release:
         cmd.append("--release")
-    subprocess.run(cmd, cwd=REPO_ROOT, check=True)
+    subprocess.run(cmd, cwd=manifest_path.parent.parent, check=True)
     return rust_search_library_path(release=release)
+
+
+def supports_rust_search_mode(mode: str, *, production_only: bool = False) -> bool:
+    """Return whether the Rust bridge supports a prepared-search mode."""
+    if production_only:
+        return mode in PRODUCTION_SUPPORTED_MODES
+    return mode in {"continuous", *PRODUCTION_SUPPORTED_MODES}
 
 
 _LIBRARY: ctypes.CDLL | None = None
@@ -53,7 +94,10 @@ def _load_library() -> ctypes.CDLL:
     path = rust_search_library_path()
     if not path.exists():
         raise FileNotFoundError(
-            f"Rust search library not built: {path}. Run with --build-rust first."
+            f"Rust search library not found: {path}. "
+            "Use an official wheel, build it with "
+            "holovec.retrieval.rust_search.build_rust_search_library(), "
+            f"or set {RUST_SEARCH_LIBRARY_ENV} to an explicit library path."
         )
 
     library = ctypes.CDLL(str(path))
@@ -120,7 +164,7 @@ def _load_library() -> ctypes.CDLL:
     return library
 
 
-EncodeQuery = Callable[[object], NDArray[Any]]
+EncodeQuery = Callable[[Array], NDArray[Any]]
 
 
 class RustPreparedIndex:
@@ -143,7 +187,7 @@ class RustPreparedIndex:
         self._encode_query = encode_query
         self._finalizer = weakref.finalize(self, free_fn, ctypes.c_void_p(handle))
 
-    def query(self, query: object, *, k: int) -> tuple[list[str], list[float]]:
+    def query(self, query: Array, *, k: int) -> tuple[list[str], list[float]]:
         encoded_query = self._encode_query(query)
         out_indices: NDArray[np.uintp] = np.empty(k, dtype=np.uintp)
         out_scores: NDArray[np.float32] = np.empty(k, dtype=np.float32)
@@ -160,27 +204,42 @@ class RustPreparedIndex:
         return labels, [float(score) for score in out_scores.tolist()]
 
 
-def _continuous_query_array(query: object) -> NDArray[Any]:
-    return cast(NDArray[Any], np.ascontiguousarray(np.asarray(query, dtype=np.float32)))
+def query_rust_prepared_index(
+    query: Array,
+    index: RustPreparedIndex,
+    *,
+    k: int,
+    return_similarities: bool = True,
+) -> tuple[list[str], list[float] | None]:
+    """Query a cached Rust prepared-search index."""
+    labels, scores = index.query(query, k=k)
+    if return_similarities:
+        return labels, scores
+    return labels, None
 
 
-def _discrete_query_array(query: object) -> NDArray[Any]:
-    return cast(NDArray[Any], np.ascontiguousarray(np.asarray(query, dtype=np.int8)))
+def _continuous_query_array(query: Array) -> NDArray[Any]:
+    return np.ascontiguousarray(np.asarray(query, dtype=np.float32))
 
 
-def _sparse_query_array(query: object) -> NDArray[Any]:
-    return cast(NDArray[Any], np.ascontiguousarray(np.asarray(query, dtype=np.uint8)))
+def _discrete_query_array(query: Array) -> NDArray[Any]:
+    return np.ascontiguousarray(np.asarray(query, dtype=np.int8))
 
 
-def _segment_query_array(model: VSAModel, query: object) -> NDArray[Any]:
-    pattern = model.space.segment_argmax(query)
-    return cast(NDArray[Any], np.ascontiguousarray(np.asarray(pattern, dtype=np.uint32)))
+def _sparse_query_array(query: Array) -> NDArray[Any]:
+    return np.ascontiguousarray(np.asarray(query, dtype=np.uint8))
+
+
+def _segment_query_array(model: VSAModel, query: Array) -> NDArray[Any]:
+    pattern = cast(SparseSegmentSpace, model.space).segment_argmax(query)
+    return np.ascontiguousarray(np.asarray(pattern, dtype=np.uint32))
 
 
 def prepare_rust_search_index(
     codebook: dict[str, Array],
     model: VSAModel,
 ) -> RustPreparedIndex:
+    """Prepare a Rust-backed exact-search index from a codebook."""
     return prepare_rust_search_from_index(prepare_search_index(codebook, model), model)
 
 
@@ -188,6 +247,7 @@ def prepare_rust_search_from_index(
     index: PreparedSearchIndex,
     model: VSAModel,
 ) -> RustPreparedIndex:
+    """Prepare a Rust-backed exact-search index from prepared search state."""
     library = _load_library()
 
     if index.mode == "continuous":

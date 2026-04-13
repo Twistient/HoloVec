@@ -13,6 +13,11 @@ from typing import TypeVar
 
 from holovec.backends.base import Array
 from holovec.models.base import VSAModel
+from holovec.retrieval.rust_search import (
+    RustPreparedIndex,
+    build_rust_search_library,
+    prepare_rust_search_from_index,
+)
 from holovec.utils.search import (
     PreparedSearchIndex,
     nearest_neighbors,
@@ -20,11 +25,6 @@ from holovec.utils.search import (
     query_prepared_index,
 )
 
-from .rust_search import (
-    RustPreparedIndex,
-    build_rust_search_library,
-    prepare_rust_search_from_index,
-)
 from .suites import create_model
 
 SUPPORTED_MODELS = ("MAP", "BSC", "HRR", "BSDC", "BSDC-SEG")

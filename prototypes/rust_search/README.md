@@ -14,6 +14,26 @@ It deliberately does not yet cover `FHRR` or `GHRR`, because the first question
 to answer is whether a Rust rewrite beats the fixed exact NumPy path on the
 non-complex retrieval kernels.
 
+The library now exposes this as an opt-in runtime backend for retrieval stores:
+
+```python
+from holovec.retrieval import ItemStore
+from holovec.retrieval.rust_search import build_rust_search_library
+
+build_rust_search_library(release=True)
+store = ItemStore(model, search_backend="rust").fit(items)
+hits = store.query(query, k=5, fast=True)
+```
+
+Production integration currently opts into Rust only for:
+
+- discrete exact-match retrieval (`MAP`, `BSC`)
+- sparse overlap retrieval (`BSDC`)
+- sparse segment-pattern retrieval (`BSDC-SEG`)
+
+Dense cosine retrieval remains on the prepared NumPy path by default because the
+prototype did not beat NumPy there.
+
 ## Build
 
 ```bash

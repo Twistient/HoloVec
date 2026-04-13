@@ -11,12 +11,28 @@
 pip install holovec
 ```
 
+Official platform wheels include the optional Rust retrieval library on
+supported platforms. The library remains opt-in at runtime through
+`search_backend="rust"`.
+
 ### From Source
 
 ```bash
 git clone https://github.com/Twistient/HoloVec.git
 cd HoloVec
 uv pip install -e .
+```
+
+If you want a source build to require the native retrieval library, build with:
+
+```bash
+HOLOVEC_BUILD_RUST=1 uv pip install .
+```
+
+If you want to skip the optional native build explicitly:
+
+```bash
+HOLOVEC_SKIP_RUST_BUILD=1 uv pip install .
 ```
 
 ## Optional Backends

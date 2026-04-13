@@ -78,6 +78,7 @@ pip-delete-this-directory.txt
 # Project specific
 *.log
 .cache/
+prototypes/rust_search/target/
 
 # Backup files
 *.bak

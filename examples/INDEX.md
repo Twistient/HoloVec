@@ -59,6 +59,7 @@ The scripts below remain useful, but they are not currently treated as release-g
 - `32_distributed_representations.py`
 - `33_error_handling_robustness.py`
 - `40_model_hrr_correlation.py`
+- `43_retrieval_backend_comparison.py`
 
 ## Notebooks
 

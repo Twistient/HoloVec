@@ -83,6 +83,33 @@ top_hits = store.query(query, k=10)
 
 This is usually the right baseline before building a custom batched pipeline.
 
+## Optional Rust Retrieval Backend
+
+For discrete and sparse retrieval-heavy workloads, HoloVec now exposes an opt-in
+Rust-backed prepared search path on `ItemStore` and `AssocStore`.
+
+```python
+from holovec.retrieval import Codebook, ItemStore
+from holovec.retrieval.rust_search import build_rust_search_library
+
+build_rust_search_library(release=True)
+store = ItemStore(model, search_backend="rust").fit(Codebook(items, backend=model.backend))
+top_hits = store.query(query, k=10, fast=True)
+```
+
+This is intentionally opt-in. Exact prepared NumPy remains the default backend,
+and unsupported or unavailable native paths fall back to NumPy.
+
+If you want a reviewer-facing comparison on the public API surface, run:
+
+```bash
+uv run python examples/43_retrieval_backend_comparison.py --model all --build-rust
+```
+
+That script compares `ItemStore(search_backend="numpy")` and
+`ItemStore(search_backend="rust")` directly, including first-query index build
+cost and steady-state query latency.
+
 ## Measure Locally
 
 Use a tiny harness that warms up the path you care about:
@@ -132,6 +159,7 @@ measurements rather than copying an old table into design docs or release notes.
 - [examples/27_cleanup_strategies.py](https://github.com/Twistient/HoloVec/blob/master/examples/27_cleanup_strategies.py)
 - [examples/41_model_ghrr_diagonality.py](https://github.com/Twistient/HoloVec/blob/master/examples/41_model_ghrr_diagonality.py)
 - [examples/42_model_bsdc_seg.py](https://github.com/Twistient/HoloVec/blob/master/examples/42_model_bsdc_seg.py)
+- [examples/43_retrieval_backend_comparison.py](https://github.com/Twistient/HoloVec/blob/master/examples/43_retrieval_backend_comparison.py)
 
 ## See Also
 

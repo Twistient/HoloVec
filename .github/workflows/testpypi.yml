@@ -1,0 +1,219 @@
+name: Publish TestPyPI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v8.0.0
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Sync dependencies
+        run: uv sync --extra dev
+
+      - name: Run release gate
+        run: uv run --extra dev pytest tests/ -q
+
+  build-sdist:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v8.0.0
+
+      - name: Build sdist
+        env:
+          HOLOVEC_SKIP_RUST_BUILD: "1"
+        run: uv build --sdist
+
+      - name: Check sdist
+        run: uvx twine check dist/*
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist-sdist
+          path: dist/*
+
+  build-wheel:
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cibw-platform: linux
+          - os: macos-13
+            cibw-platform: macos
+          - os: windows-latest
+            cibw-platform: windows
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v8.0.0
+
+      - name: Setup Rust
+        if: matrix.cibw-platform != 'linux'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build wheel
+        env:
+          CIBW_PLATFORM: ${{ matrix.cibw-platform }}
+        run: uvx cibuildwheel --output-dir wheelhouse
+
+      - name: Check wheel
+        run: uvx twine check wheelhouse/*
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist-${{ matrix.cibw-platform }}
+          path: wheelhouse/*
+
+  publish:
+    needs: [release-gate, build-sdist, build-wheel]
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v8.0.0
+
+      - name: Download distributions
+        uses: actions/download-artifact@v8
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+
+      - name: Read package version
+        id: version
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import pathlib
+          import tomllib
+          data = tomllib.loads(pathlib.Path("pyproject.toml").read_text())
+          print(f"version={data['project']['version']}")
+          PY
+
+      - name: Publish to TestPyPI
+        run: >
+          uv publish
+          --trusted-publishing always
+          --publish-url https://test.pypi.org/legacy/
+          dist/*
+
+  verify-install:
+    needs: publish
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-13
+          - os: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Wait for TestPyPI indexing
+        env:
+          HOLOVEC_VERSION: ${{ needs.publish.outputs.version }}
+        run: |
+          python - <<'PY'
+          import os
+          import time
+          import urllib.request
+
+          version = os.environ["HOLOVEC_VERSION"]
+          url = "https://test.pypi.org/simple/holovec/"
+          marker = f"holovec-{version}"
+
+          for attempt in range(20):
+              try:
+                  with urllib.request.urlopen(url, timeout=15) as response:
+                      html = response.read().decode()
+              except Exception:
+                  html = ""
+
+              if marker in html:
+                  print(f"Found {marker} on TestPyPI")
+                  break
+
+              time.sleep(15)
+          else:
+              raise SystemExit(f"{marker} not visible on TestPyPI")
+          PY
+
+      - name: Download wheel from TestPyPI
+        env:
+          HOLOVEC_VERSION: ${{ needs.publish.outputs.version }}
+        run: python -m pip download --no-deps --index-url https://test.pypi.org/simple/ --dest wheelhouse "holovec==${HOLOVEC_VERSION}"
+
+      - name: Install wheel from TestPyPI
+        run: python -m pip install wheelhouse/holovec-*.whl
+
+      - name: Smoke test installed wheel
+        env:
+          HOLOVEC_EXPECT_PACKAGED_RUST: "1"
+        run: python scripts/release_smoke_rust_backend.py

@@ -33,12 +33,15 @@ jobs:
         run: uv run --extra dev pytest
 
       - name: Run Ruff
-        run: uv run --extra dev ruff check holovec tests
+        run: uv run --extra dev ruff check holovec tests scripts
 
       - name: Run mypy
         run: uv run --extra dev mypy holovec
 
-      - name: Build wheel with native backend
+      - name: Build manylinux wheel
         env:
-          HOLOVEC_BUILD_RUST: "1"
-        run: uv build --wheel
+          CIBW_PLATFORM: linux
+        run: uvx cibuildwheel --output-dir wheelhouse
+
+      - name: Check built wheel
+        run: uvx twine check wheelhouse/*

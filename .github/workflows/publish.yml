@@ -70,7 +70,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-13, windows-latest]
+        include:
+          - os: ubuntu-latest
+            cibw-platform: linux
+          - os: macos-13
+            cibw-platform: macos
+          - os: windows-latest
+            cibw-platform: windows
 
     steps:
       - name: Checkout
@@ -85,21 +91,22 @@ jobs:
         uses: astral-sh/setup-uv@v8.0.0
 
       - name: Setup Rust
+        if: matrix.cibw-platform != 'linux'
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build wheel
         env:
-          HOLOVEC_BUILD_RUST: "1"
-        run: uv build --wheel
+          CIBW_PLATFORM: ${{ matrix.cibw-platform }}
+        run: uvx cibuildwheel --output-dir wheelhouse
 
       - name: Check wheel
-        run: uvx twine check dist/*
+        run: uvx twine check wheelhouse/*
 
       - name: Upload wheel
         uses: actions/upload-artifact@v7
         with:
-          name: dist-${{ matrix.os }}
-          path: dist/*
+          name: dist-${{ matrix.cibw-platform }}
+          path: wheelhouse/*
 
   publish:
     needs: [release-gate, build-sdist, build-wheel]

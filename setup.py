@@ -10,6 +10,7 @@ from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
+from setuptools.dist import Distribution as _Distribution
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -76,10 +77,17 @@ def _run_cargo_build(*, release: bool) -> Path:
 
 def _copy_rust_library(destination_dir: Path, *, release: bool) -> Path:
     artifact = _run_cargo_build(release=release)
+    if destination_dir.exists():
+        shutil.rmtree(destination_dir)
     destination_dir.mkdir(parents=True, exist_ok=True)
     destination_path = destination_dir / artifact.name
     shutil.copy2(artifact, destination_path)
     return destination_path
+
+
+class BinaryDistribution(_Distribution):
+    def has_ext_modules(self) -> bool:
+        return _should_build_rust() or _rust_build_required()
 
 
 class build_py(_build_py):
@@ -125,6 +133,7 @@ else:
 
 setup(
     cmdclass=cmdclass,
+    distclass=BinaryDistribution,
     include_package_data=True,
     zip_safe=False,
 )

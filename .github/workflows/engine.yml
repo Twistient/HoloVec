@@ -23,6 +23,9 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v8.0.0
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Sync dependencies
         run: uv sync --extra dev
 
@@ -34,3 +37,8 @@ jobs:
 
       - name: Run mypy
         run: uv run --extra dev mypy holovec
+
+      - name: Build wheel with native backend
+        env:
+          HOLOVEC_BUILD_RUST: "1"
+        run: uv build --wheel

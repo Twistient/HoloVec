@@ -40,6 +40,9 @@ supported as optional backends when their environment-specific tests are enabled
 pip install holovec
 ```
 
+Official wheels include the optional Rust retrieval backend on supported
+platforms. It remains opt-in at runtime through `search_backend="rust"`.
+
 Optional extras:
 
 ```bash

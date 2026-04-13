@@ -36,6 +36,10 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def _packaged_library_path() -> Path:
+    return Path(__file__).resolve().with_name("_native") / _library_filename()
+
+
 def _library_filename() -> str:
     if sys.platform == "darwin":
         return "libholovec_rust_search.dylib"
@@ -55,6 +59,9 @@ def rust_search_library_path(*, release: bool = True) -> Path:
     configured = os.getenv(RUST_SEARCH_LIBRARY_ENV)
     if configured:
         return Path(configured).expanduser().resolve()
+    packaged = _packaged_library_path()
+    if packaged.exists():
+        return packaged
     profile = "release" if release else "debug"
     return _repo_root() / "prototypes" / "rust_search" / "target" / profile / _library_filename()
 
@@ -87,8 +94,10 @@ def _load_library() -> ctypes.CDLL:
     path = rust_search_library_path()
     if not path.exists():
         raise FileNotFoundError(
-            f"Rust search library not built: {path}. "
-            "Build it with holovec.retrieval.rust_search.build_rust_search_library()."
+            f"Rust search library not found: {path}. "
+            "Use an official wheel, build it with "
+            "holovec.retrieval.rust_search.build_rust_search_library(), "
+            f"or set {RUST_SEARCH_LIBRARY_ENV} to an explicit library path."
         )
 
     library = ctypes.CDLL(str(path))

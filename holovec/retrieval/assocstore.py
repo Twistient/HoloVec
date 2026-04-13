@@ -1,6 +1,6 @@
 from ..backends.base import Array
 from ..models.base import VSAModel
-from ..utils.search import nearest_neighbors
+from ..utils.search import PreparedSearchIndex, prepare_search_index, query_prepared_index
 from .codebook import Codebook
 
 
@@ -15,6 +15,18 @@ class AssocStore:
         self.model = model
         self.keys = Codebook(backend=model.backend)
         self.values = Codebook(backend=model.backend)
+        self._prepared_key_index: PreparedSearchIndex | None = None
+        self._prepared_key_index_version = -1
+
+    def _invalidate_search_cache(self) -> None:
+        self._prepared_key_index = None
+        self._prepared_key_index_version = -1
+
+    def _get_prepared_key_index(self) -> PreparedSearchIndex:
+        if self._prepared_key_index is None or self._prepared_key_index_version != self.keys.version:
+            self._prepared_key_index = prepare_search_index(self.keys._items, self.model)
+            self._prepared_key_index_version = self.keys.version
+        return self._prepared_key_index
 
     def fit(self, key_items: dict[str, Array], value_items: dict[str, Array]) -> "AssocStore":
         # Intersect labels and preserve deterministic order
@@ -23,15 +35,21 @@ class AssocStore:
         self.values = Codebook(
             {lbl: value_items[lbl] for lbl in labels}, backend=self.model.backend
         )
+        self._invalidate_search_cache()
         return self
 
     def add(self, label: str, key_vec: Array, value_vec: Array) -> None:
         self.keys.add(label, key_vec)
         self.values.add(label, value_vec)
+        self._invalidate_search_cache()
 
     def query_label(self, key_vec: Array, k: int = 1) -> list[tuple[str, float]]:
-        labels, sims = nearest_neighbors(
-            key_vec, self.keys._items, self.model, k=k, return_similarities=True
+        labels, sims = query_prepared_index(
+            key_vec,
+            self._get_prepared_key_index(),
+            self.model,
+            k=k,
+            return_similarities=True,
         )
         return list(zip(labels, sims or [], strict=True))
 

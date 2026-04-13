@@ -17,6 +17,12 @@ def _softmax(x: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     return np.asarray(exp_x / (np.sum(exp_x) + 1e-12), dtype=np.float64)
 
 
+def _uses_complex_similarity(model: VSAModel) -> bool:
+    """Return whether a model uses complex- or matrix-valued similarity."""
+    space_name = model.space.space_name
+    return space_name == "complex" or space_name.startswith("matrix_")
+
+
 class AttentionResonatorCleanup(CleanupStrategy):
     """Attention-based resonator network using the modern Hopfield update rule."""
 
@@ -103,7 +109,7 @@ class AttentionResonatorCleanup(CleanupStrategy):
         n_items = len(labels)
         dim = model.dimension
         codebook_vectors = [codebook[lbl] for lbl in labels]
-        is_complex = hasattr(model.space, "is_complex") and model.space.is_complex
+        is_complex = _uses_complex_similarity(model)
 
         codebook_stacked = model.backend.stack(codebook_vectors, axis=0)
         codebook_mean = model.backend.mean(codebook_stacked, axis=0)
@@ -294,7 +300,7 @@ class AttentionResonatorCleanup(CleanupStrategy):
         n_items = len(labels_list)
         dim = model.dimension
         codebook_vectors = [codebook[lbl] for lbl in labels_list]
-        is_complex = hasattr(model.space, "is_complex") and model.space.is_complex
+        is_complex = _uses_complex_similarity(model)
 
         codebook_stacked = model.backend.stack(codebook_vectors, axis=0)
         codebook_mean = model.backend.mean(codebook_stacked, axis=0)

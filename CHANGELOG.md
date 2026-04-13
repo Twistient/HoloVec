@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No unreleased changes yet.
+### Fixed
+
+- Restored exact fast-query semantics in `ItemStore` and `AssocStore` so prepared retrieval matches
+  each model's defined similarity metric across dense, sparse, segmented, and matrix spaces
+- Fixed `AttentionResonatorCleanup` complex-space detection so the complex-aware path also applies
+  to FHRR and GHRR models
+- Reduced repeated-query overhead in retrieval by caching prepared codebook search state and
+  invalidating it when a fitted `Codebook` changes
+
+### Testing
+
+- Added regression coverage for prepared-search score equivalence across MAP, BSC, BSDC,
+  BSDC-SEG, FHRR, HRR, and GHRR, plus cache invalidation on shared codebook mutation
 
 ## [1.0.2] - 2026-04-12
 

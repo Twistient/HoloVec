@@ -1,10 +1,17 @@
 import numpy as np
 import pytest
 
+from holovec import VSA
 from holovec.backends import get_backend
 from holovec.models.fhrr import FHRRModel
 from holovec.retrieval import Codebook, ItemStore
 from holovec.utils.decode import decode_multilabel, decode_nearest, decode_threshold
+from holovec.utils.search import (
+    nearest_neighbors,
+    prepare_search_index,
+    prepared_similarity_scores,
+    query_prepared_index,
+)
 
 
 def test_decode_helpers_nearest_and_threshold():
@@ -40,8 +47,106 @@ def test_itemstore_batched_query_matches_scalar():
     assert {label for label, _ in fast} == {label for label, _ in slow}
 
 
+@pytest.mark.parametrize(
+    ("model_name", "dim", "kwargs"),
+    [
+        ("MAP", 512, {}),
+        ("BSC", 512, {}),
+        ("BSDC", 5000, {"sparsity": 0.02}),
+        ("BSDC-SEG", 240, {"segments": 12}),
+        ("FHRR", 512, {}),
+        ("HRR", 512, {}),
+        ("GHRR", 12, {"matrix_size": 2}),
+    ],
+)
+def test_prepared_search_scores_match_scalar_similarity(
+    model_name: str,
+    dim: int,
+    kwargs: dict[str, object],
+) -> None:
+    model = VSA.create(model_name, dim=dim, backend="numpy", seed=0, **kwargs)
+    items = {f"item{i}": model.random(seed=100 + i) for i in range(16)}
+    prepared = prepare_search_index(items, model)
+    query = model.bundle([items["item1"], items["item5"], items["item9"]])
+
+    prepared_scores = prepared_similarity_scores(query, prepared, model)
+    scalar_scores = np.array(
+        [float(model.similarity(query, items[label])) for label in prepared.labels],
+        dtype=np.float64,
+    )
+
+    assert np.allclose(prepared_scores, scalar_scores, atol=1e-6)
+
+
+@pytest.mark.parametrize(
+    ("model_name", "dim", "kwargs"),
+    [
+        ("MAP", 512, {}),
+        ("BSC", 512, {}),
+        ("BSDC", 5000, {"sparsity": 0.02}),
+        ("BSDC-SEG", 240, {"segments": 12}),
+        ("FHRR", 512, {}),
+        ("HRR", 512, {}),
+        ("GHRR", 12, {"matrix_size": 2}),
+    ],
+)
+def test_prepared_query_topk_matches_scalar_ordering(
+    model_name: str,
+    dim: int,
+    kwargs: dict[str, object],
+) -> None:
+    model = VSA.create(model_name, dim=dim, backend="numpy", seed=0, **kwargs)
+    items = {f"item{i}": model.random(seed=100 + i) for i in range(16)}
+    prepared = prepare_search_index(items, model)
+    query = model.bundle([items["item2"], items["item7"], items["item11"]])
+
+    fast_labels, fast_sims = query_prepared_index(query, prepared, model, k=5, return_similarities=True)
+    slow_labels, slow_sims = nearest_neighbors(query, items, model, k=5, return_similarities=True)
+
+    assert fast_labels == slow_labels
+    assert np.allclose(np.asarray(fast_sims), np.asarray(slow_sims), atol=1e-6)
+
+
+def test_itemstore_rebuilds_prepared_index_when_shared_codebook_changes() -> None:
+    model = VSA.create("MAP", dim=512, backend="numpy", seed=0)
+    codebook = Codebook({"a": model.random(seed=1)}, backend=model.backend)
+    store = ItemStore(model).fit(codebook)
+    query = model.random(seed=999)
+
+    store.query(query, k=1, fast=True)
+    first_index_id = id(store._prepared_index)
+
+    codebook.add("query", query)
+    updated = store.query(query, k=1, fast=True)
+
+    assert updated[0][0] == "query"
+    assert id(store._prepared_index) != first_index_id
+
+
 class TestAssocStore:
     """Tests for AssocStore heteroassociative memory."""
+
+    def test_query_label_with_map_model(self):
+        """Test exact key lookup with a discrete-space model."""
+        from holovec.retrieval import AssocStore
+
+        model = VSA.create("MAP", dim=512, backend="numpy", seed=0)
+        keys = {
+            "a": model.random(seed=1),
+            "b": model.random(seed=2),
+            "c": model.random(seed=3),
+        }
+        values = {
+            "a": model.random(seed=10),
+            "b": model.random(seed=20),
+            "c": model.random(seed=30),
+        }
+
+        store = AssocStore(model).fit(keys, values)
+
+        result = store.query_label(keys["b"], k=1)
+        assert result[0][0] == "b"
+        assert result[0][1] > 0.99
 
     def test_basic_fit_and_query(self):
         """Test basic fit and query operations."""

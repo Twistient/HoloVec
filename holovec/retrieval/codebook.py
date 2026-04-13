@@ -17,12 +17,14 @@ class Codebook:
     def __init__(self, items: dict[str, Array] | None = None, backend: Backend | None = None):
         self._items: dict[str, Array] = {}
         self._backend: Backend = backend if backend is not None else get_backend("numpy")
+        self._version = 0
         if items:
             self.extend(items)
 
     # Basic operations
     def add(self, label: str, vector: Array) -> None:
         self._items[label] = vector
+        self._version += 1
 
     def extend(self, items: dict[str, Array]) -> None:
         for k, v in items.items():
@@ -35,6 +37,11 @@ class Codebook:
     @property
     def size(self) -> int:
         return len(self._items)
+
+    @property
+    def version(self) -> int:
+        """Return the current mutation counter for cache invalidation."""
+        return self._version
 
     # Dict-like interface
     def __getitem__(self, label: str) -> Array:

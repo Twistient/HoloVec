@@ -2,7 +2,12 @@
 from ..backends.base import Array
 from ..models.base import VSAModel
 from ..utils.cleanup import BruteForceCleanup, CleanupStrategy
-from ..utils.search import nearest_neighbors
+from ..utils.search import (
+    PreparedSearchIndex,
+    nearest_neighbors,
+    prepare_search_index,
+    query_prepared_index,
+)
 from .codebook import Codebook
 
 
@@ -21,19 +26,34 @@ class ItemStore:
         self.model = model
         self.cleanup: CleanupStrategy = cleanup if cleanup is not None else BruteForceCleanup()
         self.codebook = Codebook(backend=model.backend)
+        self._prepared_index: PreparedSearchIndex | None = None
+        self._prepared_index_version = -1
+
+    def _invalidate_search_cache(self) -> None:
+        self._prepared_index = None
+        self._prepared_index_version = -1
+
+    def _get_prepared_index(self) -> PreparedSearchIndex:
+        if self._prepared_index is None or self._prepared_index_version != self.codebook.version:
+            self._prepared_index = prepare_search_index(self.codebook._items, self.model)
+            self._prepared_index_version = self.codebook.version
+        return self._prepared_index
 
     def fit(self, items: dict[str, Array] | Codebook) -> "ItemStore":
         if isinstance(items, Codebook):
             self.codebook = items
         else:
             self.codebook = Codebook(items, backend=self.model.backend)
+        self._invalidate_search_cache()
         return self
 
     def add(self, label: str, vector: Array) -> None:
         self.codebook.add(label, vector)
+        self._invalidate_search_cache()
 
     def extend(self, items: dict[str, Array]) -> None:
         self.codebook.extend(items)
+        self._invalidate_search_cache()
 
     def query(
         self,
@@ -48,43 +68,19 @@ class ItemStore:
         falls back to scalar nearest_neighbors.
         """
         if fast and self.codebook.size > 0:
-            labels, mat = self.codebook.as_matrix(self.model.backend)
-            be = self.model.backend
-            # Continuous spaces: cosine-like; ComplexSpace handled specially
-            space_name = self.model.space.space_name
             try:
-                if space_name.startswith("complex"):
-                    # sim = Re(conj(C) @ v) / D
-                    v = vec
-                    conjC = be.conjugate(mat)
-                    dots = be.matmul(conjC, v)  # (L,)
-                    sims_arr = be.real(dots)
-                    sims_np = be.to_numpy(sims_arr) / float(self.model.dimension)
-                else:
-                    # cosine: (C v) / (||C_i|| * ||v||)
-                    dots = be.matmul(mat, vec)  # (L,)
-                    # norms per row
-                    # norm(C_i) = sqrt(sum(C_i^2)) → use l2 along axis=1
-                    row_norms = be.norm(mat, ord=2, axis=1)
-                    v_norm = be.norm(vec, ord=2)
-                    denom = be.multiply(row_norms, v_norm)
-                    sims_arr = be.divide(dots, denom)
-                    sims_np = be.to_numpy(sims_arr)
-                # Prepare top-k
-                import numpy as _np
-
-                sims_np = sims_np.astype(float)
-                if k >= len(labels):
-                    order = _np.argsort(-sims_np)
-                else:
-                    # partial sort then full sort within top-k
-                    idx_part = _np.argpartition(-sims_np, kth=k - 1)[:k]
-                    order = idx_part[_np.argsort(-sims_np[idx_part])]
-                out = [(labels[i], float(sims_np[i])) for i in order[:k]]
-                if return_similarities:
-                    return out
-                else:
-                    return [(lbl, 0.0) for lbl, _ in out]
+                labels, sims = query_prepared_index(
+                    vec,
+                    self._get_prepared_index(),
+                    self.model,
+                    k=k,
+                    return_similarities=return_similarities,
+                )
+                return (
+                    list(zip(labels, sims or [], strict=True))
+                    if return_similarities
+                    else [(lbl, 0.0) for lbl in labels]
+                )
             except (AttributeError, NotImplementedError, TypeError, ValueError):
                 # Fallback to scalar path on any backend issues
                 pass

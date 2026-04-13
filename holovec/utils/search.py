@@ -20,10 +20,29 @@ References:
 """
 
 
+from dataclasses import dataclass
+from typing import cast
+
+import numpy as np
+
 from ..backends.base import Array
 from ..models.base import VSAModel
-from ..spaces.base import ContinuousSpace
-from ..spaces.spaces import SparseSegmentSpace
+from ..spaces.base import ContinuousSpace, DiscreteSpace
+from ..spaces.spaces import ComplexSpace, MatrixSpace, SparseSegmentSpace, SparseSpace
+
+
+@dataclass(slots=True)
+class PreparedSearchIndex:
+    """Prepared codebook state for repeated exact nearest-neighbor queries."""
+
+    labels: list[str]
+    matrix: Array
+    mode: str
+    row_norms: Array | None = None
+    row_counts: Array | None = None
+    conjugated_matrix: Array | None = None
+    segment_patterns: np.ndarray | None = None
+    matrix_np: np.ndarray | None = None
 
 
 def _similarity_bounds(model: VSAModel) -> tuple[float, float]:
@@ -31,6 +50,175 @@ def _similarity_bounds(model: VSAModel) -> tuple[float, float]:
     if isinstance(model.space, ContinuousSpace):
         return -1.0, 1.0
     return 0.0, 1.0
+
+
+def prepare_search_index(
+    codebook: dict[str, Array],
+    model: VSAModel,
+) -> PreparedSearchIndex:
+    """Prepare an exact-search index for repeated codebook queries."""
+    if len(codebook) == 0:
+        raise ValueError("codebook must not be empty")
+
+    be = model.backend
+    labels = list(codebook.keys())
+    matrix = be.stack([codebook[label] for label in labels], axis=0)
+    space = model.space
+
+    if isinstance(space, SparseSegmentSpace):
+        segment_patterns = np.stack([space.segment_argmax(codebook[label]) for label in labels], axis=0)
+        return PreparedSearchIndex(
+            labels=labels,
+            matrix=matrix,
+            mode="sparse_segment",
+            segment_patterns=segment_patterns,
+        )
+
+    if isinstance(space, SparseSpace):
+        row_counts = be.sum(matrix, axis=1)
+        return PreparedSearchIndex(
+            labels=labels,
+            matrix=matrix,
+            mode="sparse",
+            row_counts=row_counts,
+        )
+
+    if isinstance(space, MatrixSpace):
+        return PreparedSearchIndex(
+            labels=labels,
+            matrix=matrix,
+            mode="matrix",
+            matrix_np=np.asarray(be.to_numpy(matrix)),
+        )
+
+    if isinstance(space, ComplexSpace):
+        return PreparedSearchIndex(
+            labels=labels,
+            matrix=matrix,
+            mode="complex",
+            conjugated_matrix=be.conjugate(matrix),
+        )
+
+    if isinstance(space, ContinuousSpace):
+        return PreparedSearchIndex(
+            labels=labels,
+            matrix=matrix,
+            mode="continuous",
+            row_norms=be.norm(matrix, ord=2, axis=1),
+        )
+
+    if isinstance(space, DiscreteSpace):
+        return PreparedSearchIndex(
+            labels=labels,
+            matrix=matrix,
+            mode="discrete",
+        )
+
+    raise NotImplementedError(f"Unsupported search space {type(space).__name__!r}")
+
+
+def prepared_similarity_scores(
+    query: Array,
+    index: PreparedSearchIndex,
+    model: VSAModel,
+) -> np.ndarray:
+    """Return exact similarities between query and a prepared codebook index."""
+    be = model.backend
+
+    if index.mode == "complex":
+        if index.conjugated_matrix is None:
+            raise ValueError("Prepared complex index is missing conjugated matrix")
+        dots = be.matmul(index.conjugated_matrix, query)
+        sims = np.asarray(be.to_numpy(be.real(dots)), dtype=np.float64)
+        return np.clip(sims / float(model.dimension), -1.0, 1.0)
+
+    if index.mode == "continuous":
+        if index.row_norms is None:
+            raise ValueError("Prepared continuous index is missing row norms")
+        dots = np.asarray(be.to_numpy(be.matmul(index.matrix, query)), dtype=np.float64)
+        row_norms = np.asarray(be.to_numpy(index.row_norms), dtype=np.float64)
+        query_norm = float(np.asarray(be.to_numpy(be.norm(query, ord=2))).item())
+        if query_norm == 0.0:
+            return np.zeros(len(index.labels), dtype=np.float64)
+        denom = row_norms * query_norm
+        sims = np.divide(
+            dots,
+            denom,
+            out=np.zeros_like(dots, dtype=np.float64),
+            where=denom != 0.0,
+        )
+        return np.asarray(np.clip(sims, -1.0, 1.0), dtype=np.float64)
+
+    if index.mode == "discrete":
+        matches = be.astype(index.matrix == query, "float32")
+        return np.asarray(be.to_numpy(be.mean(matches, axis=1)), dtype=np.float64)
+
+    if index.mode == "sparse":
+        if index.row_counts is None:
+            raise ValueError("Prepared sparse index is missing row counts")
+        intersections = np.asarray(
+            be.to_numpy(be.sum(be.multiply(index.matrix, query), axis=1)),
+            dtype=np.float64,
+        )
+        row_counts = np.asarray(be.to_numpy(index.row_counts), dtype=np.float64)
+        query_count = float(np.asarray(be.to_numpy(be.sum(query))).item())
+        denom = np.minimum(row_counts, query_count)
+        return np.divide(
+            intersections,
+            denom,
+            out=np.zeros_like(intersections, dtype=np.float64),
+            where=denom != 0.0,
+        )
+
+    if index.mode == "sparse_segment":
+        if index.segment_patterns is None:
+            raise ValueError("Prepared segmented index is missing segment patterns")
+        segmented_space = cast(SparseSegmentSpace, model.space)
+        query_pattern = segmented_space.segment_argmax(query)
+        matches = index.segment_patterns == query_pattern[None, :]
+        return np.asarray(matches.mean(axis=1, dtype=np.float64), dtype=np.float64)
+
+    if index.mode == "matrix":
+        if index.matrix_np is None:
+            raise ValueError("Prepared matrix index is missing NumPy matrix cache")
+        query_np = np.asarray(be.to_numpy(query))
+        query_conj_t = np.conjugate(np.swapaxes(query_np, -1, -2))
+        traces = np.einsum("ldab,dba->l", index.matrix_np, query_conj_t, optimize=True)
+        matrix_space = cast(MatrixSpace, model.space)
+        scale = matrix_space.matrix_size * model.dimension
+        return np.asarray(traces.real / float(scale), dtype=np.float64)
+
+    raise NotImplementedError(f"Unsupported prepared search mode {index.mode!r}")
+
+
+def query_prepared_index(
+    query: Array,
+    index: PreparedSearchIndex,
+    model: VSAModel,
+    *,
+    k: int,
+    return_similarities: bool = True,
+) -> tuple[list[str], list[float] | None]:
+    """Query a prepared codebook index for the exact top-k nearest items."""
+    if not isinstance(k, int):
+        raise TypeError(f"k must be int, got {type(k)}")
+    if not isinstance(return_similarities, bool):
+        raise TypeError(f"return_similarities must be bool, got {type(return_similarities)}")
+    if k < 1:
+        raise ValueError(f"k must be >= 1, got {k}")
+    if k > len(index.labels):
+        raise ValueError(f"k ({k}) cannot exceed codebook size ({len(index.labels)})")
+
+    similarities = prepared_similarity_scores(query, index, model)
+    # Use a stable full sort so equal-score ties preserve insertion order,
+    # matching the scalar sorted(dict.items(), reverse=True) behavior.
+    order = np.argsort(-similarities, kind="stable")
+
+    labels = [index.labels[i] for i in order[:k]]
+    if not return_similarities:
+        return labels, None
+    scores = [float(similarities[i]) for i in order[:k]]
+    return labels, scores
 
 
 def nearest_neighbors(

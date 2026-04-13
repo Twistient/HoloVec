@@ -21,6 +21,7 @@ from holovec.utils import (
     AttentionResonatorCleanup,
     ResonatorCleanup,
 )
+from holovec.utils.cleanup.attention import _uses_complex_similarity
 
 
 class TestAttentionResonatorInit:
@@ -70,6 +71,12 @@ class TestAttentionResonatorInit:
         """Test that invalid patience raises error."""
         with pytest.raises(ValueError, match="patience must be >= 1"):
             AttentionResonatorCleanup(patience=0)
+
+    def test_complex_detection_covers_phasor_and_matrix_spaces(self):
+        """Complex-aware cleanup should trigger for FHRR and GHRR spaces."""
+        assert _uses_complex_similarity(VSA.create("FHRR", dim=64, seed=0))
+        assert _uses_complex_similarity(VSA.create("GHRR", dim=8, matrix_size=2, seed=0))
+        assert not _uses_complex_similarity(VSA.create("MAP", dim=64, seed=0))
 
 
 class TestAttentionResonatorCleanup:

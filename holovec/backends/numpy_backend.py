@@ -267,12 +267,10 @@ class NumPyBackend(Backend):
     # ===== Similarity Measures =====
 
     def cosine_similarity(self, a: Array, b: Array) -> float:
-        # Fast path: identical arrays
-        try:
-            if a is b or np.array_equal(a, b):
-                return 1.0
-        except Exception:
-            pass
+        # Avoid a second full-array scan here; exact equality is still handled by
+        # the normal cosine computation below.
+        if a is b:
+            return 1.0
         na = np.linalg.norm(a)
         nb = np.linalg.norm(b)
         prod = na * nb

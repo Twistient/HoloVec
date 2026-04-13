@@ -47,3 +47,24 @@ python -m benchmarks.run \
 - JSON is best for tooling and release artifacts.
 - CSV is convenient for spreadsheets and docs tables.
 - Use the methodology page in `docs/guides/benchmarks.md` before drawing cross-model conclusions.
+
+## Rust Prototype
+
+The repo also contains an engineering prototype for the retrieval hotspot under
+`prototypes/rust_search/`. It is intentionally separate from the literature
+benchmark suites above.
+
+Build and run it with:
+
+```bash
+uv run python -m benchmarks.prototype_retrieval \
+  --model all \
+  --build-rust \
+  --output artifacts/rust-prototype.json
+```
+
+That benchmark compares:
+
+- scalar exact search (`nearest_neighbors`)
+- cached exact NumPy search (`query_prepared_index`)
+- a narrow Rust `cdylib` prototype loaded through `ctypes`

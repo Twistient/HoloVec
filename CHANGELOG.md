@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added an optional `search_backend="rust"` retrieval path for `ItemStore` and `AssocStore`,
+  using the cargo-based prototype for discrete and sparse prepared-search modes while falling
+  back to exact prepared NumPy when the native library is unavailable or unsupported
+
 ### Fixed
 
 - Restored exact fast-query semantics in `ItemStore` and `AssocStore` so prepared retrieval matches
@@ -20,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added regression coverage for prepared-search score equivalence across MAP, BSC, BSDC,
   BSDC-SEG, FHRR, HRR, and GHRR, plus cache invalidation on shared codebook mutation
+- Added regression coverage for the opt-in Rust retrieval backend's parity, cache invalidation,
+  and safe fallback behavior in `ItemStore` and `AssocStore`
 
 ## [1.0.2] - 2026-04-12
 

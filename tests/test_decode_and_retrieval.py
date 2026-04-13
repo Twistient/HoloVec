@@ -4,7 +4,10 @@ import pytest
 from holovec import VSA
 from holovec.backends import get_backend
 from holovec.models.fhrr import FHRRModel
-from holovec.retrieval import Codebook, ItemStore
+from holovec.retrieval import AssocStore, Codebook, ItemStore
+from holovec.retrieval import assocstore as assocstore_module
+from holovec.retrieval import itemstore as itemstore_module
+from holovec.retrieval.rust_search import rust_search_library_path
 from holovec.utils.decode import decode_multilabel, decode_nearest, decode_threshold
 from holovec.utils.search import (
     nearest_neighbors,
@@ -12,6 +15,8 @@ from holovec.utils.search import (
     prepared_similarity_scores,
     query_prepared_index,
 )
+
+RUST_LIBRARY_AVAILABLE = rust_search_library_path().exists()
 
 
 def test_decode_helpers_nearest_and_threshold():
@@ -100,7 +105,9 @@ def test_prepared_query_topk_matches_scalar_ordering(
     prepared = prepare_search_index(items, model)
     query = model.bundle([items["item2"], items["item7"], items["item11"]])
 
-    fast_labels, fast_sims = query_prepared_index(query, prepared, model, k=5, return_similarities=True)
+    fast_labels, fast_sims = query_prepared_index(
+        query, prepared, model, k=5, return_similarities=True
+    )
     slow_labels, slow_sims = nearest_neighbors(query, items, model, k=5, return_similarities=True)
 
     assert fast_labels == slow_labels
@@ -123,13 +130,114 @@ def test_itemstore_rebuilds_prepared_index_when_shared_codebook_changes() -> Non
     assert id(store._prepared_index) != first_index_id
 
 
+def test_itemstore_rebuilds_rust_index_when_shared_codebook_changes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model = VSA.create("MAP", dim=256, backend="numpy", seed=0)
+    codebook = Codebook({"a": model.random(seed=1)}, backend=model.backend)
+    store = ItemStore(model, search_backend="rust").fit(codebook)
+    query = model.random(seed=999)
+    build_labels: list[list[str]] = []
+
+    class FakeRustIndex:
+        def __init__(self, labels: list[str]) -> None:
+            self.labels = labels
+
+    def fake_prepare_rust_search(prepared_index, _model):
+        build_labels.append(prepared_index.labels.copy())
+        return FakeRustIndex(prepared_index.labels.copy())
+
+    def fake_query_rust_search(query_vec, index, *, k, return_similarities):
+        del query_vec, k
+        labels = [index.labels[-1]]
+        scores = [1.0] if return_similarities else None
+        return labels, scores
+
+    monkeypatch.setattr(
+        itemstore_module,
+        "prepare_rust_search_from_index",
+        fake_prepare_rust_search,
+    )
+    monkeypatch.setattr(
+        itemstore_module,
+        "query_rust_prepared_index",
+        fake_query_rust_search,
+    )
+
+    store.query(query, k=1, fast=True)
+    first_rust_index_id = id(store._rust_index)
+
+    codebook.add("query", query)
+    updated = store.query(query, k=1, fast=True)
+
+    assert updated[0][0] == "query"
+    assert id(store._rust_index) != first_rust_index_id
+    assert build_labels == [["a"], ["a", "query"]]
+
+
+def test_itemstore_rust_backend_falls_back_to_prepared_numpy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model = VSA.create("MAP", dim=256, backend="numpy", seed=0)
+    items = {f"item{i}": model.random(seed=i) for i in range(8)}
+    store = ItemStore(model, search_backend="rust").fit(items)
+
+    def fail_prepare_rust_search(*_args, **_kwargs):
+        raise FileNotFoundError("missing test rust library")
+
+    monkeypatch.setattr(
+        itemstore_module,
+        "prepare_rust_search_from_index",
+        fail_prepare_rust_search,
+    )
+
+    results = store.query(items["item3"], k=3, fast=True)
+
+    assert results[0][0] == "item3"
+    assert store._prepared_index is not None
+    assert store._rust_index is None
+
+
+@pytest.mark.parametrize(
+    ("model_name", "dim", "kwargs"),
+    [
+        ("MAP", 512, {}),
+        ("BSC", 512, {}),
+        ("BSDC", 5000, {"sparsity": 0.02}),
+        ("BSDC-SEG", 240, {"segments": 12}),
+    ],
+)
+def test_itemstore_rust_backend_matches_numpy_on_supported_modes(
+    model_name: str,
+    dim: int,
+    kwargs: dict[str, object],
+) -> None:
+    if not RUST_LIBRARY_AVAILABLE:
+        pytest.skip("Rust retrieval library is not built")
+
+    model = VSA.create(model_name, dim=dim, backend="numpy", seed=0, **kwargs)
+    items = {f"item{i}": model.random(seed=100 + i) for i in range(32)}
+    query = model.bundle([items["item2"], items["item7"], items["item11"]])
+
+    numpy_store = ItemStore(model, search_backend="numpy").fit(items)
+    rust_store = ItemStore(model, search_backend="rust").fit(items)
+
+    rust_results = rust_store.query(query, k=5, fast=True)
+    numpy_results = numpy_store.query(query, k=5, fast=True)
+
+    assert [label for label, _ in rust_results] == [label for label, _ in numpy_results]
+    assert np.allclose(
+        [score for _, score in rust_results],
+        [score for _, score in numpy_results],
+        atol=1e-6,
+    )
+
+
 class TestAssocStore:
     """Tests for AssocStore heteroassociative memory."""
 
     def test_query_label_with_map_model(self):
         """Test exact key lookup with a discrete-space model."""
-        from holovec.retrieval import AssocStore
-
         model = VSA.create("MAP", dim=512, backend="numpy", seed=0)
         keys = {
             "a": model.random(seed=1),
@@ -150,8 +258,6 @@ class TestAssocStore:
 
     def test_basic_fit_and_query(self):
         """Test basic fit and query operations."""
-        from holovec.retrieval import AssocStore
-
         be = get_backend("numpy")
         model = FHRRModel(dimension=256, backend=be, seed=0)
 
@@ -176,8 +282,6 @@ class TestAssocStore:
 
     def test_query_value_returns_correct_vector(self):
         """Test that query_value returns the associated value vector."""
-        from holovec.retrieval import AssocStore
-
         be = get_backend("numpy")
         model = FHRRModel(dimension=256, backend=be, seed=0)
 
@@ -193,8 +297,6 @@ class TestAssocStore:
 
     def test_add_method(self):
         """Test adding individual key-value pairs."""
-        from holovec.retrieval import AssocStore
-
         be = get_backend("numpy")
         model = FHRRModel(dimension=256, backend=be, seed=0)
 
@@ -209,8 +311,6 @@ class TestAssocStore:
 
     def test_fit_with_partial_overlap(self):
         """Test fit when keys and values have partial label overlap."""
-        from holovec.retrieval import AssocStore
-
         be = get_backend("numpy")
         model = FHRRModel(dimension=256, backend=be, seed=0)
 
@@ -237,10 +337,6 @@ class TestAssocStore:
 
     def test_query_empty_store_raises(self):
         """Test that querying empty store raises ValueError."""
-        import pytest
-
-        from holovec.retrieval import AssocStore
-
         be = get_backend("numpy")
         model = FHRRModel(dimension=256, backend=be, seed=0)
 
@@ -252,8 +348,6 @@ class TestAssocStore:
 
     def test_save_and_load(self, tmp_path):
         """Test saving and loading an AssocStore."""
-        from holovec.retrieval import AssocStore
-
         be = get_backend("numpy")
         model = FHRRModel(dimension=256, backend=be, seed=0)
 
@@ -278,6 +372,103 @@ class TestAssocStore:
             orig_key = be.to_numpy(store.keys[label])
             load_key = be.to_numpy(loaded.keys[label])
             assert np.allclose(orig_key, load_key)
+
+    def test_invalid_search_backend_raises(self):
+        model = VSA.create("MAP", dim=256, backend="numpy", seed=0)
+
+        with pytest.raises(ValueError, match="search_backend"):
+            AssocStore(model, search_backend="bogus")
+
+    def test_rust_backend_falls_back_to_prepared_numpy(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        model = VSA.create("MAP", dim=256, backend="numpy", seed=0)
+        keys = {"x": model.random(seed=1), "y": model.random(seed=2)}
+        values = {"x": model.random(seed=10), "y": model.random(seed=20)}
+        store = AssocStore(model, search_backend="rust").fit(keys, values)
+
+        def fail_prepare_rust_search(*_args, **_kwargs):
+            raise FileNotFoundError("missing test rust library")
+
+        monkeypatch.setattr(
+            assocstore_module,
+            "prepare_rust_search_from_index",
+            fail_prepare_rust_search,
+        )
+
+        result = store.query_label(keys["y"], k=1)
+
+        assert result[0][0] == "y"
+        assert store._prepared_key_index is not None
+        assert store._rust_key_index is None
+
+    def test_rust_backend_rebuilds_key_index_when_codebook_changes(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        model = VSA.create("MAP", dim=256, backend="numpy", seed=0)
+        store = AssocStore(model, search_backend="rust")
+        store.add("a", model.random(seed=1), model.random(seed=10))
+        build_labels: list[list[str]] = []
+
+        class FakeRustIndex:
+            def __init__(self, labels: list[str]) -> None:
+                self.labels = labels
+
+        def fake_prepare_rust_search(prepared_index, _model):
+            build_labels.append(prepared_index.labels.copy())
+            return FakeRustIndex(prepared_index.labels.copy())
+
+        def fake_query_rust_search(query_vec, index, *, k, return_similarities):
+            del query_vec, k
+            labels = [index.labels[-1]]
+            scores = [1.0] if return_similarities else None
+            return labels, scores
+
+        monkeypatch.setattr(
+            assocstore_module,
+            "prepare_rust_search_from_index",
+            fake_prepare_rust_search,
+        )
+        monkeypatch.setattr(
+            assocstore_module,
+            "query_rust_prepared_index",
+            fake_query_rust_search,
+        )
+
+        store.query_label(model.random(seed=99), k=1)
+        first_rust_index_id = id(store._rust_key_index)
+
+        query = model.random(seed=123)
+        store.add("query", query, model.random(seed=456))
+        updated = store.query_label(query, k=1)
+
+        assert updated[0][0] == "query"
+        assert id(store._rust_key_index) != first_rust_index_id
+        assert build_labels == [["a"], ["a", "query"]]
+
+    def test_rust_backend_matches_numpy_on_supported_modes(self) -> None:
+        if not RUST_LIBRARY_AVAILABLE:
+            pytest.skip("Rust retrieval library is not built")
+
+        model = VSA.create("MAP", dim=512, backend="numpy", seed=0)
+        keys = {f"item{i}": model.random(seed=100 + i) for i in range(16)}
+        values = {label: model.random(seed=1_000 + i) for i, label in enumerate(keys)}
+        query = model.bundle([keys["item2"], keys["item7"], keys["item11"]])
+
+        numpy_store = AssocStore(model, search_backend="numpy").fit(keys, values)
+        rust_store = AssocStore(model, search_backend="rust").fit(keys, values)
+
+        rust_results = rust_store.query_label(query, k=5)
+        numpy_results = numpy_store.query_label(query, k=5)
+
+        assert [label for label, _ in rust_results] == [label for label, _ in numpy_results]
+        assert np.allclose(
+            [score for _, score in rust_results],
+            [score for _, score in numpy_results],
+            atol=1e-6,
+        )
 
 
 class TestCodebookDictInterface:
@@ -467,6 +658,12 @@ class TestItemStoreExtended:
         assert store.codebook.size == 2
         assert "a" in store.codebook
         assert "b" in store.codebook
+
+    def test_invalid_search_backend_raises(self):
+        model = VSA.create("MAP", dim=256, backend="numpy", seed=0)
+
+        with pytest.raises(ValueError, match="search_backend"):
+            ItemStore(model, search_backend="bogus")
 
     def test_add_method(self):
         """Test add() method on ItemStore."""
